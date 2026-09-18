@@ -77,7 +77,14 @@ BEGIN TRY
         ExecutedQuantity,
         ExecutionPrice,
         ExecutedAt,
-        CreatedAt
+        CreatedAt,
+        TradeCurrency,
+        ReportingCurrency,
+        ExchangeRateToReporting,
+        ExchangeRateDate,
+        ExchangeRateSource,
+        TradeValueReporting,
+        CommissionReporting
     )
     SELECT
         source.ExecutionId,
@@ -85,7 +92,14 @@ BEGIN TRY
         source.ExecutedQuantity,
         source.ExecutionPrice,
         source.ExecutedAt,
-        source.CreatedAt
+        source.CreatedAt,
+        source.TradeCurrency,
+        source.ReportingCurrency,
+        source.ExchangeRateToReporting,
+        source.ExchangeRateDate,
+        source.ExchangeRateSource,
+        source.TradeValueReporting,
+        source.CommissionReporting
     FROM trading.Execution AS source
     WHERE
         source.CreatedAt > @ExecutionLastWatermark

@@ -26,6 +26,9 @@ CREATE TABLE dw.FactTrade
     CustomerKey    INT NOT NULL,
     AccountKey     INT NOT NULL,
     InstrumentKey  INT NOT NULL,
+    TradeCurrencyKey INT NOT NULL,
+    ReportingCurrencyKey INT NOT NULL,
+    ExchangeRateDateKey INT NOT NULL,
 
     /* Chei degenerate/sursă */
 
@@ -48,6 +51,10 @@ CREATE TABLE dw.FactTrade
     ) PERSISTED,
 
     CommissionAmount DECIMAL(19,4) NOT NULL,
+    ExchangeRateToReporting DECIMAL(19,10) NOT NULL,
+    ExchangeRateSource VARCHAR(50) NOT NULL,
+    TradeValueReporting DECIMAL(19,4) NOT NULL,
+    CommissionReporting DECIMAL(19,4) NOT NULL,
 
     /* Marcaj temporal */
 
@@ -81,6 +88,18 @@ CREATE TABLE dw.FactTrade
         FOREIGN KEY (InstrumentKey)
         REFERENCES dw.DimInstrument(InstrumentKey),
 
+    CONSTRAINT FK_FactTrade_TradeCurrency
+        FOREIGN KEY (TradeCurrencyKey)
+        REFERENCES dw.DimCurrency(CurrencyKey),
+
+    CONSTRAINT FK_FactTrade_ReportingCurrency
+        FOREIGN KEY (ReportingCurrencyKey)
+        REFERENCES dw.DimCurrency(CurrencyKey),
+
+    CONSTRAINT FK_FactTrade_ExchangeRateDate
+        FOREIGN KEY (ExchangeRateDateKey)
+        REFERENCES dw.DimDate(DateKey),
+
 
     CONSTRAINT UQ_FactTrade_ExecutionId
         UNIQUE (ExecutionId),
@@ -97,9 +116,43 @@ CREATE TABLE dw.FactTrade
     CONSTRAINT CK_FactTrade_Commission
         CHECK (CommissionAmount >= 0),
 
+    CONSTRAINT CK_FactTrade_ExchangeRate
+        CHECK (ExchangeRateToReporting > 0),
+
+    CONSTRAINT CK_FactTrade_ReportingValues
+        CHECK (TradeValueReporting > 0 AND CommissionReporting >= 0),
+
 
     CONSTRAINT CK_FactTrade_Side
         CHECK (Side IN ('BUY', 'SELL'))
+);
+GO
+
+
+CREATE TABLE dw.FactExchangeRate
+(
+    ExchangeRateKey  BIGINT IDENTITY(1,1) NOT NULL,
+    DateKey          INT NOT NULL,
+    SourceCurrencyKey INT NOT NULL,
+    TargetCurrencyKey INT NOT NULL,
+    ExchangeRateId   BIGINT NOT NULL,
+    MidRate          DECIMAL(19,10) NOT NULL,
+    BuyRate          DECIMAL(19,10) NOT NULL,
+    SellRate         DECIMAL(19,10) NOT NULL,
+    SourceSystem     VARCHAR(50) NOT NULL,
+    DWCreatedAt      DATETIME2(3) NOT NULL
+        CONSTRAINT DF_FactExchangeRate_DWCreatedAt DEFAULT SYSUTCDATETIME(),
+
+    CONSTRAINT PK_FactExchangeRate PRIMARY KEY (ExchangeRateKey),
+    CONSTRAINT UQ_FactExchangeRate_ExchangeRateId UNIQUE (ExchangeRateId),
+    CONSTRAINT FK_FactExchangeRate_Date FOREIGN KEY (DateKey)
+        REFERENCES dw.DimDate(DateKey),
+    CONSTRAINT FK_FactExchangeRate_SourceCurrency FOREIGN KEY (SourceCurrencyKey)
+        REFERENCES dw.DimCurrency(CurrencyKey),
+    CONSTRAINT FK_FactExchangeRate_TargetCurrency FOREIGN KEY (TargetCurrencyKey)
+        REFERENCES dw.DimCurrency(CurrencyKey),
+    CONSTRAINT CK_FactExchangeRate_Rates CHECK
+        (MidRate > 0 AND BuyRate > 0 AND SellRate > 0)
 );
 GO
 

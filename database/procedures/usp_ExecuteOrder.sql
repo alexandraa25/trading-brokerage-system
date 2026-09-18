@@ -24,6 +24,13 @@ BEGIN
         @CashAccountId BIGINT,
         @TradeValue DECIMAL(19,4),
         @CommissionAmount DECIMAL(19,4),
+        @ReportingCurrency CHAR(3) = 'EUR',
+        @ExchangeRateDate DATE,
+        @ExchangeRateToReporting DECIMAL(19,10),
+        @ExchangeRateSource VARCHAR(50),
+        @TradeValueReporting DECIMAL(19,4),
+        @CommissionReporting DECIMAL(19,4),
+        @ExecutedAt DATETIME2(3),
         @TotalCashRequired DECIMAL(19,4),
         @ExecutionId BIGINT,
         @ExecutedSoFar DECIMAL(19,8),
@@ -201,6 +208,47 @@ BEGIN
 
 
         ------------------------------------------------
+        -- 12.1 Conversia istorică în valuta de raportare EUR
+        ------------------------------------------------
+
+        SET @ExecutedAt = SYSUTCDATETIME();
+        SET @ExchangeRateDate = CAST(@ExecutedAt AS DATE);
+
+        IF @Currency = @ReportingCurrency
+        BEGIN
+            SET @ExchangeRateToReporting = 1;
+            SET @ExchangeRateSource = 'IDENTITY';
+        END
+        ELSE
+        BEGIN
+            SELECT TOP (1)
+                @ExchangeRateDate = rate_row.RateDate,
+                @ExchangeRateToReporting = rate_row.MidRate,
+                @ExchangeRateSource = rate_row.SourceSystem
+            FROM core.ExchangeRate rate_row
+            WHERE rate_row.SourceCurrency = @Currency
+              AND rate_row.TargetCurrency = @ReportingCurrency
+              AND rate_row.RateDate <= CAST(@ExecutedAt AS DATE)
+            ORDER BY
+                CASE WHEN rate_row.SourceSystem = 'ECB_REFERENCE' THEN 0 ELSE 1 END,
+                rate_row.RateDate DESC;
+        END;
+
+        IF @ExchangeRateToReporting IS NULL
+            THROW 50023, N'Nu există un curs valutar pentru conversia tranzacției în EUR.', 1;
+
+        IF @ExchangeRateSource = 'ECB_REFERENCE'
+           AND DATEDIFF(DAY, @ExchangeRateDate, CAST(@ExecutedAt AS DATE)) > 7
+            THROW 50024, N'Ultimul curs oficial BCE este prea vechi. Importul valutar trebuie verificat.', 1;
+
+        SET @TradeValueReporting =
+            ROUND(@TradeValue * @ExchangeRateToReporting, 4);
+
+        SET @CommissionReporting =
+            ROUND(@CommissionAmount * @ExchangeRateToReporting, 4);
+
+
+        ------------------------------------------------
         -- 13. Validarea numerarului pentru cumpărare
         ------------------------------------------------
 
@@ -254,14 +302,28 @@ BEGIN
             OrderId,
             ExecutedQuantity,
             ExecutionPrice,
-            ExecutedAt
+            ExecutedAt,
+            TradeCurrency,
+            ReportingCurrency,
+            ExchangeRateToReporting,
+            ExchangeRateDate,
+            ExchangeRateSource,
+            TradeValueReporting,
+            CommissionReporting
         )
         VALUES
         (
             @OrderId,
             @ExecutedQuantity,
             @ExecutionPrice,
-            SYSUTCDATETIME()
+            @ExecutedAt,
+            @Currency,
+            @ReportingCurrency,
+            @ExchangeRateToReporting,
+            @ExchangeRateDate,
+            @ExchangeRateSource,
+            @TradeValueReporting,
+            @CommissionReporting
         );
 
         SET @ExecutionId = SCOPE_IDENTITY();
@@ -486,6 +548,12 @@ BEGIN
             @TradeValue AS TradeValue,
             @CommissionAmount AS CommissionAmount,
             @Currency AS Currency,
+            @ExchangeRateToReporting AS ExchangeRateToEUR,
+            @ExchangeRateDate AS ExchangeRateDate,
+            @ExchangeRateSource AS ExchangeRateSource,
+            @TradeValueReporting AS TradeValueEUR,
+            @CommissionReporting AS CommissionEUR,
+            @ReportingCurrency AS ReportingCurrency,
             CASE
                 WHEN @ExecutedQuantity = @RemainingQuantity
                     THEN 'Executed'

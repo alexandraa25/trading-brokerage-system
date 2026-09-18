@@ -24,7 +24,9 @@ INCLUDE
     CustomerKey,
     ExecutedQuantity,
     ExecutionPrice,
-    CommissionAmount
+    CommissionAmount,
+    TradeValueReporting,
+    CommissionReporting
 );
 GO
 
@@ -49,7 +51,9 @@ INCLUDE
     Side,
     ExecutedQuantity,
     ExecutionPrice,
-    CommissionAmount
+    CommissionAmount,
+    TradeValueReporting,
+    CommissionReporting
 );
 GO
 
@@ -74,7 +78,9 @@ INCLUDE
     Side,
     ExecutedQuantity,
     ExecutionPrice,
-    CommissionAmount
+    CommissionAmount,
+    TradeValueReporting,
+    CommissionReporting
 );
 GO
 
@@ -94,7 +100,9 @@ INCLUDE
     InstrumentKey,
     ExecutedQuantity,
     ExecutionPrice,
-    CommissionAmount
+    CommissionAmount,
+    TradeValueReporting,
+    CommissionReporting
 );
 GO
 
@@ -130,9 +138,9 @@ SELECT
 
     SUM(f.ExecutedQuantity) AS TotalQuantity,
 
-    SUM(f.TradeValue) AS TradingVolume,
+    SUM(f.TradeValueReporting) AS TradingVolumeEUR,
 
-    SUM(f.CommissionAmount) AS CommissionRevenue
+    SUM(f.CommissionReporting) AS CommissionRevenueEUR
 
 FROM dw.FactTrade AS f
 
@@ -151,13 +159,13 @@ GROUP BY
 ORDER BY
     d.YearNumber,
     d.MonthNumber,
-    TradingVolume DESC;
+    TradingVolumeEUR DESC;
 
 
 
     SELECT
     COUNT(*) AS TradeCount,
-    SUM(TradeValue) AS TotalTradingVolume,
-    SUM(CommissionAmount) AS TotalCommission,
+    SUM(TradeValueReporting) AS TotalTradingVolumeEUR,
+    SUM(CommissionReporting) AS TotalCommissionEUR,
     SUM(ExecutedQuantity) AS TotalQuantity
 FROM dw.FactTrade;

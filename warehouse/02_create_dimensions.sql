@@ -168,6 +168,30 @@ CREATE TABLE dw.DimInstrument
 GO
 
 
+/* ============================================================
+   5. DimCurrency
+   ============================================================ */
+
+CREATE TABLE dw.DimCurrency
+(
+    CurrencyKey          INT IDENTITY(1,1) NOT NULL,
+    CurrencyCode         CHAR(3)       NOT NULL,
+    CurrencyName         NVARCHAR(100) NOT NULL,
+    MinorUnit            TINYINT       NOT NULL,
+    IsActive             BIT           NOT NULL,
+    IsReportingCurrency  BIT           NOT NULL,
+    SourceUpdatedAt      DATETIME2(3)  NOT NULL,
+    DWCreatedAt          DATETIME2(3)  NOT NULL
+        CONSTRAINT DF_DimCurrency_DWCreatedAt DEFAULT SYSUTCDATETIME(),
+    DWUpdatedAt          DATETIME2(3)  NOT NULL
+        CONSTRAINT DF_DimCurrency_DWUpdatedAt DEFAULT SYSUTCDATETIME(),
+
+    CONSTRAINT PK_DimCurrency PRIMARY KEY (CurrencyKey),
+    CONSTRAINT UQ_DimCurrency_CurrencyCode UNIQUE (CurrencyCode)
+);
+GO
+
+
 PRINT N'Dimensiunile depozitului de date au fost create cu succes.';
 GO
 

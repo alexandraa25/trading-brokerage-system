@@ -194,7 +194,14 @@ BEGIN TRY
         ExecutedQuantity,
         ExecutionPrice,
         ExecutedAt,
-        CreatedAt
+        CreatedAt,
+        TradeCurrency,
+        ReportingCurrency,
+        ExchangeRateToReporting,
+        ExchangeRateDate,
+        ExchangeRateSource,
+        TradeValueReporting,
+        CommissionReporting
     )
     SELECT
         ExecutionId,
@@ -202,7 +209,14 @@ BEGIN TRY
         ExecutedQuantity,
         ExecutionPrice,
         ExecutedAt,
-        CreatedAt
+        CreatedAt,
+        TradeCurrency,
+        ReportingCurrency,
+        ExchangeRateToReporting,
+        ExchangeRateDate,
+        ExchangeRateSource,
+        TradeValueReporting,
+        CommissionReporting
     FROM trading.Execution;
 
 

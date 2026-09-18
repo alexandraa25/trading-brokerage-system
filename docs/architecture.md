@@ -28,11 +28,15 @@ Power BI
 
 ## Stratul operațional
 
-Schema `core` gestionează clientul, verificarea KYC, contul de tranzacționare și conturile de numerar. Schema `trading` gestionează piețele, emitenții, instrumentele, ordinele, execuțiile, pozițiile, comisioanele și tranzacțiile de numerar. Schema `audit` păstrează istoricul schimbărilor.
+Schema `core` gestionează clientul, verificarea KYC, contul de tranzacționare, conturile de numerar, catalogul valutelor și cursurile istorice. Schema `trading` gestionează piețele, emitenții, instrumentele, ordinele, execuțiile, pozițiile, comisioanele și tranzacțiile de numerar. Schema `audit` păstrează istoricul schimbărilor.
 
 Un ordin reprezintă intenția clientului. O execuție reprezintă o cantitate tranzacționată efectiv. Separarea permite execuții parțiale și calculul corect al prețului mediu ponderat.
 
 Procedurile `usp_CreateOrder`, `usp_DepositCash` și `usp_ExecuteOrder` concentrează regulile de business. Operațiile financiare rulează în tranzacții și folosesc blocări explicite pentru a evita execuțiile duble și consumarea concurentă a aceluiași sold sau aceleiași poziții.
+
+EUR este valuta principală de raportare. Execuțiile păstrează valuta și suma originală, data cursului, rata folosită și valorile convertite în EUR. Instantaneul de pe execuție permite reproducerea rapoartelor chiar dacă tabelul cursurilor este corectat ulterior.
+
+Cursurile sunt importate din API-ul oficial BCE printr-o sarcină Windows programată zilnic la 17:15, ora Bucureștiului. Importul este idempotent și fiecare rulare este înregistrată în `audit.ExchangeRateImportLog`. În weekend și înaintea publicării cursului din ziua curentă se folosește ultimul curs oficial disponibil. Procedura de execuție respinge un curs oficial mai vechi de șapte zile, pentru a evita tranzacționarea cu date rămase neactualizate.
 
 ## Stratul ETL
 
@@ -44,7 +48,7 @@ Jurnalul ETL înregistrează starea și numărul de rânduri procesate. Marcajel
 
 ## Depozitul de date
 
-Modelul este o schemă stea cu `FactTrade` în centru și dimensiunile `DimDate`, `DimCustomer`, `DimAccount` și `DimInstrument` în jurul său.
+Modelul este o schemă stea cu `FactTrade` în centru și dimensiunile `DimDate`, `DimCustomer`, `DimAccount`, `DimInstrument` și `DimCurrency` în jurul său. `FactExchangeRate` păstrează cursurile zilnice dintre valutele operaționale și EUR.
 
 Granularitatea tabelului de fapte este o execuție. Cheile surogat separă modelul analitic de identificatorii operaționali și permit extinderea ulterioară către dimensiuni cu istoric.
 

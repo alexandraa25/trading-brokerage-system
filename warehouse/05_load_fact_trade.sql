@@ -51,6 +51,9 @@ BEGIN TRY
         CustomerKey,
         AccountKey,
         InstrumentKey,
+        TradeCurrencyKey,
+        ReportingCurrencyKey,
+        ExchangeRateDateKey,
 
         OrderId,
         ExecutionId,
@@ -61,6 +64,10 @@ BEGIN TRY
         ExecutedQuantity,
         ExecutionPrice,
         CommissionAmount,
+        ExchangeRateToReporting,
+        ExchangeRateSource,
+        TradeValueReporting,
+        CommissionReporting,
 
         ExecutedAt
     )
@@ -83,6 +90,12 @@ BEGIN TRY
 
         instrument.InstrumentKey,
 
+        trade_currency.CurrencyKey,
+
+        reporting_currency.CurrencyKey,
+
+        CONVERT(INT, CONVERT(CHAR(8), execution.ExchangeRateDate, 112)),
+
         orders.OrderId,
 
         execution.ExecutionId,
@@ -101,6 +114,14 @@ BEGIN TRY
             0
         ) AS CommissionAmount,
 
+        execution.ExchangeRateToReporting,
+
+        execution.ExchangeRateSource,
+
+        execution.TradeValueReporting,
+
+        execution.CommissionReporting,
+
         execution.ExecutedAt
 
     FROM BrokerageDB.staging.Execution AS execution
@@ -117,6 +138,12 @@ BEGIN TRY
     INNER JOIN dw.DimInstrument AS instrument
         ON instrument.InstrumentId =
            orders.InstrumentId
+
+    INNER JOIN dw.DimCurrency AS trade_currency
+        ON trade_currency.CurrencyCode = execution.TradeCurrency
+
+    INNER JOIN dw.DimCurrency AS reporting_currency
+        ON reporting_currency.CurrencyCode = execution.ReportingCurrency
 
     INNER JOIN dw.DimDate AS calendar
         ON calendar.DateKey =
@@ -148,8 +175,67 @@ BEGIN TRY
               execution.ExecutionId
     );
 
-
     SET @RowsInserted = @@ROWCOUNT;
+
+
+    DELETE fact_rate
+    FROM dw.FactExchangeRate fact_rate
+    WHERE NOT EXISTS
+    (
+        SELECT 1 FROM BrokerageDB.core.ExchangeRate source_rate
+        WHERE source_rate.ExchangeRateId = fact_rate.ExchangeRateId
+    );
+
+    UPDATE fact_rate
+    SET
+        DateKey = CONVERT(INT, CONVERT(CHAR(8), source_rate.RateDate, 112)),
+        SourceCurrencyKey = source_currency.CurrencyKey,
+        TargetCurrencyKey = target_currency.CurrencyKey,
+        MidRate = source_rate.MidRate,
+        BuyRate = source_rate.BuyRate,
+        SellRate = source_rate.SellRate,
+        SourceSystem = source_rate.SourceSystem
+    FROM dw.FactExchangeRate fact_rate
+    INNER JOIN BrokerageDB.core.ExchangeRate source_rate
+        ON source_rate.ExchangeRateId = fact_rate.ExchangeRateId
+    INNER JOIN dw.DimCurrency source_currency
+        ON source_currency.CurrencyCode = source_rate.SourceCurrency
+    INNER JOIN dw.DimCurrency target_currency
+        ON target_currency.CurrencyCode = source_rate.TargetCurrency;
+
+    INSERT INTO dw.FactExchangeRate
+    (
+        DateKey,
+        SourceCurrencyKey,
+        TargetCurrencyKey,
+        ExchangeRateId,
+        MidRate,
+        BuyRate,
+        SellRate,
+        SourceSystem
+    )
+    SELECT
+        CONVERT(INT, CONVERT(CHAR(8), rate_row.RateDate, 112)),
+        source_currency.CurrencyKey,
+        target_currency.CurrencyKey,
+        rate_row.ExchangeRateId,
+        rate_row.MidRate,
+        rate_row.BuyRate,
+        rate_row.SellRate,
+        rate_row.SourceSystem
+    FROM BrokerageDB.core.ExchangeRate rate_row
+    INNER JOIN dw.DimCurrency source_currency
+        ON source_currency.CurrencyCode = rate_row.SourceCurrency
+    INNER JOIN dw.DimCurrency target_currency
+        ON target_currency.CurrencyCode = rate_row.TargetCurrency
+    INNER JOIN dw.DimDate rate_date
+        ON rate_date.DateKey = CONVERT(INT, CONVERT(CHAR(8), rate_row.RateDate, 112))
+    WHERE NOT EXISTS
+    (
+        SELECT 1
+        FROM dw.FactExchangeRate existing
+        WHERE existing.ExchangeRateId = rate_row.ExchangeRateId
+    );
 
 
     COMMIT TRANSACTION;
@@ -185,6 +271,9 @@ SELECT
     CustomerKey,
     AccountKey,
     InstrumentKey,
+    TradeCurrencyKey,
+    ReportingCurrencyKey,
+    ExchangeRateDateKey,
     OrderId,
     ExecutionId,
     Side,
@@ -193,6 +282,10 @@ SELECT
     ExecutionPrice,
     TradeValue,
     CommissionAmount,
+    ExchangeRateToReporting,
+    ExchangeRateSource,
+    TradeValueReporting,
+    CommissionReporting,
     ExecutedAt
 FROM dw.FactTrade
 ORDER BY TradeKey;
@@ -234,6 +327,10 @@ SELECT
     f.ExecutionPrice,
     f.TradeValue,
     f.CommissionAmount
+    ,f.ExchangeRateToReporting
+    ,f.ExchangeRateSource
+    ,f.TradeValueReporting
+    ,f.CommissionReporting
 
 FROM dw.FactTrade AS f
 
@@ -253,7 +350,18 @@ ORDER BY f.ExecutedAt DESC;
 
 
 SELECT
-    SUM(TradeValue) AS TotalTradingVolume
+    currency.CurrencyCode,
+    SUM(fact.TradeValue) AS TotalTradingVolumeOriginal,
+    SUM(fact.CommissionAmount) AS TotalCommissionOriginal
+FROM dw.FactTrade fact
+INNER JOIN dw.DimCurrency currency
+    ON currency.CurrencyKey = fact.TradeCurrencyKey
+GROUP BY currency.CurrencyCode
+ORDER BY currency.CurrencyCode;
+
+SELECT
+    SUM(TradeValueReporting) AS TotalTradingVolumeEUR,
+    SUM(CommissionReporting) AS TotalCommissionEUR
 FROM dw.FactTrade;
 
 
@@ -262,15 +370,11 @@ SELECT
 FROM dw.FactTrade;
 
 SELECT
-    SUM(CommissionAmount) AS TotalCommission
-FROM dw.FactTrade;
-
-SELECT
     Side,
     COUNT(*) AS TradeCount,
     SUM(ExecutedQuantity) AS TotalQuantity,
-    SUM(TradeValue) AS TradingVolume,
-    SUM(CommissionAmount) AS CommissionRevenue
+    SUM(TradeValueReporting) AS TradingVolumeEUR,
+    SUM(CommissionReporting) AS CommissionRevenueEUR
 FROM dw.FactTrade
 GROUP BY Side
 ORDER BY Side;

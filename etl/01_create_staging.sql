@@ -147,6 +147,13 @@ CREATE TABLE staging.Execution
     ExecutionPrice   DECIMAL(19,8) NOT NULL,
     ExecutedAt       DATETIME2(3)  NOT NULL,
     CreatedAt        DATETIME2(3)  NOT NULL,
+    TradeCurrency    CHAR(3)       NOT NULL,
+    ReportingCurrency CHAR(3)      NOT NULL,
+    ExchangeRateToReporting DECIMAL(19,10) NOT NULL,
+    ExchangeRateDate DATE          NOT NULL,
+    ExchangeRateSource VARCHAR(50) NOT NULL,
+    TradeValueReporting DECIMAL(19,4) NOT NULL,
+    CommissionReporting DECIMAL(19,4) NOT NULL,
 
     ExtractedAt      DATETIME2(3)  NOT NULL
         DEFAULT SYSUTCDATETIME()

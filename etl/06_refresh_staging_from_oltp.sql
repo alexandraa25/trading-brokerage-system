@@ -112,11 +112,17 @@ BEGIN TRY
     INSERT INTO staging.Execution
     (
         ExecutionId, OrderId, ExecutedQuantity,
-        ExecutionPrice, ExecutedAt, CreatedAt
+        ExecutionPrice, ExecutedAt, CreatedAt,
+        TradeCurrency, ReportingCurrency, ExchangeRateToReporting,
+        ExchangeRateDate, ExchangeRateSource,
+        TradeValueReporting, CommissionReporting
     )
     SELECT
         ExecutionId, OrderId, ExecutedQuantity,
-        ExecutionPrice, ExecutedAt, CreatedAt
+        ExecutionPrice, ExecutedAt, CreatedAt,
+        TradeCurrency, ReportingCurrency, ExchangeRateToReporting,
+        ExchangeRateDate, ExchangeRateSource,
+        TradeValueReporting, CommissionReporting
     FROM trading.Execution;
 
     INSERT INTO staging.CashTransaction

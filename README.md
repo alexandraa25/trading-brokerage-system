@@ -129,9 +129,13 @@ UltimaÎncărcareReușită < TimpSursă <= MarcajCurent
 DimDate ───────────── FactTrade ───────────── DimInstrument
                           │
                       DimAccount
+                          │
+                     DimCurrency
+
+DimDate ─────── FactExchangeRate ─────── DimCurrency
 ```
 
-Dimensiunile folosesc chei surogat. Granularitatea `FactTrade` este un rând pentru fiecare execuție. Măsurile principale sunt cantitatea, prețul, valoarea tranzacției și comisionul.
+Dimensiunile folosesc chei surogat. Granularitatea `FactTrade` este un rând pentru fiecare execuție. Măsurile principale păstrează atât valoarea și comisionul în valuta originală, cât și valorile convertite în EUR. `FactExchangeRate` conține cursurile istorice zilnice.
 
 Testul warehouse verifică populația dimensiunilor, reconcilierea sursă-fact, duplicatele, cheile orfane, măsurile și cheile de dată.
 
@@ -151,7 +155,7 @@ Raportul consumă modelul dimensional și conține:
 
 ![Modelul de date](powerbi/screenshots/data-model.png)
 
-Fișierul `.pbix` nu este versionat, deoarece `.gitignore` exclude fișierele binare Power BI. Modelul actual nu face conversie valutară, deci totalurile între valute trebuie filtrate și interpretate corespunzător.
+Fișierul `.pbix` nu este versionat, deoarece `.gitignore` exclude fișierele binare Power BI. Totalurile consolidate folosesc EUR drept valută principală de afișare.
 
 ## Testare
 
@@ -164,6 +168,7 @@ Testele de concurență necesită două sesiuni SQL Server separate.
 ```text
 trading-brokerage-system/
 ├── database/   # OLTP, proceduri, triggere, vizualizări și indecși
+├── automation/ # importul și programarea cursurilor oficiale BCE
 ├── etl/        # staging și încărcări incrementale
 ├── warehouse/  # schema stea și încărcările analitice
 ├── tests/      # scenarii și validări automate
@@ -177,11 +182,37 @@ trading-brokerage-system/
 
 ```text
 database/01_create_database_schemas_tables.sql
+database/04_currency_conversion_eur.sql
+database/05_ecb_daily_exchange_rates.sql
 database/02_seed_data.sql
-database/03_seed_diverse_demo_data.sql
+database/procedures/*.sql
+database/triggers/*.sql
+database/03_seed_diverse_demo_data.sql  (opțional)
+database/views/*.sql
+database/indexes/*.sql
 ```
 
-Scriptul `03_seed_diverse_demo_data.sql` este opțional și adaugă un set extins, divers și idempotent de date demonstrative. Înaintea lui, rulați scripturile din `database/procedures` și `database/triggers`. Apoi rulați scripturile din `database/views` și `database/indexes`.
+`03_seed_diverse_demo_data.sql` adaugă un set extins, divers și idempotent de date demonstrative.
+
+`04_currency_conversion_eur.sql` configurează EUR drept valută principală de raportare. `05_ecb_daily_exchange_rates.sql` pregătește jurnalizarea importurilor oficiale BCE și sursa cursului păstrată pe fiecare execuție. Sumele originale nu sunt înlocuite.
+
+### Actualizarea zilnică a cursurilor BCE
+
+Importul inițial complet se execută astfel:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Import-EcbExchangeRates.ps1 -FullHistory
+```
+
+Sarcina Windows zilnică se instalează astfel:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Install-DailyEcbRateTask.ps1
+```
+
+Sarcina `TradingBrokerage-ECB-Daily-Rates` rulează la 17:15, ora Bucureștiului, reîncearcă în caz de eroare și pornește la prima ocazie dacă ora programată a fost ratată. Calculatorul și SQL Server trebuie să fie pornite, iar utilizatorul Windows trebuie să fie autentificat. Importurile sunt înregistrate în `audit.ExchangeRateImportLog`.
+
+BCE nu publică un curs nou în weekend sau în zilele sale nelucrătoare. În acest caz, tranzacția folosește ultimul curs oficial disponibil și salvează atât data reală a cursului, cât și sursa `ECB_REFERENCE`.
 
 ### 2. Staging și ETL
 
@@ -193,6 +224,7 @@ etl/04_incremental_dimensions.sql
 etl/04_incremental_load.sql
 etl/05_incremental_append_only.sql
 etl/06_refresh_staging_from_oltp.sql
+etl/07_currency_reporting_eur.sql
 ```
 
 Folosiți `06_refresh_staging_from_oltp.sql` când doriți să reconstruiți complet zona de staging din baza OLTP curentă.
@@ -206,16 +238,17 @@ warehouse/03_create_facts.sql
 warehouse/04_load_dimensions.sql
 warehouse/05_load_fact_trade.sql
 warehouse/06_create_analytics_indexes.sql
+warehouse/07_currency_reporting_eur.sql
 ```
 
 ### 4. Validare
 
-Rulați testele OLTP relevante, apoi `tests/14_data_warehouse_validation.sql` și `tests/15_end_to_end_workflow.sql`.
+Rulați testele OLTP relevante, apoi `tests/14_data_warehouse_validation.sql`, `tests/15_end_to_end_workflow.sql`, `tests/16_currency_conversion.sql` și `tests/17_currency_dw_validation.sql`.
 
 ## Extensii viitoare
 
 - dimensiuni cu istoric SCD 2;
-- cursuri valutare și valută standard de raportare;
+- import automat al cursurilor valutare de la un furnizor oficial;
 - SQL Server Change Tracking sau CDC;
 - tabel de fapte pentru tranzacțiile de numerar;
 - orchestrare ETL și CI/CD;

@@ -204,6 +204,34 @@ WHERE NOT EXISTS
 
 
 /* ============================================================
+   PARTEA 5 - ÎNCARCĂ DimCurrency
+   ============================================================ */
+
+MERGE dw.DimCurrency AS target
+USING BrokerageDB.core.Currency AS source
+    ON source.CurrencyCode = target.CurrencyCode
+WHEN MATCHED THEN
+    UPDATE SET
+        CurrencyName = source.CurrencyName,
+        MinorUnit = source.MinorUnit,
+        IsActive = source.IsActive,
+        IsReportingCurrency = source.IsReportingCurrency,
+        SourceUpdatedAt = source.UpdatedAt,
+        DWUpdatedAt = SYSUTCDATETIME()
+WHEN NOT MATCHED THEN
+    INSERT
+    (
+        CurrencyCode, CurrencyName, MinorUnit, IsActive,
+        IsReportingCurrency, SourceUpdatedAt
+    )
+    VALUES
+    (
+        source.CurrencyCode, source.CurrencyName, source.MinorUnit,
+        source.IsActive, source.IsReportingCurrency, source.UpdatedAt
+    );
+
+
+/* ============================================================
    PARTEA 3 - ÎNCARCĂ DimAccount
    ============================================================ */
 
@@ -356,7 +384,12 @@ FROM dw.DimAccount
 UNION ALL
 
 SELECT 'DimInstrument', COUNT(*)
-FROM dw.DimInstrument;
+FROM dw.DimInstrument
+
+UNION ALL
+
+SELECT 'DimCurrency', COUNT(*)
+FROM dw.DimCurrency;
 
 
 

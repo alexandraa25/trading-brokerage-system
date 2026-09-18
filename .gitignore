@@ -9,8 +9,8 @@ bin/
 obj/
 
 # Fișiere locale și cache Power BI
-*.pbit
-*.pbix
+#*.pbit
+#*.pbix
 
 # Python
 __pycache__/
