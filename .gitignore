@@ -1,0 +1,30 @@
+# Fișiere locale SQL Server
+*.mdf
+*.ndf
+*.ldf
+
+# Visual Studio / SSMS
+.vs/
+bin/
+obj/
+
+# Fișiere locale și cache Power BI
+*.pbit
+*.pbix
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Sistem de operare
+.DS_Store
+Thumbs.db
+
+# Jurnale
+*.log
+
+# Fișiere temporare
+*.tmp
+*.bak
