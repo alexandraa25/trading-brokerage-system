@@ -8,6 +8,9 @@
 bin/
 obj/
 
+# Rezultate locale ale compilărilor și verificărilor
+artifacts/
+
 # Fișiere locale și cache Power BI
 #*.pbit
 #*.pbix
