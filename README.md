@@ -133,11 +133,20 @@ DimDate ───────────── FactTrade ───────�
                      DimCurrency
 
 DimDate ─────── FactExchangeRate ─────── DimCurrency
+
+DimDate ───── FactCashTransaction ───── DimCustomer / DimAccount / DimCurrency
 ```
 
 Dimensiunile folosesc chei surogat. Granularitatea `FactTrade` este un rând pentru fiecare execuție. Măsurile principale păstrează atât valoarea și comisionul în valuta originală, cât și valorile convertite în EUR. `FactExchangeRate` conține cursurile istorice zilnice.
 
-Testul warehouse verifică populația dimensiunilor, reconcilierea sursă-fact, duplicatele, cheile orfane, măsurile și cheile de dată.
+`FactCashTransaction` păstrează fiecare depunere, retragere, mișcare de
+decontare, comision și conversie valutară. Fiecare rând are suma în moneda
+originală, cursul istoric către EUR, sursa cursului și suma raportată în EUR.
+Pentru o conversie valutară sunt folosite cursurile salvate odată cu acea
+conversie, astfel încât raportarea istorică rămâne stabilă.
+
+Testele warehouse verifică populația dimensiunilor, reconcilierea sursă-fact,
+duplicatele, cheile orfane, măsurile și cheile de dată.
 
 ## Power BI
 
@@ -169,6 +178,7 @@ Testele de concurență necesită două sesiuni SQL Server separate.
 trading-brokerage-system/
 ├── database/   # OLTP, proceduri, triggere, vizualizări și indecși
 ├── automation/ # importul și programarea cursurilor oficiale BCE
+├── api/        # API ASP.NET Core, autentificare JWT și endpointuri client
 ├── etl/        # staging și încărcări incrementale
 ├── warehouse/  # schema stea și încărcările analitice
 ├── tests/      # scenarii și validări automate
@@ -210,7 +220,7 @@ Sarcina Windows zilnică se instalează astfel:
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Install-DailyEcbRateTask.ps1
 ```
 
-Sarcina `TradingBrokerage-ECB-Daily-Rates` rulează la 17:15, ora Bucureștiului, reîncearcă în caz de eroare și pornește la prima ocazie dacă ora programată a fost ratată. Calculatorul și SQL Server trebuie să fie pornite, iar utilizatorul Windows trebuie să fie autentificat. Importurile sunt înregistrate în `audit.ExchangeRateImportLog`.
+Sarcina `TradingBrokerage-Daily-Data-Pipeline` rulează la 17:15, ora Bucureștiului, reîncearcă în caz de eroare și pornește la prima ocazie dacă ora programată a fost ratată. Ea importă cursurile BCE, actualizează staging-ul și încarcă depozitul de date. Calculatorul și SQL Server trebuie să fie pornite, iar utilizatorul Windows trebuie să fie autentificat. Importurile sunt înregistrate în `audit.ExchangeRateImportLog`, iar rulările fluxului în `automation/logs/`.
 
 BCE nu publică un curs nou în weekend sau în zilele sale nelucrătoare. În acest caz, tranzacția folosește ultimul curs oficial disponibil și salvează atât data reală a cursului, cât și sursa `ECB_REFERENCE`.
 
@@ -239,18 +249,33 @@ warehouse/04_load_dimensions.sql
 warehouse/05_load_fact_trade.sql
 warehouse/06_create_analytics_indexes.sql
 warehouse/07_currency_reporting_eur.sql
+warehouse/08_create_fact_cash_transaction.sql
+warehouse/09_load_fact_cash_transaction.sql
+warehouse/10_create_fact_portfolio_daily_snapshot.sql
+warehouse/11_load_fact_portfolio_daily_snapshot.sql
+warehouse/12_create_fact_order_lifecycle.sql
+warehouse/13_load_fact_order_lifecycle.sql
+warehouse/14_create_powerbi_views.sql
+warehouse/15_create_fact_kyc.sql
+warehouse/16_load_fact_kyc.sql
 ```
 
 ### 4. Validare
 
-Rulați testele OLTP relevante, apoi `tests/14_data_warehouse_validation.sql`, `tests/15_end_to_end_workflow.sql`, `tests/16_currency_conversion.sql` și `tests/17_currency_dw_validation.sql`.
+Rulați testele OLTP relevante, apoi `tests/14_data_warehouse_validation.sql`,
+`tests/15_end_to_end_workflow.sql`, `tests/16_currency_conversion.sql`,
+`tests/17_currency_dw_validation.sql` și
+`tests/19_cash_transaction_dw_validation.sql`,
+`tests/20_portfolio_snapshot_dw_validation.sql` și
+`tests/21_order_lifecycle_dw_validation.sql`,
+`tests/22_kyc_dw_validation.sql`.
 
 ## Extensii viitoare
 
 - dimensiuni cu istoric SCD 2;
 - import automat al cursurilor valutare de la un furnizor oficial;
 - SQL Server Change Tracking sau CDC;
-- tabel de fapte pentru tranzacțiile de numerar;
+- fapt pentru ciclul de viață al ordinelor, inclusiv timpul până la execuție;
 - orchestrare ETL și CI/CD;
 - API ASP.NET Core, analiză Python și publicare în Azure.
 

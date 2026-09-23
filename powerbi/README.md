@@ -55,3 +55,20 @@ Directorul conține documentația și capturile raportului. Fișierul editabil `
 - venituri din comisioane și excepții operaționale.
 
 Modelul Power BI consumă datele din `BrokerageDW`, evitând interogarea directă a tabelelor operaționale.
+
+## Extensii pentru raportare
+
+Importă din schema `dw`: `vwPowerBiCashFlow`,
+`vwPowerBiPortfolioEvolution` și `vwPowerBiOrderLifecycle`.
+
+```DAX
+Flux net EUR = SUM ( vwPowerBiCashFlow[SumaEur] )
+
+Valoare portofoliu EUR = SUM ( vwPowerBiPortfolioEvolution[ValoareTotalaEur] )
+
+Timp mediu soluționare (minute) =
+AVERAGE ( vwPowerBiOrderLifecycle[MinutePanaLaSolutionare] )
+```
+
+Folosește un grafic de evoluție pentru valoarea portofoliului, un grafic cu
+fluxul net după tipul operațiunii și distribuția ordinelor după stare.

@@ -1,0 +1,160 @@
+.deposit-card {
+  display: grid;
+  grid-template-columns: minmax(230px, .8fr) 2fr;
+  gap: 28px;
+  padding: 26px;
+  margin-bottom: 22px;
+  background: linear-gradient(120deg, #09284b, #076f7c);
+  border-radius: 18px;
+  color: #fff;
+  box-shadow: 0 14px 30px #0d486132
+}
+
+.deposit-card p,
+.account-modal p {
+  margin: 0 0 8px;
+  color: #a5f0e6;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.4px
+}
+
+.deposit-card h2,
+.account-modal h2 {
+  margin: 0 0 8px
+}
+
+.deposit-card>div>span {
+  color: #d0edf0;
+  line-height: 1.45
+}
+
+.new-account {
+  margin-top: 16px;
+  padding: 9px 11px;
+  border: 1px solid #a5f0e688;
+  background: #ffffff15;
+  color: #e4fffc;
+  font-size: 13px
+}
+
+.deposit-card form {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+  margin: 0;
+  align-content: end
+}
+
+.deposit-card label,
+.account-modal label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700
+}
+
+.deposit-card label {
+  color: #dff8fa
+}
+
+.deposit-card .description {
+  grid-column: span 2
+}
+
+.deposit-card input,
+.deposit-card select,
+.account-modal select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #ffffff44;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #18374e;
+  font-size: 15px
+}
+
+.deposit-card form>button {
+  grid-column: span 2;
+  justify-self: end;
+  background: #a5f0e6;
+  color: #075568;
+  padding: 11px 15px
+}
+
+.deposit-card button:disabled {
+  background: #ffffff55;
+  color: #d8edf0;
+  cursor: not-allowed
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #09284b8c;
+  backdrop-filter: blur(3px)
+}
+
+.account-modal {
+  display: grid;
+  gap: 16px;
+  width: min(440px, 100%);
+  padding: 28px;
+  border-radius: 17px;
+  background: #fff;
+  color: #1c364b;
+  box-shadow: 0 24px 60px #071a2b66
+}
+
+.account-modal p {
+  color: #087c8c
+}
+
+.account-modal>span {
+  color: #637083;
+  line-height: 1.45
+}
+
+.account-modal label {
+  color: #526a7c
+}
+
+.account-modal select {
+  border-color: #ccd6e0
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px
+}
+
+.modal-actions .secondary {
+  background: #fff;
+  color: #254254;
+  border: 1px solid #cdd9e1
+}
+
+@media(max-width:760px) {
+  .deposit-card {
+    grid-template-columns: 1fr
+  }
+
+  .deposit-card form {
+    grid-template-columns: 1fr
+  }
+
+  .deposit-card .description,
+  .deposit-card form>button {
+    grid-column: span 1
+  }
+
+  .deposit-card form>button {
+    justify-self: stretch
+  }
+}

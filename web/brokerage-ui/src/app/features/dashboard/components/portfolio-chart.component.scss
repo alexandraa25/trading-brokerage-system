@@ -1,0 +1,175 @@
+.card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 26px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 26px #14213d12
+}
+
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start
+}
+
+.chart-head p {
+  margin: 0;
+  color: #0b6b7a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px
+}
+
+.chart-head h2 {
+  margin: 5px 0 6px
+}
+
+.chart-head>div>span {
+  color: #637083
+}
+
+.current {
+  text-align: right;
+  display: grid;
+  gap: 5px
+}
+
+.current strong {
+  color: #0b6b7a;
+  font-size: 20px
+}
+
+.current small {
+  font-weight: 700
+}
+
+.good {
+  color: #16803c
+}
+
+.bad {
+  color: #b42318
+}
+
+.periods {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 24px 0 16px
+}
+
+.periods button {
+  padding: 9px 13px;
+  background: #edf2f5;
+  color: #526a7c
+}
+
+.periods button.active {
+  background: #0b7f87;
+  color: #fff
+}
+
+.custom {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: #f4f8fa;
+  border-radius: 12px
+}
+
+.custom label {
+  display: grid;
+  gap: 5px;
+  color: #526a7c;
+  font-size: 12px;
+  font-weight: 700
+}
+
+.custom input {
+  padding: 9px;
+  border: 1px solid #ccd6e0;
+  border-radius: 7px
+}
+
+.custom button {
+  padding: 10px 13px
+}
+
+.custom button:disabled {
+  background: #cfdbe1;
+  cursor: not-allowed
+}
+
+.chart-wrap {
+  height: 270px;
+  padding: 8px 0 0;
+  border-bottom: 1px solid #dce6eb
+}
+
+.chart-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible
+}
+
+.line {
+  fill: none;
+  stroke: #087c86;
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round
+}
+
+.area {
+  fill: url(#area)
+}
+
+circle {
+  fill: #fff;
+  stroke: #087c86;
+  stroke-width: 3
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  color: #718295;
+  font-size: 12px;
+  margin-top: 8px
+}
+
+.source {
+  display: block;
+  margin-top: 14px;
+  color: #718295;
+  font-size: 12px
+}
+
+.empty {
+  display: grid;
+  gap: 7px;
+  padding: 44px 0;
+  color: #637083
+}
+
+@media(max-width:650px) {
+  .chart-head {
+    flex-direction: column
+  }
+
+  .current {
+    text-align: left
+  }
+
+  .custom {
+    align-items: stretch;
+    flex-direction: column
+  }
+
+  .custom button {
+    width: 100%
+  }
+}

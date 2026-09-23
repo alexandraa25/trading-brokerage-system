@@ -1,0 +1,145 @@
+.notification-area {
+  position: relative
+}
+
+.bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: #fff;
+  color: #1e4e66;
+  border: 1px solid #cdd9e1;
+  border-radius: 12px;
+  font-size: 25px
+}
+
+.bell b {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  padding: 0 3px;
+  background: #d64545;
+  color: #fff;
+  border-radius: 12px;
+  font-size: 10px
+}
+
+.panel {
+  position: absolute;
+  right: 0;
+  top: 54px;
+  width: min(400px, calc(100vw - 40px));
+  z-index: 10;
+  background: #fff;
+  border: 1px solid #dde8ee;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px #1736512b;
+  overflow: hidden
+}
+
+.panel header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 18px 18px 14px;
+  margin: 0;
+  border-bottom: 1px solid #edf2f5
+}
+
+.panel p {
+  margin: 0 0 4px;
+  color: #0b7f87;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px
+}
+
+.panel h2 {
+  margin: 0;
+  font-size: 20px
+}
+
+.read-all {
+  padding: 8px 10px;
+  background: #e8f6f5;
+  color: #08736f;
+  font-size: 12px
+}
+
+.items {
+  max-height: 420px;
+  overflow: auto
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 31px 1fr;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 18px;
+  background: #fff;
+  color: #213d50;
+  text-align: left;
+  border-radius: 0;
+  border-bottom: 1px solid #edf2f5
+}
+
+.item:hover {
+  background: #f7fbfc
+}
+
+.item.unread {
+  background: #edfafa
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  background: #d9f2ef;
+  color: #08736f;
+  font-weight: 800
+}
+
+.item span:last-child {
+  display: grid;
+  gap: 4px
+}
+
+.item small {
+  color: #607788;
+  line-height: 1.35
+}
+
+.item time {
+  color: #8a9aa6;
+  font-size: 11px
+}
+
+.empty {
+  display: grid;
+  gap: 7px;
+  padding: 28px 18px;
+  color: #637083
+}
+
+@media(max-width:650px) {
+  .panel {
+    right: -48px
+  }
+
+  .bell {
+    width: 40px;
+    height: 40px
+  }
+}

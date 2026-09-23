@@ -1,0 +1,24 @@
+@Brokerage_HostAddress = http://localhost:5018
+
+GET {{Brokerage_HostAddress}}/api/health/database
+Accept: application/json
+
+###
+
+POST {{Brokerage_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "customer.demo@brokerage.local",
+  "password": "DemoCustomer!2026"
+}
+
+###
+
+GET {{Brokerage_HostAddress}}/api/instruments
+Authorization: Bearer {{token}}
+
+###
+
+GET {{Brokerage_HostAddress}}/api/orders/1/executions
+Authorization: Bearer {{token}}

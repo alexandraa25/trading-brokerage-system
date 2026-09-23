@@ -1,0 +1,115 @@
+.heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start
+}
+
+.heading p {
+  margin: 0 0 8px;
+  color: #147a9b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.4px
+}
+
+.heading h2 {
+  margin: 0 0 8px
+}
+
+.heading span {
+  color: #637083
+}
+
+.heading strong {
+  background: #e5f5f4;
+  color: #08736f;
+  border-radius: 20px;
+  padding: 9px 12px;
+  white-space: nowrap
+}
+
+.filters {
+  margin: 22px 0
+}
+
+.filters select {
+  padding: 11px 13px;
+  border: 1px solid #ccd6e0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 15px
+}
+
+.table-wrap {
+  overflow: auto
+}
+
+table {
+  min-width: 700px
+}
+
+.type {
+  display: inline-block;
+  border-radius: 16px;
+  padding: 5px 9px;
+  background: #eaf1f5;
+  color: #526a7c;
+  font-size: 12px;
+  font-weight: 700
+}
+
+.type.deposit {
+  background: #e8f6ef;
+  color: #176c3a
+}
+
+.type.debit {
+  background: #fff0e9;
+  color: #b54708
+}
+
+.positive {
+  color: #16803c
+}
+
+.negative {
+  color: #b42318
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  color: #637083;
+  font-size: 14px
+}
+
+.pagination button {
+  padding: 9px 12px
+}
+
+.pagination button:disabled {
+  background: #d6dfe5;
+  cursor: not-allowed
+}
+
+.empty {
+  display: grid;
+  gap: 7px;
+  padding: 34px 0;
+  color: #637083
+}
+
+@media(max-width:650px) {
+  .heading {
+    align-items: stretch;
+    flex-direction: column
+  }
+
+  .pagination {
+    justify-content: center
+  }
+}

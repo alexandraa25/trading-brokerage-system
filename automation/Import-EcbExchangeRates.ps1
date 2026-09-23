@@ -240,6 +240,14 @@ WHERE TradeCurrency = 'EUR';
 
         $transaction.Commit()
 
+        # După ce cursurile BCE sunt actualizate, salvează valoarea zilnică
+        # a fiecărui portofoliu pentru graficul istoric în EUR.
+        $snapshotCommand = New-SqlCommand @'
+EXEC trading.usp_RefreshSimulatedMarketQuotes;
+EXEC reporting.usp_CapturePortfolioDailySnapshot;
+'@
+        [void]$snapshotCommand.ExecuteNonQuery()
+
         $finishCommand = New-SqlCommand @'
 UPDATE audit.ExchangeRateImportLog
 SET CompletedAt = SYSUTCDATETIME(),

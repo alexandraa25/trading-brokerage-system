@@ -1,0 +1,61 @@
+<section class="login-card">
+  <div class="logo">B</div>
+  <p class="eyebrow">BROKERAGE PLATFORM</p>
+  <h1>{{ registering() ? 'Creează un cont' : 'Bun venit înapoi' }}</h1>
+  <p class="intro">
+    {{
+      registering()
+        ? 'Contul EUR și dosarul KYC sunt create automat.'
+        : 'Administrează investițiile tale într-un singur loc.'
+    }}
+  </p>
+  @if (!registering()) {
+    <form (ngSubmit)="login()">
+      <label>Email<input name="email" [(ngModel)]="email" type="email" required /></label
+      ><label
+        >Parolă<input name="password" [(ngModel)]="password" type="password" required
+      /></label>
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+      @if (success()) {
+        <p class="success">{{ success() }}</p>
+      }
+      <button [disabled]="loading()">{{ loading() ? 'Se autentifică...' : 'Autentificare' }}</button
+      ><button type="button" class="link" (click)="registering.set(true)">
+        Creează cont client
+      </button>
+    </form>
+  } @else {
+    <form (ngSubmit)="register()">
+      <label>Prenume<input name="firstName" [(ngModel)]="registration.firstName" required /></label
+      ><label>Nume<input name="lastName" [(ngModel)]="registration.lastName" required /></label
+      ><label
+        >Email<input
+          name="registerEmail"
+          [(ngModel)]="registration.email"
+          type="email"
+          required /></label
+      ><label
+        >Parolă<input
+          name="registerPassword"
+          [(ngModel)]="registration.password"
+          type="password"
+          minlength="8"
+          required /></label
+      ><label
+        >Document KYC<select name="documentType" [(ngModel)]="registration.documentType">
+          <option>Carte de identitate</option>
+          <option>Pașaport</option>
+        </select></label
+      >
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+      <button [disabled]="loading()">{{ loading() ? 'Se creează...' : 'Creează contul' }}</button
+      ><button type="button" class="link" (click)="registering.set(false)">
+        Înapoi la autentificare
+      </button>
+    </form>
+  }
+</section>

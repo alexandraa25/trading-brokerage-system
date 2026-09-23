@@ -1,0 +1,94 @@
+.withdrawal-card {
+  display: grid;
+  grid-template-columns: minmax(230px, .8fr) 2fr;
+  gap: 28px;
+  padding: 26px;
+  margin-bottom: 22px;
+  background: #fff;
+  border: 1px solid #f0d7cf;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px #6e30130d
+}
+
+.withdrawal-card p {
+  margin: 0 0 8px;
+  color: #b54708;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.4px
+}
+
+.withdrawal-card h2 {
+  margin: 0 0 8px
+}
+
+.withdrawal-card>div>span {
+  color: #6b7280;
+  line-height: 1.45
+}
+
+.withdrawal-card form {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+  margin: 0;
+  align-content: end
+}
+
+.withdrawal-card label {
+  gap: 6px;
+  font-size: 13px;
+  color: #664234
+}
+
+.withdrawal-card .description {
+  grid-column: span 2
+}
+
+.withdrawal-card input,
+.withdrawal-card select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #ead3ca;
+  border-radius: 9px;
+  background: #fffdfc;
+  color: #3c2c26;
+  font-size: 15px
+}
+
+.withdrawal-card small {
+  grid-column: span 2;
+  color: #81543f
+}
+
+.withdrawal-card button {
+  grid-column: span 2;
+  justify-self: end;
+  background: #b54708
+}
+
+.withdrawal-card button:disabled {
+  background: #e5c9bb;
+  cursor: not-allowed
+}
+
+@media(max-width:760px) {
+  .withdrawal-card {
+    grid-template-columns: 1fr
+  }
+
+  .withdrawal-card form {
+    grid-template-columns: 1fr
+  }
+
+  .withdrawal-card .description,
+  .withdrawal-card small,
+  .withdrawal-card button {
+    grid-column: span 1
+  }
+
+  .withdrawal-card button {
+    justify-self: stretch
+  }
+}

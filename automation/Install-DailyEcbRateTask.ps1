@@ -2,18 +2,18 @@
 param(
     [string]$ServerInstance = 'localhost',
     [string]$Database = 'BrokerageDB',
-    [string]$TaskName = 'TradingBrokerage-ECB-Daily-Rates',
+    [string]$TaskName = 'TradingBrokerage-Daily-Data-Pipeline',
     [string]$DailyTime = '17:15'
 )
 
 $ErrorActionPreference = 'Stop'
-$importScript = Join-Path $PSScriptRoot 'Import-EcbExchangeRates.ps1'
+$importScript = Join-Path $PSScriptRoot 'Run-DailyDataPipeline.ps1'
 
 if (-not (Test-Path -LiteralPath $importScript)) {
     throw "Nu a fost găsit importatorul BCE: $importScript"
 }
 
-$arguments = '-NoProfile -ExecutionPolicy Bypass -File "{0}" -ServerInstance "{1}" -Database "{2}" -DaysBack 10' -f `
+$arguments = '-NoProfile -ExecutionPolicy Bypass -File "{0}" -ServerInstance "{1}" -OperationalDatabase "{2}" -WarehouseDatabase "BrokerageDW" -DaysBack 10' -f `
     $importScript, $ServerInstance, $Database
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $arguments
 $trigger = New-ScheduledTaskTrigger -Daily -At $DailyTime
@@ -30,7 +30,7 @@ Register-ScheduledTask `
     -Action $action `
     -Trigger $trigger `
     -Settings $settings `
-    -Description 'Importă zilnic cursurile oficiale BCE în BrokerageDB.' `
+    -Description 'Importă cursurile BCE, actualizează staging-ul și depozitul de date.' `
     -Force | Out-Null
 
 Write-Output "Sarcina '$TaskName' a fost configurată zilnic la ora $DailyTime."

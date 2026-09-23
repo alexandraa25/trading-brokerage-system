@@ -1,0 +1,61 @@
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 26px;
+  margin-bottom: 22px;
+  box-shadow: 0 8px 26px #14213d12
+}
+
+.title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center
+}
+
+.title span {
+  background: #e6f5f4;
+  color: #08716f;
+  padding: 7px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 13px
+}
+
+.eyebrow {
+  color: #0b6b7a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  margin: 0
+}
+
+h2 {
+  margin: 5px 0 18px
+}
+
+.table-wrap {
+  overflow: auto
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left
+}
+
+th,
+td {
+  padding: 14px;
+  border-bottom: 1px solid #e5eaf0
+}
+
+th {
+  color: #637083;
+  font-size: 12px;
+  text-transform: uppercase
+}
+
+small,
+.empty {
+  color: #637083
+}

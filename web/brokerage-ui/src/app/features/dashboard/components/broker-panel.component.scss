@@ -1,0 +1,115 @@
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 26px;
+  box-shadow: 0 8px 26px #14213d12
+}
+
+.card>p {
+  margin: 0;
+  color: #0b6b7a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px
+}
+
+.card h2 {
+  margin: 5px 0 18px
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px
+}
+
+.filters input,
+.filters select {
+  padding: 10px;
+  border: 1px solid #cedbe2;
+  border-radius: 7px;
+  background: #fff
+}
+
+.filters label {
+  display: grid;
+  gap: 4px;
+  color: #5b6b7c;
+  font-size: 11px;
+  font-weight: 800
+}
+
+.filters label input {
+  min-height: 40px;
+  box-sizing: border-box
+}
+
+.count {
+  color: #637083;
+  font-size: 13px
+}
+
+.orders {
+  display: grid;
+  gap: 12px
+}
+
+.orders article {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e2ebf0;
+  border-radius: 10px;
+  padding: 16px
+}
+
+.orders b,
+.orders span {
+  display: block
+}
+
+.orders span {
+  margin-top: 5px;
+  color: #637083;
+  font-size: 13px
+}
+
+button {
+  background: #0b6b7a;
+  color: #fff;
+  border: 0;
+  border-radius: 7px;
+  padding: 9px 12px;
+  font-weight: 700;
+  cursor: pointer
+}
+
+.details {
+  background: #edf5f6;
+  color: #08736f;
+  border: 1px solid #bee2e3
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  color: #637083;
+  font-size: 14px
+}
+
+.pagination button:disabled {
+  background: #d6dfe5;
+  cursor: not-allowed
+}
+
+@media(max-width:650px) {
+  .orders article {
+    align-items: flex-start;
+    flex-direction: column
+  }
+}

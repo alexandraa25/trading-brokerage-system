@@ -1,0 +1,59 @@
+.filter-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 22px;
+  margin-bottom: 22px;
+  border: 1px solid #d9e8ee;
+  border-radius: 15px;
+  background: #f7fbfc
+}
+
+.filter-card p {
+  margin: 0 0 6px;
+  color: #0b7f87;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px
+}
+
+.filter-card h2 {
+  margin: 0 0 6px;
+  font-size: 20px
+}
+
+.filter-card span {
+  color: #637083;
+  font-size: 14px
+}
+
+.filter-card label {
+  display: grid;
+  gap: 5px;
+  min-width: 150px;
+  color: #526a7c;
+  font-size: 12px;
+  font-weight: 700
+}
+
+.filter-card select {
+  padding: 10px 12px;
+  border: 1px solid #ccdbe4;
+  border-radius: 8px;
+  background: #fff;
+  color: #243d50;
+  font: inherit;
+  font-size: 15px
+}
+
+@media(max-width:650px) {
+  .filter-card {
+    align-items: stretch;
+    flex-direction: column
+  }
+
+  .filter-card label {
+    min-width: 0
+  }
+}
