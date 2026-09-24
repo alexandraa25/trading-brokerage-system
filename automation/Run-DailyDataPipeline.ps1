@@ -38,7 +38,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Importul BCE a eșuat.' }
     }
 
-    Invoke-SqlFile -Database $OperationalDatabase -RelativePath 'etl/06_refresh_staging_from_oltp.sql'
+    Invoke-SqlFile -Database $OperationalDatabase -RelativePath 'etl/07_refresh_staging_from_oltp.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/04_load_dimensions.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/05_load_fact_trade.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/09_load_fact_cash_transaction.sql'

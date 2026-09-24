@@ -36,6 +36,7 @@ small {
   background: #e3f6f2;
   color: #08736f
 }
+.heading-actions{display:flex;align-items:center;gap:10px}.heading-actions button{white-space:nowrap}
 
 .filters {
   display: flex;
@@ -126,4 +127,5 @@ th {
   .filters {
     flex-direction: column
   }
+  .heading-actions{align-items:stretch;flex-direction:column}.heading-actions button{width:100%}
 }

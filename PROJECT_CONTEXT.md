@@ -180,7 +180,7 @@ sunt păstrate zilnic în baza de date.
   `tests/21_order_lifecycle_dw_validation.sql`.
 - Vizualizările `dw.vwPowerBiCashFlow`, `dw.vwPowerBiPortfolioEvolution` și
   `dw.vwPowerBiOrderLifecycle` pregătesc datele pentru Power BI prin
-  `warehouse/14_create_powerbi_views.sql`.
+  `warehouse/views/01_create_powerbi_views.sql`.
 - Fluxul zilnic este automatizat prin
   `automation/Run-DailyDataPipeline.ps1`: import BCE, cotații și snapshoturi,
   refresh staging, dimensiuni și toate faptele DW. Sarcina Windows
@@ -202,11 +202,79 @@ sunt păstrate zilnic în baza de date.
 - Componente funcționale: `web/brokerage-ui/src/app/features/`.
 - Nu se pun adrese API sau tipuri duplicate în componente când pot fi în
   serviciu sau modele comune.
+- Designul interfeței folosește acum un sistem vizual unificat în `app.scss`:
+  antet comun pentru roluri, taburi, carduri, formulare, tabele, stări și
+  comportament responsive. Pagina de autentificare folosește aceeași paletă și
+  aceleași forme vizuale în `features/login/login.component.scss`.
+- În panoul administratorului, crearea unui client sau angajat se face acum
+  prin buton și fereastră modală. Taburile Clienți, KYC, Conturi, Utilizatori
+  și Jurnal audit folosesc filtre grupate cu etichete și resetare, iar Conturi
+  și Utilizatori au paginare.
+- Butonul „Detalii” din lista administratorului pentru clienți deschide o
+  fereastră cu datele clientului, conturile de tranzacționare, soldurile de
+  numerar și pozițiile. Datele provin din `GET /api/admin/customers/{id}/overview`.
+- Administratorul are tabul „Rapoarte”, alimentat prin
+  `GET /api/admin/analytics`. Endpointul citește agregări read-only din
+  `BrokerageDW`, iar interfața afișează valoarea portofoliilor, fluxul net de
+  numerar, comisioane, ordine, KYC și evoluția portofoliilor pe 14 zile.
+- Graficul din „Rapoarte” este dinamic: administratorul selectează 7, 30, 90
+  sau 365 de zile, iar API-ul reîncarcă punctele din `BrokerageDW`. Graficul
+  este o linie SVG cu puncte și tooltip care arată data și valoarea în EUR.
 
+## Organizare Angular (24.09.2026)
+
+- Componentele clientului și brokerului nu mai sunt împreună în `dashboard/components`.
+  Ele sunt separate în `features/dashboard/portfolio`, `cash`, `trading`, `broker` și `profile`.
+- Componenta reutilizabilă de notificări este în `shared/components`.
+- Tipurile locale ale componentei rădăcină sunt în `core/models/dashboard.models.ts`.
+- Convențiile noii structuri sunt documentate în `web/brokerage-ui/src/app/README.md`.
+## Fațade dashboard Angular (24.09.2026)
+
+- `core/services/customer-dashboard.service.ts` încarcă datele de bază ale clientului într-o singură operație: conturi, instrumente, ordine, profil, cursuri, istoric, valori pe monedă și notificări.
+- `core/services/broker-dashboard.service.ts` centralizează lista de ordine, execuții, istoric, cursuri și notificări broker.
+- `core/services/admin-dashboard.service.ts` centralizează încărcarea datelor KYC, audit, clienți, conturi, utilizatori, indicatori și rapoarte administrator.
+- `app.ts` coordonează ecranul și semnalele de stare, delegând încărcările de date către aceste servicii.
+## Modele TypeScript explicite (24.09.2026)
+
+- `web/brokerage-ui/src/app/core/models/admin.models.ts` conține modelele pentru cererea de ordin, detaliile clientului administratorului și înregistrările de audit.
+- `AdminCustomerOverview` înlocuiește `any` pentru fereastra cu conturi, solduri și poziții ale clientului.
+- `KycAuditEntry` este folosit de componenta Jurnal audit, iar `CreateOrderRequest` este folosit de formularul de ordin și de componenta rădăcină.
+- `ApiService` returnează acum `AdminCustomerOverview` și `AccessAuditEntry` pentru endpointurile respective.
+## Tipuri KYC și Broker (24.09.2026)
+
+- Modelele `KycRecord`, `BrokerExecution` și `BrokerOrderDetails` sunt în `web/brokerage-ui/src/app/core/models/admin.models.ts`.
+- Endpointurile API și componentele KYC/Broker folosesc aceste modele, fără `any` pentru datele de răspuns.
+- `$any(...)` rămas în șabloane este numai conversie pentru `EventTarget` din DOM, nu un model de date nestructurat.
+## Integrare Power BI în administrator (24.09.2026)
+
+- Tabul `Power BI` este disponibil exclusiv în panoul administratorului și este implementat în `web/brokerage-ui/src/app/features/admin/admin-powerbi.component.ts`.
+- Pagina listează cele șase rapoarte propuse și deschide raportul publicat într-o filă nouă.
+- URL-ul de embed se configurează local în `web/brokerage-ui/src/app/core/config/powerbi.config.ts`; tokenurile și parolele nu se salvează în cod.
+## Documentație
+
+- `README.md` este ghidul global actualizat: funcționalități, arhitectură,
+  pornire locală, automatizare, Power BI și testare.
+- Ghidurile detaliate sunt păstrate lângă componenta descrisă, în
+  `database/README.md`, `etl/README.md`, `warehouse/README.md`,
+  `automation/README.md` și `powerbi/README.md`.
+
+## Testare automată (24.09.2026)
+
+- Testele Angular sunt în `web/brokerage-ui/src/app/features/admin/*.spec.ts` și se rulează din `web/brokerage-ui` cu `npm run test:ci`.
+- Sunt acoperite filtrele pentru Clienți și Utilizatori, fereastra modală pentru client nou, precum și punctele și selectorul de perioadă ale graficului administrativ.
+- Validarea `tests/23_admin_analytics_validation.sql` verifică rapoartele administrative și datele aferente din `BrokerageDW`; a trecut cu succes.
+- În timpul testării au fost corectate filtrele administrative: lista se recalculează acum când se schimbă criteriile. Scala graficului folosește minimul și maximul reale ale perioadei, pentru a face vizibile diferențele mici.
+## Teste API automate (24.09.2026)
+
+- Proiectul `api/Brokerage/Brokerage.Api.Tests` conține teste xUnit de integrare.
+- `BrokerageApiFactory` pornește API-ul cu SQLite temporar și date de test pentru Client, Broker și Administrator; `BrokerageDB` nu este folosită sau modificată.
+- Sunt verificate autentificarea, identificarea rolului, accesul interzis între roluri, protecția conturilor altui client, validarea ordinelor, accesul brokerului la execuții și accesul administratorului la KYC/utilizatori.
+- Comanda de rulare este `dotnet test Brokerage.Api.Tests/Brokerage.Api.Tests.csproj`; la 24.09.2026 au trecut 6 din 6 teste.
+- Depunerea, retragerea, conversia, execuția și crearea utilizatorului cu audit necesită o suită SQL Server de test, deoarece apelează proceduri stocate sau jurnale SQL Server. Ele nu se rulează intenționat pe baza principală.
 ## Următorii pași recomandați
 
 1. Actualizarea raportului Power BI existent cu noile vizualizări analitice.
-2. Teste automate pentru API și Angular.
+2. Teste SQL Server de integrare pentru procedurile stocate.
 3. Pregătirea configurării pentru publicare.
 
 ## Regulă de continuitate

@@ -1,284 +1,193 @@
-# Sistem de baze de date pentru tranzacționare și brokeraj
+# Trading Brokerage System
 
-Proiect de portofoliu centrat pe SQL Server, care simulează platforma de back-office a unei firme de brokeraj.
+Aplicație de portofoliu pentru administrarea unei platforme de brokeraj.
+Acoperă fluxul complet de lucru pentru client, broker și administrator, cu
+cursuri BCE, depozit de date și raportare Power BI. EUR este moneda principală
+de raportare.
 
-Proiectul demonstrează proiectare relațională, execuție tranzacțională a ordinelor, controlul concurenței, audit, optimizarea performanței, ETL, modelare dimensională și analiză în Power BI. Scopul este prezentarea unui flux complet, de la baza operațională OLTP până la depozitul de date și raportare.
+## Funcționalități
+
+### Client
+
+- înregistrare, autentificare și stare KYC;
+- conturi de numerar în mai multe monede;
+- depuneri, retrageri și conversii la curs BCE;
+- poziții, instrumente, ordine și istoric;
+- valoare portofoliu, profit/pierdere și evoluție zilnică;
+- notificări persistente.
+
+### Broker
+
+- ordine active cu filtre, paginare și alerte;
+- execuții complete sau parțiale cu validări;
+- respingere cu motiv obligatoriu;
+- istoric, export CSV și notificări broker.
+
+### Administrator
+
+- verificare KYC, clienți, conturi și utilizatori;
+- suspendare/reactivare cu motiv obligatoriu;
+- indicatori operaționali, alerte și jurnale de audit;
+- export CSV pentru date administrative.
 
 ## Arhitectură
 
 ```text
-BrokerageDB (OLTP)
-        │
-        ▼
-Staging și ETL
-        │
-        ▼
-BrokerageDW (depozit de date)
-        │
-        ▼
-Power BI
+Angular → ASP.NET Core API → BrokerageDB → staging → BrokerageDW → Power BI
+                                  ▲
+                                  └──────────── BCE
 ```
 
-`BrokerageDB` conține schemele `core`, `trading`, `audit` și `staging`. `BrokerageDW` păstrează modelul dimensional folosit pentru analiză.
+- `BrokerageDB` este baza operațională.
+- `staging` pregătește datele pentru analiză.
+- `BrokerageDW` este depozitul dimensional folosit de Power BI.
+- Automatizarea zilnică importă cursuri BCE, actualizează staging-ul și
+  încarcă depozitul.
 
 ## Tehnologii
 
-- Microsoft SQL Server, T-SQL și SQL Server Management Studio
-- proceduri stocate, tranzacții, `TRY/CATCH`, `THROW` și `XACT_ABORT`
-- blocări, izolare și controlul concurenței
-- constrângeri, triggere și istoric de audit
-- indecși neclusterizați și planuri de execuție
-- ETL, staging, încărcări complete și incrementale
-- marcaje temporale și jurnalizarea rulărilor ETL
-- modelare dimensională și schemă stea
-- Power BI, DAX, Git și GitHub
-
-## Baza de date OLTP
-
-### Schema `core`
-
-Conține `CustomerType`, `Customer`, `KYC`, `Account` și `CashAccount`. Un client poate avea mai multe conturi de tranzacționare, iar un cont poate avea conturi de numerar în mai multe valute.
-
-### Schema `trading`
-
-Conține `Market`, `Issuer`, `Instrument`, `Order`, `Execution`, `Position`, `Commission` și `CashTransaction`.
-
-`Order` reprezintă intenția clientului, iar `Execution` reprezintă cantitatea executată efectiv. Separarea permite executarea unui ordin în mai multe tranșe.
-
-### Schema `audit`
-
-Conține `OrderStatusHistory`, pentru schimbările de stare ale ordinelor, și `AuditLog`, pentru operațiile asupra clienților, verificărilor KYC, conturilor, ordinelor și execuțiilor.
-
-Integritatea datelor este protejată prin chei primare și externe, constrângeri unice, constrângeri `CHECK`, valori implicite și coloane `IDENTITY`.
-
-## Fluxul de tranzacționare
-
-```text
-Client → KYC aprobat → Cont activ → Depozit
-       → Crearea și validarea ordinului → Pending
-       → Execuție → Poziție + Numerar + Comision + Audit
-```
-
-Ordinele acceptă direcțiile `BUY` și `SELL`, tipurile `MARKET` și `LIMIT`, precum și execuții parțiale sau integrale. Stările posibile sunt `Pending`, `PartiallyExecuted`, `Executed`, `Cancelled` și `Rejected`.
-
-Ordinele se creează prin `trading.usp_CreateOrder`. Procedura validează:
-
-- starea clientului și a contului;
-- aprobarea KYC;
-- existența și starea instrumentului;
-- contul de numerar în valuta instrumentului;
-- numerarul estimat pentru un ordin `BUY LIMIT`;
-- poziția disponibilă pentru un ordin `SELL`.
-
-## Execuția tranzacțională
-
-`trading.usp_ExecuteOrder` verifică din nou eligibilitatea clientului și a contului în interiorul tranzacției. Apoi validează starea ordinului, cantitatea rămasă, prețul limită, numerarul sau poziția disponibilă.
-
-Dacă validările reușesc, procedura creează execuția și comisionul, actualizează poziția și numerarul, scrie tranzacțiile de numerar și schimbă starea ordinului. Toate operațiile sunt atomice:
-
-```sql
-SET XACT_ABORT ON;
-BEGIN TRY
-    BEGIN TRANSACTION;
-    -- operații tranzacționale
-    COMMIT TRANSACTION;
-END TRY
-BEGIN CATCH
-    IF XACT_STATE() <> 0 ROLLBACK TRANSACTION;
-    THROW;
-END CATCH;
-```
-
-## Concurență și execuții parțiale
-
-Execuția folosește `UPDLOCK` și `HOLDLOCK` pentru a proteja ordinul, contul de numerar și poziția. Astfel, două sesiuni nu pot consuma independent aceeași cantitate rămasă sau același sold.
-
-Un ordin de 100 de unități poate fi executat în tranșe de `30 @ 150`, `40 @ 149` și `30 @ 148`. Poziția rezultată folosește prețul mediu ponderat 149.
-
-## Audit
-
-`trading.trg_Order_StatusHistory` înregistrează numai schimbările de stare, de exemplu `Pending → PartiallyExecuted → Executed`.
-
-Triggerele din `trg_Audit_TradingWorkflow.sql` înregistrează operațiile `INSERT`, `UPDATE` și `DELETE`, utilizatorul SQL, momentul schimbării și valorile vechi/noi în format JSON.
-
-## Performanță
-
-Proiectul folosește `SET STATISTICS IO ON`, `SET STATISTICS TIME ON` și planurile de execuție SQL Server. Testele au fost efectuate pe peste 100.000 de ordine.
-
-Pentru interogarea după cont, stare și data creării, un index compus a redus citirile logice de la 1.064 la aproximativ 700 și a permis folosirea unui `Index Seek`. Detaliile sunt în [analiza performanței](docs/performance-analysis.md).
-
-## ETL și staging
-
-Schema `staging` izolează extragerea de sistemul operațional. Încărcarea inițială copiază datele complete, iar încărcările ulterioare folosesc marcaje temporale.
-
-```text
-UltimaÎncărcareReușită < TimpSursă <= MarcajCurent
-```
-
-`Customer`, `Account`, `Market`, `Instrument` și `Order` folosesc actualizare plus inserare. `Execution` și `CashTransaction` sunt entități numai cu adăugare, iar identificatorul sursă previne duplicatele.
-
-`staging.ETLRunLog` păstrează începutul, finalul, starea, numărul de rânduri și eroarea. Marcajul temporal avansează numai după o tranzacție reușită.
-
-## Depozitul de date
-
-`BrokerageDW` folosește o schemă stea:
-
-```text
-                     DimCustomer
-                          │
-DimDate ───────────── FactTrade ───────────── DimInstrument
-                          │
-                      DimAccount
-                          │
-                     DimCurrency
-
-DimDate ─────── FactExchangeRate ─────── DimCurrency
-
-DimDate ───── FactCashTransaction ───── DimCustomer / DimAccount / DimCurrency
-```
-
-Dimensiunile folosesc chei surogat. Granularitatea `FactTrade` este un rând pentru fiecare execuție. Măsurile principale păstrează atât valoarea și comisionul în valuta originală, cât și valorile convertite în EUR. `FactExchangeRate` conține cursurile istorice zilnice.
-
-`FactCashTransaction` păstrează fiecare depunere, retragere, mișcare de
-decontare, comision și conversie valutară. Fiecare rând are suma în moneda
-originală, cursul istoric către EUR, sursa cursului și suma raportată în EUR.
-Pentru o conversie valutară sunt folosite cursurile salvate odată cu acea
-conversie, astfel încât raportarea istorică rămâne stabilă.
-
-Testele warehouse verifică populația dimensiunilor, reconcilierea sursă-fact,
-duplicatele, cheile orfane, măsurile și cheile de dată.
-
-## Power BI
-
-Raportul consumă modelul dimensional și conține:
-
-- **Prezentare executivă**: volum, tranzacții, comisioane și evoluție în timp;
-- **Analiza tranzacționării**: piață, instrument, sens, preț mediu și detalii;
-- **Analiza clienților**: activitate, volum și detaliere client-cont-instrument.
-
-![Prezentare executivă](powerbi/screenshots/executive-overview.png)
-
-![Analiza tranzacționării](powerbi/screenshots/trading-analysis.png)
-
-![Analiza clienților](powerbi/screenshots/customer-analysis.png)
-
-![Modelul de date](powerbi/screenshots/data-model.png)
-
-Fișierul `.pbix` nu este versionat, deoarece `.gitignore` exclude fișierele binare Power BI. Totalurile consolidate folosesc EUR drept valută principală de afișare.
-
-## Testare
-
-Scripturile din `tests/` acoperă datele inițiale, depunerile, ordinele, execuțiile, performanța, revenirea tranzacțiilor, concurența, execuția dublă, execuțiile parțiale, vânzările, constrângerile, auditul, eșecul ETL, depozitul de date și fluxul complet.
-
-Testele de concurență necesită două sesiuni SQL Server separate.
+- SQL Server și T-SQL;
+- ASP.NET Core 10, Entity Framework Core și JWT;
+- Angular 20 și TypeScript;
+- PowerShell, Windows Task Scheduler și Power BI.
 
 ## Structură
 
 ```text
 trading-brokerage-system/
-├── database/   # OLTP, proceduri, triggere, vizualizări și indecși
-├── automation/ # importul și programarea cursurilor oficiale BCE
-├── api/        # API ASP.NET Core, autentificare JWT și endpointuri client
-├── etl/        # staging și încărcări incrementale
-├── warehouse/  # schema stea și încărcările analitice
-├── tests/      # scenarii și validări automate
-├── docs/       # arhitectură și performanță
-└── powerbi/    # documentație și capturi
+├── api/          # API ASP.NET Core
+├── web/          # interfața Angular
+├── database/     # baza operațională BrokerageDB
+├── etl/          # staging și transformări
+├── warehouse/    # depozitul BrokerageDW
+├── automation/   # flux zilnic BCE → staging → DW
+├── tests/        # validări SQL automate
+├── docs/         # arhitectură, operațiuni și ghiduri
+└── powerbi/      # ghid și capturi ale raportului
 ```
 
-## Rularea proiectului
+Ghiduri specifice: [baza operațională](database/README.md),
+[ETL](etl/README.md), [depozitul de date](warehouse/README.md),
+[automatizarea](automation/README.md) și [Power BI](powerbi/README.md).
 
-### 1. Baza OLTP
+## Pornire locală
+
+### Baza de date
+
+Rulează scripturile în ordinea din [database/README.md](database/README.md).
+Pentru date demonstrative extinse poți rula:
 
 ```text
-database/01_create_database_schemas_tables.sql
-database/04_currency_conversion_eur.sql
-database/05_ecb_daily_exchange_rates.sql
-database/02_seed_data.sql
-database/procedures/*.sql
-database/triggers/*.sql
-database/03_seed_diverse_demo_data.sql  (opțional)
-database/views/*.sql
-database/indexes/*.sql
+database/demo/01_seed_diverse_demo_data.sql
 ```
 
-`03_seed_diverse_demo_data.sql` adaugă un set extins, divers și idempotent de date demonstrative.
+### API
 
-`04_currency_conversion_eur.sql` configurează EUR drept valută principală de raportare. `05_ecb_daily_exchange_rates.sql` pregătește jurnalizarea importurilor oficiale BCE și sursa cursului păstrată pe fiecare execuție. Sumele originale nu sunt înlocuite.
-
-### Actualizarea zilnică a cursurilor BCE
-
-Importul inițial complet se execută astfel:
+În `api/Brokerage/Brokerage`:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Import-EcbExchangeRates.ps1 -FullHistory
+dotnet run
 ```
 
-Sarcina Windows zilnică se instalează astfel:
+Swagger: `https://localhost:7103/swagger`.
+
+Cheia JWT se configurează local prin User Secrets sub `Jwt:Key` și nu se
+salvează în Git.
+
+### Interfață
+
+În `web/brokerage-ui`:
+
+```powershell
+npm install
+npm start
+```
+
+Interfața: `http://localhost:4200`.
+
+## Conturi demonstrative
+
+| Rol | Email | Parolă |
+| --- | --- | --- |
+| Client | `customer.demo@brokerage.local` | `DemoCustomer!2026` |
+| Broker | `broker.demo@brokerage.local` | `DemoBroker!2026` |
+| Administrator | `admin.demo@brokerage.local` | `DemoAdmin!2026` |
+
+## Automatizare zilnică
+
+Sarcina Windows `TradingBrokerage-Daily-Data-Pipeline` rulează la 17:15:
+
+```text
+Import BCE → cotații și snapshoturi → staging → BrokerageDW
+```
+
+Instalare sau actualizare:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Install-DailyEcbRateTask.ps1
 ```
 
-Sarcina `TradingBrokerage-Daily-Data-Pipeline` rulează la 17:15, ora Bucureștiului, reîncearcă în caz de eroare și pornește la prima ocazie dacă ora programată a fost ratată. Ea importă cursurile BCE, actualizează staging-ul și încarcă depozitul de date. Calculatorul și SQL Server trebuie să fie pornite, iar utilizatorul Windows trebuie să fie autentificat. Importurile sunt înregistrate în `audit.ExchangeRateImportLog`, iar rulările fluxului în `automation/logs/`.
+Test local fără apel BCE:
 
-BCE nu publică un curs nou în weekend sau în zilele sale nelucrătoare. În acest caz, tranzacția folosește ultimul curs oficial disponibil și salvează atât data reală a cursului, cât și sursa `ECB_REFERENCE`.
-
-### 2. Staging și ETL
-
-```text
-etl/01_create_staging.sql
-etl/02_initial_load.sql
-etl/03_create_etl_control.sql
-etl/04_incremental_dimensions.sql
-etl/04_incremental_load.sql
-etl/05_incremental_append_only.sql
-etl/06_refresh_staging_from_oltp.sql
-etl/07_currency_reporting_eur.sql
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Run-DailyDataPipeline.ps1 -SkipEcbImport
 ```
 
-Folosiți `06_refresh_staging_from_oltp.sql` când doriți să reconstruiți complet zona de staging din baza OLTP curentă.
+Mai multe detalii: [operațiunea zilnică](docs/operations/daily-pipeline.md).
 
-### 3. Depozitul de date
+## Depozit de date și Power BI
+
+`BrokerageDW` include dimensiuni pentru dată, client, cont, instrument și
+monedă, plus fapte pentru execuții, cursuri valutare, numerar, portofolii,
+ordine și KYC.
+
+Importă în Power BI vizualizările:
+
+- `dw.vwPowerBiCashFlow`;
+- `dw.vwPowerBiPortfolioEvolution`;
+- `dw.vwPowerBiOrderLifecycle`.
+
+Pentru Power BI Service este necesar un gateway local și o reîmprospătare după
+17:30.
+
+## Testare
+
+Scripturile SQL din `tests/` verifică fluxurile importante, integritatea,
+conversiile, auditul și depozitul. După o încărcare completă a depozitului,
+rulează:
 
 ```text
-warehouse/01_create_warehouse.sql
-warehouse/02_create_dimensions.sql
-warehouse/03_create_facts.sql
-warehouse/04_load_dimensions.sql
-warehouse/05_load_fact_trade.sql
-warehouse/06_create_analytics_indexes.sql
-warehouse/07_currency_reporting_eur.sql
-warehouse/08_create_fact_cash_transaction.sql
-warehouse/09_load_fact_cash_transaction.sql
-warehouse/10_create_fact_portfolio_daily_snapshot.sql
-warehouse/11_load_fact_portfolio_daily_snapshot.sql
-warehouse/12_create_fact_order_lifecycle.sql
-warehouse/13_load_fact_order_lifecycle.sql
-warehouse/14_create_powerbi_views.sql
-warehouse/15_create_fact_kyc.sql
-warehouse/16_load_fact_kyc.sql
+tests/14_data_warehouse_validation.sql
+tests/17_currency_dw_validation.sql
+tests/19_cash_transaction_dw_validation.sql
+tests/20_portfolio_snapshot_dw_validation.sql
+tests/21_order_lifecycle_dw_validation.sql
+tests/22_kyc_dw_validation.sql
+tests/23_admin_analytics_validation.sql
 ```
 
-### 4. Validare
+Testele automate ale interfeței se rulează în web/brokerage-ui:
 
-Rulați testele OLTP relevante, apoi `tests/14_data_warehouse_validation.sql`,
-`tests/15_end_to_end_workflow.sql`, `tests/16_currency_conversion.sql`,
-`tests/17_currency_dw_validation.sql` și
-`tests/19_cash_transaction_dw_validation.sql`,
-`tests/20_portfolio_snapshot_dw_validation.sql` și
-`tests/21_order_lifecycle_dw_validation.sql`,
-`tests/22_kyc_dw_validation.sql`.
+``powershell
+npm run test:ci
+`` 
 
-## Extensii viitoare
+Comanda folosește Chrome headless și verifică filtrele administrative, ferestrele modale și graficul analitic. Pentru verificarea manuală, folosește [checklistul manual](docs/testing/manual-checklist.md).
 
-- dimensiuni cu istoric SCD 2;
-- import automat al cursurilor valutare de la un furnizor oficial;
-- SQL Server Change Tracking sau CDC;
-- fapt pentru ciclul de viață al ordinelor, inclusiv timpul până la execuție;
-- orchestrare ETL și CI/CD;
-- API ASP.NET Core, analiză Python și publicare în Azure.
+## Notă
 
-## Obiectiv
+Proiectul este demonstrativ: cotațiile instrumentelor sunt simulate, iar
+cursurile valutare sunt păstrate istoric pentru ca rapoartele și tranzacțiile
+vechi să rămână corecte.
 
-Proiectul arată cum componentele unei platforme de date financiare lucrează împreună: sistem tranzacțional, logică sigură la concurență, audit, optimizare, ETL, depozit de date și analiză Power BI.
+Memoria de continuitate a proiectului este în [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md).
+
+### Teste automate API
+
+Din `api/Brokerage`, rulează:
+
+```powershell
+dotnet test Brokerage.Api.Tests/Brokerage.Api.Tests.csproj
+```
+
+Suita pornește API-ul cu SQLite temporar și verifică autentificarea, rolurile, accesul interzis, izolarea conturilor, validarea ordinelor, brokerul și administratorul. Nu modifică `BrokerageDB`.

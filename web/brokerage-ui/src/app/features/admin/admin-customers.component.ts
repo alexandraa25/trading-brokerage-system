@@ -6,55 +6,19 @@ import { AdminCustomer } from '../../core/models';
   selector: 'app-admin-customers',
   imports: [FormsModule],
   styleUrl: './admin-customers.component.scss',
-  template: `<section class="create-card">
-      <b>CLIENT NOU</b>
-      <form (ngSubmit)="submitCustomer()">
-        <input
-          name="firstName"
-          [(ngModel)]="newCustomer.firstName"
-          placeholder="Prenume"
-          required
-        /><input
-          name="lastName"
-          [(ngModel)]="newCustomer.lastName"
-          placeholder="Nume"
-          required
-        /><input
-          name="email"
-          [(ngModel)]="newCustomer.email"
-          placeholder="Email"
-          type="email"
-          required
-        /><input
-          name="password"
-          [(ngModel)]="newCustomer.password"
-          placeholder="Parolă inițială"
-          type="password"
-          minlength="8"
-          required
-        /><button>Adaugă client</button>
-      </form>
-    </section>
-    <section class="card">
+  template: `<section class="card">
       <div class="heading">
         <div>
           <p>ADMINISTRARE</p>
           <h2>Clienți</h2>
           <span>Gestionează accesul și verifică situația fiecărui client.</span>
         </div>
-        <strong>{{ filtered().length }} clienți</strong>
+        <div class="heading-actions"><strong>{{ filtered().length }} clienți</strong><button type="button" (click)="createOpen.set(true)">+ Client nou</button></div>
       </div>
-      <div class="filters">
-        <input
-          [(ngModel)]="query"
-          (ngModelChange)="page.set(0)"
-          placeholder="Caută nume sau email"
-        /><select [(ngModel)]="status" (ngModelChange)="page.set(0)">
-          <option value="ALL">Toate stările</option>
-          <option value="Active">Activi</option>
-          <option value="Inactive">Inactivi</option>
-          <option value="Blocked">Blocați</option>
-        </select>
+      <div class="admin-toolbar">
+        <label class="search-field">Caută client<input [(ngModel)]="query" (ngModelChange)="page.set(0)" placeholder="Nume sau e-mail" /></label>
+        <label>Stare profil<select [(ngModel)]="status" (ngModelChange)="page.set(0)"><option value="ALL">Toate stările</option><option value="Active">Activi</option><option value="Inactive">Inactivi</option><option value="Blocked">Blocați</option></select></label>
+        <button type="button" class="reset-filter" (click)="resetFilters()">Resetează</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -118,7 +82,8 @@ import { AdminCustomer } from '../../core/models';
           </button>
         </div>
       }
-    </section>`,
+    </section>
+    @if(createOpen()) { <div class="modal-backdrop" (click)="createOpen.set(false)"><section class="create-modal" (click)="$event.stopPropagation()"><button type="button" class="close-modal" (click)="createOpen.set(false)">×</button><p>CLIENT NOU</p><h2>Adaugă un client</h2><span>Se vor crea contul EUR și dosarul KYC în așteptare.</span><form (ngSubmit)="submitCustomer()"><div class="two-columns"><label>Prenume<input name="firstName" [(ngModel)]="newCustomer.firstName" required /></label><label>Nume<input name="lastName" [(ngModel)]="newCustomer.lastName" required /></label></div><label>E-mail<input name="email" [(ngModel)]="newCustomer.email" type="email" required /></label><label>Parolă inițială<input name="password" [(ngModel)]="newCustomer.password" type="password" minlength="8" required /></label><label>Document KYC<select name="documentType" [(ngModel)]="newCustomer.documentType"><option>Carte de identitate</option><option>Pașaport</option></select></label><div class="modal-actions"><button type="button" class="secondary" (click)="createOpen.set(false)">Anulează</button><button>Adaugă client</button></div></form></section></div> }`,
 })
 export class AdminCustomersComponent {
   readonly customers = input<AdminCustomer[]>([]);
@@ -141,15 +106,16 @@ export class AdminCustomersComponent {
   query = '';
   status = 'ALL';
   page = signal(0);
+  createOpen = signal(false);
   readonly size = 10;
-  filtered = computed(() => {
+  filtered = () => {
     const q = this.query.trim().toLowerCase();
     return this.customers().filter(
       (c) =>
         (this.status === 'ALL' || c.customerStatus === this.status) &&
         (!q || `${c.firstName} ${c.lastName} ${c.email}`.toLowerCase().includes(q)),
     );
-  });
+  };
   pages() {
     return Math.max(1, Math.ceil(this.filtered().length / this.size));
   }
@@ -175,5 +141,7 @@ export class AdminCustomersComponent {
       password: '',
       documentType: 'Carte de identitate',
     };
+    this.createOpen.set(false);
   }
+  resetFilters() { this.query = ''; this.status = 'ALL'; this.page.set(0); }
 }

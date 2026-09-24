@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Account, AdminAccount, AdminCustomer, AdminOverview, AdminUser, BrokerNotification, CashBalance, CashTransaction, CurrencyExchangeQuote, CurrencyPortfolioValue, CustomerNotification, CustomerProfile, DisplayExchangeRate, PortfolioHistoryPoint, Position, Instrument, Order } from './models';
+import { AdminCustomerOverview, AccessAuditEntry, BrokerExecution, BrokerOrderDetails, KycAuditEntry, KycRecord } from './models/admin.models';
+import { Account, AdminAccount, AdminAnalytics, AdminCustomer, AdminOverview, AdminUser, BrokerNotification, CashBalance, CashTransaction, CurrencyExchangeQuote, CurrencyPortfolioValue, CustomerNotification, CustomerProfile, DisplayExchangeRate, PortfolioHistoryPoint, Position, Instrument, Order } from './models';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private url = 'https://localhost:7103/api';
@@ -17,19 +18,26 @@ export class ApiService {
   registerForAdmin(customer: { firstName: string; lastName: string; email: string; password: string; documentType: string | null }) {
     return this.http.post(`${this.url}/registration/admin`, customer, { headers: this.headers });
   }
-  adminCustomers() { return this.http.get<AdminCustomer[]>(`${this.url}/admin/customers`, { headers: this.headers }); }
+  adminKyc() { return this.http.get<KycRecord[]>(`${this.url}/admin/kyc`, { headers: this.headers }); }
+  adminKycAudit() { return this.http.get<KycAuditEntry[]>(`${this.url}/admin/kyc/audit`, { headers: this.headers }); }
+  updateKycStatus(kycId: number, status: string, rejectionReason?: string) { return this.http.post(`${this.url}/admin/kyc/${kycId}/status`, { status, rejectionReason: rejectionReason ?? null }, { headers: this.headers }); }  adminCustomers() { return this.http.get<AdminCustomer[]>(`${this.url}/admin/customers`, { headers: this.headers }); }
   adminOverview() { return this.http.get<AdminOverview>(`${this.url}/admin/overview`, { headers: this.headers }); }
+  adminAnalytics(days = 30) { return this.http.get<AdminAnalytics>(`${this.url}/admin/analytics?days=${days}`, { headers: this.headers }); }
   adminUsers() { return this.http.get<AdminUser[]>(`${this.url}/admin/users`, { headers: this.headers }); }
   updateAdminUserStatus(id:string,isActive:boolean){return this.http.post(`${this.url}/admin/users/${id}/status`,{isActive},{headers:this.headers});}
   resetAdminUserPassword(id:string,newPassword:string){return this.http.post(`${this.url}/admin/users/${id}/reset-password`,{newPassword},{headers:this.headers});}
   createAdminUser(user:{email:string;password:string;role:string}){return this.http.post(`${this.url}/admin/users`,user,{headers:this.headers});}
-  accessAudit(){return this.http.get<any[]>(`${this.url}/admin/access-audit`,{headers:this.headers});}
+  accessAudit(){return this.http.get<AccessAuditEntry[]>(`${this.url}/admin/access-audit`,{headers:this.headers});}
   adminAccounts(){return this.http.get<AdminAccount[]>(`${this.url}/admin/accounts`,{headers:this.headers});}
   updateAdminAccountStatus(id:number,status:string,reason:string){return this.http.post(`${this.url}/admin/accounts/${id}/status`,{status,reason},{headers:this.headers});}
   openAdminCashAccount(accountId:number,currency:string){return this.http.post(`${this.url}/admin/accounts/${accountId}/cash-accounts`,{currency},{headers:this.headers});}
   updateCustomerStatus(customerId: number, status: string) { return this.http.post(`${this.url}/admin/customers/${customerId}/status`, { status }, { headers: this.headers }); }
-  adminCustomerOverview(customerId: number) { return this.http.get<any>(`${this.url}/admin/customers/${customerId}/overview`, { headers: this.headers }); }
-  accounts() {
+  adminCustomerOverview(customerId: number) { return this.http.get<AdminCustomerOverview>(`${this.url}/admin/customers/${customerId}/overview`, { headers: this.headers }); }
+  valuation(accountId: number) { return this.http.get(`${this.url}/accounts/${accountId}/valuation`, { headers: this.headers }); }
+  brokerExecutions() { return this.http.get<BrokerExecution[]>(`${this.url}/broker/executions`, { headers: this.headers }); }
+  brokerOrderDetails(orderId: number) { return this.http.get<BrokerOrderDetails>(`${this.url}/broker/orders/${orderId}/details`, { headers: this.headers }); }
+  executeOrder(orderId: number, executedQuantity: number, executionPrice: number) { return this.http.post(`${this.url}/orders/${orderId}/executions`, { executedQuantity, executionPrice }, { headers: this.headers }); }
+  rejectBrokerOrder(orderId: number, reason: string) { return this.http.post(`${this.url}/broker/orders/${orderId}/reject`, { reason }, { headers: this.headers }); }  accounts() {
     return this.http.get<Account[]>(`${this.url}/accounts`, { headers: this.headers });
   }
   cash(id: number) {

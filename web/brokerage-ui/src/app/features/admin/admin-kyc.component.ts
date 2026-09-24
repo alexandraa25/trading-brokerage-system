@@ -1,20 +1,6 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-
-export type KycRecord = {
-  kycId: number;
-  customerId: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  customerStatus: string;
-  status: string;
-  documentType: string;
-  createdAt: string;
-  updatedAt: string | null;
-  rejectionReason: string | null;
-};
-
+import { KycRecord } from '../../core/models/admin.models';
 @Component({
   selector: 'app-admin-kyc',
   imports: [DatePipe],
@@ -28,17 +14,13 @@ export type KycRecord = {
       </div>
       <strong>{{ filtered().length }} dosare</strong>
     </div>
-    <div class="filters">
-      <input
-        placeholder="Caută nume sau e-mail"
-        [value]="query()"
-        (input)="setQuery($any($event.target).value)"
-      /><select [value]="statusFilter()" (change)="setStatusFilter($any($event.target).value)">
+    <div class="admin-toolbar">
+      <label class="search-field">Caută dosar<input placeholder="Nume sau e-mail" [value]="query()" (input)="setQuery($any($event.target).value)" /></label><label>Stare KYC<select [value]="statusFilter()" (change)="setStatusFilter($any($event.target).value)">
         <option value="ALL">Toate stările</option>
         <option value="Pending">În așteptare</option>
         <option value="Approved">Aprobate</option>
         <option value="Rejected">Respinse</option>
-      </select>
+      </select></label><button type="button" class="reset-filter" (click)="resetFilters()">Resetează</button>
     </div>
     @if (filtered().length) {
       <div class="table-wrap">
@@ -135,6 +117,7 @@ export class AdminKycComponent {
     this.statusFilter.set(value);
     this.page.set(0);
   }
+  resetFilters() { this.query.set(''); this.statusFilter.set('ALL'); this.page.set(0); }
   previousPage() {
     this.page.update((value) => Math.max(0, value - 1));
   }

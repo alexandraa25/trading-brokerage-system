@@ -18,12 +18,12 @@ raportare consolidată.
 11. `11_load_fact_portfolio_daily_snapshot.sql`
 12. `12_create_fact_order_lifecycle.sql`
 13. `13_load_fact_order_lifecycle.sql`
-14. `14_create_powerbi_views.sql`
+14. `views/01_create_powerbi_views.sql`
 15. `15_create_fact_kyc.sql`
 16. `16_load_fact_kyc.sql`
 
 Înainte de încărcările de la pașii 4, 5 și 9, actualizează staging-ul cu
-`etl/06_refresh_staging_from_oltp.sql` atunci când ai date operaționale noi.
+`etl/07_refresh_staging_from_oltp.sql` atunci când ai date operaționale noi.
 
 ## Fapte disponibile
 
@@ -42,7 +42,7 @@ Conversiile valutare utilizează cursurile păstrate în
 `trading.CurrencyConversion`. Celelalte mișcări folosesc ultimul curs către
 EUR disponibil la data operațiunii. EUR are cursul identitar 1.
 
-`14_create_powerbi_views.sql` publică vizualizările `vwPowerBiCashFlow`,
+`views/01_create_powerbi_views.sql` publică vizualizările `vwPowerBiCashFlow`,
 `vwPowerBiPortfolioEvolution` și `vwPowerBiOrderLifecycle` pentru importul
 direct în Power BI.
 

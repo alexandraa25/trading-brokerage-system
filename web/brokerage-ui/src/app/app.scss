@@ -1,246 +1,138 @@
 :host {
-  font-family: Arial, sans-serif;
-  color: #14213d
+  --ink: #14233b;
+  --muted: #64748b;
+  --line: #dce5ee;
+  --surface: #ffffff;
+  --soft: #f4f7fb;
+  --brand: #0f766e;
+  --brand-dark: #115e59;
+  --brand-soft: #e5f6f3;
+  --danger: #b42318;
+  --success: #16845b;
+  display: block;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
+
+* { box-sizing: border-box; }
 
 main {
   min-height: 100vh;
-  background: #f3f6fa;
-  padding: 40px
+  padding: 36px;
+  background:
+    radial-gradient(circle at 7% 3%, #d9f6ef 0, transparent 26rem),
+    radial-gradient(circle at 98% 10%, #deecff 0, transparent 30rem),
+    var(--soft);
 }
 
-.card,
-.summary article {
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 8px 26px #14213d12
-}
-
-.login {
-  width: min(420px, 90vw);
-  margin: 8vh auto;
-  padding: 38px
-}
-
-.brand {
-  font-weight: 700;
-  letter-spacing: 2px;
-  color: #147a9b;
-  margin: 0
-}
-
-.login h1 {
-  margin: 10px 0
-}
-
-.login>p {
-  color: #637083
-}
-
-form {
-  display: grid;
-  gap: 16px;
-  margin-top: 28px
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-weight: 600
-}
-
-input {
-  padding: 12px;
-  border: 1px solid #ccd6e0;
-  border-radius: 8px;
-  font-size: 16px
-}
-
-button {
-  border: 0;
-  border-radius: 8px;
-  background: #147a9b;
-  color: white;
-  padding: 12px 18px;
-  font-weight: 700;
-  cursor: pointer
-}
-
-.error {
-  color: #b42318;
-  margin: 0
-}
-
-.dashboard {
-  max-width: 1050px;
-  margin: auto
-}
+.dashboard { width: min(1280px, 100%); margin: 0 auto; }
 
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px
-}
-
-.header-actions { display: flex; align-items: center; gap: 12px; }
-.display-currency { display: grid; gap: 3px; color: #526a7c; font-size: 11px; font-weight: 700; }
-.display-currency select { min-width: 75px; padding: 7px 9px; border: 1px solid #cdd9e1; border-radius: 8px; background: #fff; color: #254254; font: inherit; font-size: 14px; }
-.admin-dashboard .display-currency { color: #d8eff1; }
-.admin-dashboard .display-currency select { border-color: #ffffff55; background: #ffffff18; color: #fff; }
-.filtered-history-note { margin: 0 0 22px; padding: 16px 18px; border-left: 4px solid #0b7f87; border-radius: 8px; background: #eaf7f7; color: #315968; }
-.admin-customer-detail{position:fixed;right:28px;top:110px;z-index:10;width:min(390px,calc(100vw - 40px));max-height:75vh;overflow:auto;padding:22px;border-radius:14px;background:#fff;box-shadow:0 18px 45px #09284b44}.admin-customer-detail h3{margin:0}.admin-customer-detail p{color:#526a7c;font-size:14px}.admin-customer-detail>button{float:right;padding:2px 8px;background:transparent;color:#36566a;font-size:22px}
-.admin-export{display:flex;justify-content:flex-end;margin:-10px 0 16px}.admin-export button{padding:9px 12px;background:#edf5f6;border:1px solid #bee2e3;color:#08736f}
-
-h1 {
-  margin: 8px 0
-}
-
-.summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-bottom: 22px
-}
-
-.summary article {
-  padding: 22px;
-  display: grid;
-  gap: 8px
-}
-
-.summary span {
-  color: #637083
-}
-
-.summary strong {
-  font-size: 24px
-}
-
-.good {
-  color: #16803c
-}
-
-.dashboard .card {
-  padding: 26px
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left
-}
-
-th,
-td {
-  padding: 14px;
-  border-bottom: 1px solid #e5eaf0
-}
-
-th {
-  color: #637083;
-  font-size: 13px
-}
-
-@media(max-width:650px) {
-  main {
-    padding: 20px
-  }
-
-  .summary {
-    grid-template-columns: 1fr
-  }
-
-  header {
-    align-items: flex-start;
-    gap: 12px
-  }
-}
-
-.logout {
-  background: #fff;
-  color: #254254;
-  border: 1px solid #cdd9e1;
-}
-
-.tabs {
-  display: flex;
-  gap: 8px;
-  border-bottom: 1px solid #dbe5eb;
-  margin-bottom: 24px;
-  overflow: auto;
-}
-
-.tabs button {
-  background: transparent;
-  color: #607181;
-  white-space: nowrap;
-}
-
-.tabs button.active {
-  background: #e5f5f4;
-  color: #08736f;
-  box-shadow: inset 0 -3px #0b8b84;
-}
-
-.broker-refresh {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
-  margin: -8px 0 16px;
-  padding: 11px 14px;
-  border: 1px solid #d8e7ea;
-  border-radius: 10px;
-  background: #edf7f7;
-  color: #426072;
-  font-size: 13px;
-}
-
-.broker-refresh button { padding: 8px 12px; white-space: nowrap; }
-.broker-tools{display:flex;align-items:center;gap:10px}.broker-tools label{display:grid;gap:3px;color:#526a7c;font-size:11px;font-weight:700}.broker-tools select{padding:7px 9px;border:1px solid #cdd9e1;border-radius:8px;background:#fff;color:#254254;font:inherit;font-size:14px}
-
-.broker-export { display:flex; justify-content:flex-end; margin:-10px 0 18px; }
-.broker-export button { background:#edf5f6; border:1px solid #bee2e3; color:#08736f; padding:9px 12px; }
-
-.order-message {
-  background: #e8f6ef;
-  color: #176c3a;
-  padding: 12px;
-  border-radius: 8px;
-  font-weight: 700;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.order-message button {
-  background: transparent;
-  color: #176c3a;
-  padding: 0 5px;
-  font-size: 22px;
-  line-height: 1;
-}
-
-.admin-dashboard header {
-  padding: 28px 30px;
+  gap: 22px;
+  min-height: 134px;
+  padding: 28px 32px;
   margin-bottom: 22px;
-  border-radius: 22px;
-  background: linear-gradient(118deg, #09284b 0%, #095f79 58%, #0b8b84 100%);
+  border: 1px solid #ffffff99;
+  border-radius: 24px;
   color: #fff;
-  box-shadow: 0 18px 38px #0b456033;
+  background: linear-gradient(120deg, #102a43, #155e75 55%, #0f766e);
+  box-shadow: 0 22px 46px #1235522a;
 }
 
-.admin-dashboard .brand { color: #a5f0e6; }
-.admin-dashboard h1 { font-size: clamp(30px, 4vw, 42px); }
-.admin-dashboard .logout { border-color: #ffffff55; color: #fff; background: #ffffff18; }
-.admin-tabs { border: 0; border-radius: 14px; padding: 6px; background: #e6edf3; width: fit-content; margin-bottom: 26px; }
-.admin-tabs button { display: flex; gap: 9px; align-items: center; border-radius: 10px; padding: 12px 16px; color: #426072; }
-.admin-tabs button.active { background: #fff; color: #075f77; box-shadow: 0 4px 12px #163b5318; }
-.tab-icon { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #cdeeea; color: #08736f; font-size: 13px; }
-.admin-tabs button.active .tab-icon { background: #087c86; color: #fff; }
+.brand { margin: 0 0 7px; color: #a7f3d0; font-size: 12px; font-weight: 800; letter-spacing: .18em; }
+h1 { margin: 0; font-size: clamp(30px, 4vw, 44px); letter-spacing: -.035em; }
+.header-actions { display: flex; align-items: center; gap: 12px; }
+.display-currency, .broker-tools label { display: grid; gap: 5px; color: #d8f2ed; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+.display-currency select, .broker-tools select {
+  min-width: 82px; padding: 8px 10px; border: 1px solid #ffffff55; border-radius: 9px;
+  background: #ffffff19; color: #fff; font: inherit; font-size: 14px;
+}
+.display-currency option, .broker-tools option { color: var(--ink); background: #fff; }
 
-@media(max-width:650px) { .admin-dashboard header { padding: 22px; } .admin-tabs { width: 100%; } .admin-tabs button { flex: 1; justify-content: center; } }
-@media(max-width:650px) { .broker-refresh { align-items: flex-start; flex-direction: column; } .broker-tools{width:100%;justify-content:space-between;} }
-@media(max-width:650px) { .broker-export { justify-content:stretch; } .broker-export button { width:100%; } }
+button { border: 0; border-radius: 10px; padding: 10px 14px; background: var(--brand); color: #fff; font: inherit; font-size: 14px; font-weight: 750; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, background .16s ease; }
+button:hover:not(:disabled) { background: var(--brand-dark); transform: translateY(-1px); box-shadow: 0 6px 16px #0f766e32; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+.logout { border: 1px solid #ffffff66; background: #ffffff17; color: #fff; padding: 11px 16px; }
+.logout:hover:not(:disabled) { background: #ffffff2c; }
+
+.tabs { display: flex; gap: 5px; padding: 6px; margin: 0 0 22px; overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 5px 16px #12263d0a; }
+.tabs button { flex: 0 0 auto; background: transparent; color: #597085; box-shadow: none; }
+.tabs button:hover:not(:disabled) { background: #eef7f6; color: var(--brand-dark); transform: none; }
+.tabs button.active { background: var(--brand-soft); color: #076b66; box-shadow: inset 0 -3px var(--brand); }
+.admin-tabs { width: 100%; }
+.admin-tabs button { display: flex; align-items: center; gap: 8px; }
+.tab-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #cceee8; color: var(--brand-dark); }
+.admin-tabs button.active .tab-icon { background: var(--brand); color: #fff; }
+
+.order-message { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 18px; padding: 13px 16px; border: 1px solid #bce9d5; border-radius: 12px; background: #effbf5; color: #166534; font-weight: 700; }
+.order-message button { padding: 0 5px; background: transparent; color: inherit; font-size: 21px; box-shadow: none; }
+.admin-export, .broker-export { display: flex; justify-content: flex-end; margin: -8px 0 16px; }
+.admin-export button, .broker-export button { border: 1px solid #b9e2dc; background: #f0fbf9; color: #08736f; }
+
+.broker-refresh { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin: 0 0 16px; padding: 13px 16px; border: 1px solid #b9e2dc; border-radius: 14px; background: #effbf9; color: #426072; font-size: 13px; }
+.broker-tools { display: flex; align-items: center; gap: 10px; }
+.broker-tools label { color: #426072; }
+.broker-tools select { border-color: #b9d5d1; background: #fff; color: var(--ink); }
+
+.filtered-history-note { margin: 0 0 20px; padding: 15px 17px; border-left: 4px solid var(--brand); border-radius: 10px; background: #edf8f6; color: #315968; }
+.admin-customer-detail { position: fixed; right: 28px; top: 110px; z-index: 20; width: min(410px, calc(100vw - 36px)); max-height: 74vh; overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: 0 25px 60px #102a4352; }
+.admin-customer-detail h3 { margin-top: 0; }.admin-customer-detail p { color: var(--muted); font-size: 14px; }.admin-customer-detail > button { float: right; padding: 0 5px; background: transparent; color: var(--muted); font-size: 22px; box-shadow: none; }
+
+:host ::ng-deep .card, :host ::ng-deep .summary article {
+  border: 1px solid var(--line); border-radius: 18px; background: var(--surface);
+  box-shadow: 0 10px 26px #102a4310;
+}
+:host ::ng-deep .card { padding: 25px; margin-bottom: 20px; }
+:host ::ng-deep .card > p, :host ::ng-deep .eyebrow { color: var(--brand); font-size: 11px; font-weight: 800; letter-spacing: .13em; }
+:host ::ng-deep .card h2 { margin: 7px 0 18px; font-size: 25px; letter-spacing: -.025em; }
+:host ::ng-deep .summary { gap: 16px; margin-bottom: 20px; }
+:host ::ng-deep .summary article { padding: 20px; }
+:host ::ng-deep .summary span, :host ::ng-deep .count { color: var(--muted); }
+:host ::ng-deep .summary strong { color: var(--ink); }
+:host ::ng-deep input, :host ::ng-deep select, :host ::ng-deep textarea { width: 100%; border: 1px solid #cad8e4; border-radius: 10px; padding: 11px 12px; background: #fff; color: var(--ink); font: inherit; outline: none; }
+:host ::ng-deep input:focus, :host ::ng-deep select:focus, :host ::ng-deep textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px #0f766e18; }
+:host ::ng-deep label { color: #36566a; }
+:host ::ng-deep table { overflow: hidden; border: 1px solid var(--line); border-radius: 12px; }
+:host ::ng-deep th { background: #f5f8fb; color: #526a7c; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
+:host ::ng-deep td, :host ::ng-deep th { padding: 13px; border-bottom: 1px solid #e8eef4; }
+:host ::ng-deep tr:last-child td { border-bottom: 0; }
+:host ::ng-deep .pagination { gap: 12px; margin-top: 18px; color: var(--muted); }
+:host ::ng-deep .pagination button { padding: 8px 11px; }
+:host ::ng-deep .positive, :host ::ng-deep .good { color: var(--success); }
+:host ::ng-deep .negative, :host ::ng-deep .error { color: var(--danger); }
+:host ::ng-deep .admin-toolbar { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin: 22px 0; padding: 14px; border: 1px solid #dce9ed; border-radius: 14px; background: #f7fbfc; }
+:host ::ng-deep .admin-toolbar label { display: grid; flex: 0 1 190px; gap: 6px; color: #526a7c; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
+:host ::ng-deep .admin-toolbar .search-field { flex: 1 1 260px; }
+:host ::ng-deep .admin-toolbar .reset-filter { padding: 11px 13px; border: 1px solid #cbdbe1; background: #fff; color: #36566a; box-shadow: none; }
+:host ::ng-deep .modal-backdrop, :host ::ng-deep .overlay, :host ::ng-deep .modal { backdrop-filter: blur(4px); }
+:host ::ng-deep .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: #102a4378; }
+:host ::ng-deep .create-modal { position: relative; display: grid; gap: 13px; width: min(520px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 28px; border: 1px solid #fff; border-radius: 20px; background: #fff; box-shadow: 0 28px 70px #102a4355; }
+:host ::ng-deep .customer-overview-modal { position: relative; display: grid; gap: 11px; width: min(620px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 28px; border-radius: 20px; background: #fff; box-shadow: 0 28px 70px #102a4355; }
+:host ::ng-deep .customer-overview-modal > p { margin: 0; color: var(--brand); font-size: 11px; font-weight: 850; letter-spacing: .14em; }.customer-overview-modal h2 { margin: 0; font-size: 28px; }.customer-overview-modal > span { color: var(--muted); }.customer-overview-modal h3 { margin: 13px 0 0; font-size: 15px; }.customer-overview-modal article { display: flex; justify-content: space-between; gap: 14px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 10px; background: #f8fbfc; }.customer-overview-modal article span { color: var(--muted); font-size: 13px; text-align: right; }
+:host ::ng-deep .create-modal > p { margin: 0; color: var(--brand); font-size: 11px; font-weight: 850; letter-spacing: .14em; }
+:host ::ng-deep .create-modal h2 { margin: 0; font-size: 27px; }.create-modal > span { color: var(--muted); font-size: 14px; }
+:host ::ng-deep .create-modal form { display: grid; gap: 14px; margin-top: 7px; }.two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+:host ::ng-deep .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }.secondary { border: 1px solid #cbdbe1 !important; background: #fff !important; color: #36566a !important; }
+:host ::ng-deep .close-modal { position: absolute; top: 13px; right: 15px; padding: 0 6px; background: transparent; color: #64748b; font-size: 24px; box-shadow: none; }
+
+@media (max-width: 760px) {
+  main { padding: 16px; }
+  header { align-items: flex-start; flex-direction: column; padding: 23px; border-radius: 19px; }
+  .header-actions { width: 100%; justify-content: space-between; }
+  .tabs { border-radius: 13px; }
+  .admin-tabs button { padding: 10px 12px; }
+  .tab-icon { display: none; }
+  .broker-refresh, .broker-tools { align-items: flex-start; flex-direction: column; }
+  .broker-tools { width: 100%; }.broker-tools button { width: 100%; }
+  .admin-export, .broker-export { justify-content: stretch; }.admin-export button, .broker-export button { width: 100%; }
+  :host ::ng-deep .card { padding: 18px; border-radius: 15px; }
+  :host ::ng-deep .summary { grid-template-columns: 1fr; }
+  :host ::ng-deep .admin-toolbar { align-items: stretch; flex-direction: column; }
+  :host ::ng-deep .admin-toolbar label, :host ::ng-deep .admin-toolbar .search-field { flex-basis: auto; }
+  :host ::ng-deep .two-columns { grid-template-columns: 1fr; }
+  :host ::ng-deep .modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; }
+}
