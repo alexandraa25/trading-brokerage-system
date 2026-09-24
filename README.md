@@ -66,7 +66,7 @@ trading-brokerage-system/
 └── powerbi/      # ghid și capturi ale raportului
 ```
 
-Ghiduri specifice: [baza operațională](database/README.md),
+Ghiduri specifice: [API](api/Brokerage/README.md), [baza operațională](database/README.md),
 [ETL](etl/README.md), [depozitul de date](warehouse/README.md),
 [automatizarea](automation/README.md) și [Power BI](powerbi/README.md).
 

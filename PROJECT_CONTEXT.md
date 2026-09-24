@@ -250,6 +250,9 @@ sunt păstrate zilnic în baza de date.
 - Tabul `Power BI` este disponibil exclusiv în panoul administratorului și este implementat în `web/brokerage-ui/src/app/features/admin/admin-powerbi.component.ts`.
 - Pagina listează cele șase rapoarte propuse și deschide raportul publicat într-o filă nouă.
 - URL-ul de embed se configurează local în `web/brokerage-ui/src/app/core/config/powerbi.config.ts`; tokenurile și parolele nu se salvează în cod.
+## Documentație API (24.09.2026)
+
+- `api/Brokerage/README.md` descrie pornirea API-ului, User Secrets pentru JWT, Swagger, endpointurile pe roluri, configurația locală și testele automate.
 ## Documentație
 
 - `README.md` este ghidul global actualizat: funcționalități, arhitectură,
