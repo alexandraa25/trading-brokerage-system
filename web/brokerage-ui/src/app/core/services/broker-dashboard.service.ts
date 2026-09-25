@@ -6,9 +6,22 @@ import { ApiService } from '../api.service';
 export class BrokerDashboardService {
   constructor(private readonly api: ApiService) {}
   loadDashboard() {
-    return forkJoin({ orders: this.api.orders(), executions: this.api.brokerExecutions(), history: this.api.brokerOrderHistory(), rates: this.api.displayExchangeRates(), notifications: this.api.brokerNotifications() });
+    return forkJoin({
+      orders: this.api.orders(),
+      executions: this.api.brokerExecutions(),
+      history: this.api.brokerOrderHistory(),
+      rates: this.api.displayExchangeRates(),
+      notifications: this.api.brokerNotifications(),
+      alerts: this.api.brokerIntelligentAlerts(),
+    });
   }
-  orderDetails(orderId: number) { return this.api.brokerOrderDetails(orderId); }
-  execute(id: number, quantity: number, price: number) { return this.api.executeOrder(id, quantity, price); }
-  reject(id: number, reason: string) { return this.api.rejectBrokerOrder(id, reason); }
+  orderDetails(orderId: number) {
+    return this.api.brokerOrderDetails(orderId);
+  }
+  execute(id: number, quantity: number, price: number) {
+    return this.api.executeOrder(id, quantity, price);
+  }
+  reject(id: number, reason: string) {
+    return this.api.rejectBrokerOrder(id, reason);
+  }
 }

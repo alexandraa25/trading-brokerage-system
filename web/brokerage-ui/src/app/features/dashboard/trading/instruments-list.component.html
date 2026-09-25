@@ -1,0 +1,72 @@
+<section class="card">
+  <div class="heading">
+    <div>
+      <p>PIAȚĂ</p>
+      <h2>Instrumente disponibile</h2>
+      <span>Active financiare care pot fi cumpărate sau vândute prin ordine.</span>
+    </div>
+    <strong>{{ filtered().length }} instrumente</strong>
+  </div>
+  <div class="filters">
+    <input placeholder="Caută simbol sau nume" [value]="query()" (input)="setQuery($any($event.target).value)" /><select
+      [value]="typeFilter()" (change)="setType($any($event.target).value)">
+      <option value="ALL">Toate tipurile</option>
+      <option value="Stock">Acțiuni</option>
+      <option value="ETF">ETF-uri</option>
+      <option value="Bond">Obligațiuni</option>
+    </select>
+  </div>
+  <div class="grid">
+    @for (instrument of filtered(); track instrument.instrumentId) {
+    <article>
+      <div class="instrument-head">
+        <div>
+          <b>{{ instrument.symbol }}</b><span>{{ typeLabel(instrument.instrumentType) }}</span>
+        </div>
+        <strong>{{
+          instrument.marketPrice === null ? '—' : (instrument.marketPrice | number: '1.2-4')
+          }}
+          {{ instrument.currency }}</strong>
+      </div>
+      <h3>{{ instrument.instrumentName }}</h3>
+      <button class="favorite" type="button" (click)="toggleFavorite(instrument.instrumentId)">{{isFavorite(instrument.instrumentId)?'★ În favorite':'☆ Adaugă la favorite'}}</button><button class="price-alert" type="button" (click)="openAlert(instrument)">Setează alertă preț</button>
+      <dl>
+        <div>
+          <dt>Emitent</dt>
+          <dd>{{ instrument.issuerName }}</dd>
+        </div>
+        <div>
+          <dt>Piață</dt>
+          <dd>{{ instrument.marketName }}</dd>
+        </div>
+        <div>
+          <dt>Ultima cotație</dt>
+          <dd>
+            {{
+            instrument.quoteDate
+            ? (instrument.quoteDate | date: 'dd.MM.yyyy')
+            : 'Indisponibilă'
+            }}
+          </dd>
+        </div>
+      </dl>
+      <button class="history-button" type="button" (click)="openHistory(instrument)">Vezi evoluția</button>
+    </article>
+    } @empty {
+    <p class="empty">Nu am găsit instrumente pentru filtrul selectat.</p>
+    }
+  </div>
+  <section class="watchlist"><div><p>WATCHLIST</p><h2>Favorite și alerte de preț</h2></div><div class="watch-grid"><article><h3>Instrumente favorite</h3>@for(item of favoriteInstruments();track item.instrumentId){<p><b>★ {{item.symbol}}</b><span>{{item.instrumentName}}</span></p>}@empty{<small>Nu ai adăugat instrumente favorite.</small>}</article><article><h3>Alerte configurate</h3>@for(alert of priceAlerts();track alert.customerPriceAlertId){<p><b>{{alert.symbol}}</b><span>preț {{alert.direction==='Above'?'peste':'sub'}} {{alert.targetPrice}}</span><button type="button" (click)="removeAlert(alert.customerPriceAlertId)">Șterge</button></p>}@empty{<small>Nu ai configurat alerte de preț.</small>}</article></div></section>
+  <app-instrument-price-chart [instrument]="selected()" [points]="quotes()" (closed)="selected.set(null)"
+    (periodChange)="loadQuotes($event)" />
+  @if(alertInstrument()){<div class="alert-backdrop" (click)="alertInstrument.set(null)"><form class="alert-modal" (click)="$event.stopPropagation()" (ngSubmit)="saveAlert()"><h2>Alertă {{alertInstrument()!.symbol}}</h2><label>Notifică-mă când prețul<select [(ngModel)]="alertDirection" name="direction"><option value="Above">urcă peste</option><option value="Below">scade sub</option></select></label><label>Preț țintă<input type="number" name="target" [(ngModel)]="alertPrice" min="0.01" step="0.01"></label><div><button type="button" (click)="alertInstrument.set(null)">Anulează</button><button>Salvează alerta</button></div></form></div>}
+  <details class="guide">
+    <summary>Ce înseamnă tipurile de instrumente?</summary>
+    <p>
+      <b>Acțiune:</b> o parte dintr-o companie. <b>ETF:</b> un pachet de instrumente urmărit
+      într-o singură poziție. <b>Obligațiune:</b> un împrumut acordat unui emitent, de regulă cu
+      dobândă.
+    </p>
+  </details>
+  <small class="source">Prețurile sunt cotații simulate zilnice, în moneda instrumentului.</small>
+</section>

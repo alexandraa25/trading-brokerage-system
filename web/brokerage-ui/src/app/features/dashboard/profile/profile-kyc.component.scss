@@ -126,6 +126,7 @@
 .empty {
   color: #637083
 }
+.password-card{border:1px solid #dbe9ec;background:linear-gradient(135deg,#fff,#f3fbfa)}.password-card>p{margin:-9px 0 18px;color:#637995}.password-card form{display:grid;grid-template-columns:repeat(3,1fr) auto;gap:12px;align-items:end}.password-card label{display:grid;gap:6px;color:#36566a;font-size:12px;font-weight:800}.password-card input{box-sizing:border-box;width:100%;padding:11px 12px;border:1px solid #c9dce3;border-radius:10px;background:#fff;font:inherit}.password-card input:focus{outline:0;border-color:#087c8c;box-shadow:0 0 0 3px #0f766e18}.password-card button{min-width:140px;padding:11px 15px;border:0;border-radius:10px;background:#087c8c;color:#fff;font:inherit;font-weight:800;box-shadow:0 6px 14px #0755682b;cursor:pointer;transition:transform .16s,box-shadow .16s}.password-card button:hover{transform:translateY(-1px);box-shadow:0 10px 19px #0755683b}.password-error{grid-column:span 3;color:#b42318;font-size:13px;font-weight:700}
 
 @media(max-width:760px) {
   .profile-card {
@@ -136,6 +137,7 @@
   .details {
     grid-template-columns: repeat(2, 1fr)
   }
+  .password-card form{grid-template-columns:1fr}.password-card button{width:100%}.password-error{grid-column:auto}
 }
 
 @media(max-width:450px) {

@@ -64,10 +64,43 @@ export type AdminCustomer = {
   accountsCount: number;
   accountStatus: string | null;
 };
-export type AdminOverview = { activeCustomers:number; pendingKyc:number; activeOrders:number; dailyExecutions:number; blockedCustomers:number; delayedKyc:number; latestRateDate:string|null; exchangeRateOutdated:boolean };
-export type AdminUser = { apiUserId:string; email:string; role:string; isActive:boolean; createdAt:string };
-export type AdminAccount = { accountId:number; accountNumber:string; currency:string; status:string; customerName:string; email:string };
-export type AdminAnalytics = { portfolioValue:number; netCashFlow:number; commissions:number; activeOrders:number; completedOrders:number; rejectedOrders:number; pendingKyc:number; averageKycDays:number; trend:{date:string;value:number}[]; days:number };
+export type AdminOverview = {
+  activeCustomers: number;
+  pendingKyc: number;
+  activeOrders: number;
+  dailyExecutions: number;
+  blockedCustomers: number;
+  delayedKyc: number;
+  latestRateDate: string | null;
+  exchangeRateOutdated: boolean;
+};
+export type AdminUser = {
+  apiUserId: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+};
+export type AdminAccount = {
+  accountId: number;
+  accountNumber: string;
+  currency: string;
+  status: string;
+  customerName: string;
+  email: string;
+};
+export type AdminAnalytics = {
+  portfolioValue: number;
+  netCashFlow: number;
+  commissions: number;
+  activeOrders: number;
+  completedOrders: number;
+  rejectedOrders: number;
+  pendingKyc: number;
+  averageKycDays: number;
+  trend: { date: string; value: number }[];
+  days: number;
+};
 export type CurrencyExchangeQuote = {
   sourceCurrency: string;
   targetCurrency: string;
@@ -109,6 +142,7 @@ export type Instrument = {
   quoteDate: string | null;
   quoteSource: string | null;
 };
+export type InstrumentQuotePoint = { quoteDate: string; marketPrice: number };
 
 export type Order = {
   orderId: number;
@@ -117,6 +151,11 @@ export type Order = {
   orderType: string;
   quantity: number;
   limitPrice: number | null;
+  stopPrice: number | null;
+  originalQuantity: number;
+  executedQuantity: number;
+  cancelledQuantity: number;
+  remainingQuantity: number;
   status: string;
   createdAt: string;
 };

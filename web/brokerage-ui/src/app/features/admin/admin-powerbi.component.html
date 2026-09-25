@@ -1,0 +1,41 @@
+
+    <section class="powerbi-hero">
+      <div>
+        <p>ANALIZĂ AVANSATĂ</p>
+        <h2>Rapoarte Power BI</h2>
+        <span>Analize interactive construite pe depozitul de date BrokerageDW.</span>
+      </div>
+      @if (reportUrl()) {
+        <button type="button" (click)="openReport()">Deschide raportul Power BI ↗</button>
+      }
+    </section>
+
+    @if (!reportUrl()) {
+      <section class="configuration-card">
+        <b>RAPORT NECONFIGURAT</b>
+        <h3>Conectează raportul Power BI</h3>
+        <p>După publicarea raportului în Power BI Service, copiază URL-ul de embed în <code>core/config/powerbi.config.ts</code>.</p>
+        <ol>
+          <li>Publică fișierul <code>BrokerageAnalytics.pbix</code> în Power BI Service.</li>
+          <li>Deschide raportul și copiază adresa din „Embed report” sau „Secure embed”.</li>
+          <li>Lipește adresa în câmpul <code>reportUrl</code>.</li>
+        </ol>
+      </section>
+    }
+
+    <section class="report-grid">
+      @for (page of pages; track page.title) {
+        <article>
+          <span class="report-icon">◔</span>
+          <p>{{ page.title }}</p>
+          <h3>{{ page.description }}</h3>
+          <small>{{ page.metrics }}</small>
+        </article>
+      }
+    </section>
+
+    <section class="card data-note">
+      <b>SURSA DATELOR</b>
+      <p>BrokerageDB → Staging → BrokerageDW → Power BI. Valorile financiare agregate sunt raportate în EUR, folosind cursurile BCE istorice.</p>
+    </section>
+  

@@ -33,7 +33,7 @@ public class AdminOperationsController(BrokerageDbContext db, IPasswordHasher<Ap
         return Ok(new {
             ActiveCustomers = await db.Customers.CountAsync(item => item.Status == "Active"),
             PendingKyc = await db.KycRecords.CountAsync(item => item.Status == "Pending"),
-            ActiveOrders = await db.Orders.CountAsync(item => item.Status == "Pending" || item.Status == "PartiallyExecuted"),
+        ActiveOrders = await db.Orders.CountAsync(item => item.Status == "Pending" || item.Status == "WaitingTrigger" || item.Status == "Triggered" || item.Status == "PartiallyExecuted"),
             DailyExecutions = await db.Executions.CountAsync(item => item.ExecutedAt >= today),
             BlockedCustomers = await db.Customers.CountAsync(item => item.Status == "Blocked"),
             DelayedKyc = await db.KycRecords.CountAsync(item => item.Status == "Pending" && item.CreatedAt < today.AddDays(-7)),

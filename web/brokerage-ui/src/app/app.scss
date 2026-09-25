@@ -112,6 +112,7 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 :host ::ng-deep .modal-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 20px; background: #102a4378; }
 :host ::ng-deep .create-modal { position: relative; display: grid; gap: 13px; width: min(520px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 28px; border: 1px solid #fff; border-radius: 20px; background: #fff; box-shadow: 0 28px 70px #102a4355; }
 :host ::ng-deep .customer-overview-modal { position: relative; display: grid; gap: 11px; width: min(620px, 100%); max-height: calc(100vh - 40px); overflow: auto; padding: 28px; border-radius: 20px; background: #fff; box-shadow: 0 28px 70px #102a4355; }
+:host .admin-monitoring-reports { display: grid; gap: 24px; }
 :host ::ng-deep .customer-overview-modal > p { margin: 0; color: var(--brand); font-size: 11px; font-weight: 850; letter-spacing: .14em; }.customer-overview-modal h2 { margin: 0; font-size: 28px; }.customer-overview-modal > span { color: var(--muted); }.customer-overview-modal h3 { margin: 13px 0 0; font-size: 15px; }.customer-overview-modal article { display: flex; justify-content: space-between; gap: 14px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 10px; background: #f8fbfc; }.customer-overview-modal article span { color: var(--muted); font-size: 13px; text-align: right; }
 :host ::ng-deep .create-modal > p { margin: 0; color: var(--brand); font-size: 11px; font-weight: 850; letter-spacing: .14em; }
 :host ::ng-deep .create-modal h2 { margin: 0; font-size: 27px; }.create-modal > span { color: var(--muted); font-size: 14px; }
@@ -136,3 +137,4 @@ button:disabled { cursor: not-allowed; opacity: .5; }
   :host ::ng-deep .two-columns { grid-template-columns: 1fr; }
   :host ::ng-deep .modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; }
 }
+.deferred-placeholder { min-height: 120px; display: grid; place-items: center; margin: 22px 0; border: 1px dashed #bed1db; border-radius: 14px; color: #60778b; background: #f8fbfc; }

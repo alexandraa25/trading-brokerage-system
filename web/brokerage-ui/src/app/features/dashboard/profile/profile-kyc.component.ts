@@ -1,74 +1,19 @@
-import { Component, input } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CustomerProfile } from '../../../core/models';
 
 @Component({
   selector: 'app-profile-kyc',
-  imports: [DatePipe],
+  imports: [DatePipe, FormsModule],
   styleUrl: './profile-kyc.component.scss',
-  template: `@if (profile()) {
-      <section class="profile-card">
-        <div class="identity">
-          <div class="avatar">{{ profile()!.firstName[0] }}{{ profile()!.lastName[0] }}</div>
-          <div>
-            <p>PROFIL CLIENT</p>
-            <h2>{{ profile()!.firstName }} {{ profile()!.lastName }}</h2>
-            <span>{{ profile()!.email }}</span>
-          </div>
-        </div>
-        <div
-          class="status-card"
-          [class.approved]="profile()!.kycStatus === 'Approved'"
-          [class.pending]="profile()!.kycStatus === 'Pending'"
-          [class.rejected]="profile()!.kycStatus === 'Rejected'"
-        >
-          <span class="status-icon">{{
-            profile()!.kycStatus === 'Approved'
-              ? '✓'
-              : profile()!.kycStatus === 'Rejected'
-                ? '!'
-                : '…'
-          }}</span>
-          <div>
-            <b>{{ statusLabel(profile()!.kycStatus) }}</b
-            ><small>{{ statusDescription(profile()!.kycStatus) }}</small>
-          </div>
-        </div>
-      </section>
-      <section class="details-card">
-        <h2>Date verificare</h2>
-        <div class="details">
-          <article>
-            <span>Stare client</span><b>{{ profile()!.customerStatus }}</b>
-          </article>
-          <article>
-            <span>Document</span><b>{{ profile()!.documentType || 'Necompletat' }}</b>
-          </article>
-          <article>
-            <span>Dosar creat</span
-            ><b>{{
-              profile()!.kycCreatedAt ? (profile()!.kycCreatedAt | date: 'dd.MM.yyyy') : '—'
-            }}</b>
-          </article>
-          <article>
-            <span>Verificat la</span
-            ><b>{{
-              profile()!.verifiedAt ? (profile()!.verifiedAt | date: 'dd.MM.yyyy') : 'În așteptare'
-            }}</b>
-          </article>
-        </div>
-        @if (profile()!.rejectionReason) {
-          <div class="rejection">
-            <b>Motivul respingerii</b><span>{{ profile()!.rejectionReason }}</span>
-          </div>
-        }
-      </section>
-    } @else {
-      <section class="details-card empty"><b>Profilul nu a putut fi încărcat.</b></section>
-    }`,
+  templateUrl: './profile-kyc.component.html',
 })
 export class ProfileKycComponent {
   profile = input<CustomerProfile | null>(null);
+  passwordChange = output<{currentPassword:string;newPassword:string}>();
+  currentPassword=''; newPassword=''; confirmPassword=''; localError=signal('');
+  submit(){this.localError.set(''); if(this.newPassword.length<8){this.localError.set('Parola nouă trebuie să aibă cel puțin 8 caractere.');return;}if(this.newPassword!==this.confirmPassword){this.localError.set('Confirmarea parolei nu corespunde.');return;}if(this.currentPassword===this.newPassword){this.localError.set('Noua parolă trebuie să fie diferită.');return;}this.passwordChange.emit({currentPassword:this.currentPassword,newPassword:this.newPassword});this.currentPassword='';this.newPassword='';this.confirmPassword='';}
   statusLabel(status: string) {
     return (
       (

@@ -2,56 +2,306 @@
   @if (!loggedIn()) {
     <app-login (authenticated)="onAuthenticated()" />
   } @else {
-    <section class="dashboard" [class.admin-dashboard]="isAdmin()" [class.broker-dashboard]="isBroker()" [class.customer-dashboard]="!isAdmin() && !isBroker()">
+    <section class="dashboard" [class.admin-dashboard]="isAdmin()">
       <header>
-        <div><p class="brand">BROKERAGE</p><h1>{{ isAdmin() ? 'Panou administrator' : isBroker() ? 'Panou broker' : 'Portofoliul meu' }}</h1></div>
-        <div class="header-actions">@if(!isAdmin() && !isBroker()){<label class="display-currency">Afișare în<select [value]="displayCurrency()" (change)="selectDisplayCurrency($any($event.target).value)">@for(rate of displayRates();track rate.currency){<option [value]="rate.currency">{{rate.currency}}</option>}</select></label><app-notification-panel [notifications]="notifications()" [open]="notificationsOpen()" [unreadCount]="unreadNotifications()" (toggle)="toggleNotifications()" (markRead)="markNotificationRead($event)" (markAll)="markAllNotificationsRead()" /> }@if(isBroker()){<app-notification-panel [notifications]="brokerNotifications()" [open]="notificationsOpen()" [unreadCount]="unreadBrokerNotifications()" (toggle)="toggleNotifications()" (markRead)="markBrokerNotificationRead($event)" (markAll)="markAllBrokerNotificationsRead()" /> }<button class="logout" (click)="logout()">Deconectare</button></div>
+        <div>
+          <p class="brand">BROKERAGE</p>
+          <h1>
+            {{
+              isAdmin() ? 'Panou administrator' : isBroker() ? 'Panou broker' : 'Portofoliul meu'
+            }}
+          </h1>
+        </div>
+        <div class="header-actions">
+          @if (!isAdmin() && !isBroker()) {
+            <label class="display-currency"
+              >Afișare în<select
+                [value]="displayCurrency()"
+                (change)="selectDisplayCurrency($any($event.target).value)"
+              >
+                @for (rate of displayRates(); track rate.currency) {
+                  <option [value]="rate.currency">{{ rate.currency }}</option>
+                }
+              </select></label
+            ><app-notification-panel
+              [notifications]="notifications()"
+              [open]="notificationsOpen()"
+              [unreadCount]="unreadNotifications()"
+              (toggle)="toggleNotifications()"
+              (markRead)="markNotificationRead($event)"
+              (markAll)="markAllNotificationsRead()"
+            />
+          }
+          @if (isBroker()) {
+            <app-notification-panel
+              [notifications]="brokerNotifications()"
+              [open]="notificationsOpen()"
+              [unreadCount]="unreadBrokerNotifications()"
+              (toggle)="toggleNotifications()"
+              (markRead)="markBrokerNotificationRead($event)"
+              (markAll)="markAllBrokerNotificationsRead()"
+            />
+          }
+          <button class="logout" (click)="logout()">Deconectare</button>
+        </div>
       </header>
       @if (isAdmin()) {
         <nav class="tabs admin-tabs">
-          <button [class.active]="adminTab() === 'overview'" (click)="adminTab.set('overview')"><span class="tab-icon">◉</span> Monitorizare</button>
-          <button [class.active]="adminTab() === 'kyc'" (click)="adminTab.set('kyc')"><span class="tab-icon">✓</span> Administrare KYC</button>
-          <button [class.active]="adminTab() === 'customers'" (click)="adminTab.set('customers')"><span class="tab-icon">♙</span> Clienți</button>
-          <button [class.active]="adminTab() === 'accounts'" (click)="adminTab.set('accounts')"><span class="tab-icon">◫</span> Conturi</button>
-          <button [class.active]="adminTab() === 'users'" (click)="adminTab.set('users')"><span class="tab-icon">⌁</span> Utilizatori</button>
-          <button [class.active]="adminTab() === 'audit'" (click)="adminTab.set('audit')"><span class="tab-icon">◷</span> Jurnal audit</button>
-          <button [class.active]="adminTab() === 'analytics'" (click)="adminTab.set('analytics')"><span class="tab-icon">◔</span> Rapoarte</button><button [class.active]="adminTab() === 'powerbi'" (click)="adminTab.set('powerbi')"><span class="tab-icon">▣</span> Power BI</button>
+          <button [class.active]="adminTab() === 'overview'" (click)="adminTab.set('overview')">
+            <span class="tab-icon">◉</span> Monitorizare și rapoarte
+          </button>
+          <button [class.active]="adminTab() === 'kyc'" (click)="adminTab.set('kyc')">
+            <span class="tab-icon">✓</span> Administrare KYC
+          </button>
+          <button [class.active]="adminTab() === 'customers'" (click)="adminTab.set('customers')">
+            <span class="tab-icon">♙</span> Clienți
+          </button>
+          <button [class.active]="adminTab() === 'accounts'" (click)="adminTab.set('accounts')">
+            <span class="tab-icon">◫</span> Conturi
+          </button>
+          <button [class.active]="adminTab() === 'users'" (click)="adminTab.set('users')">
+            <span class="tab-icon">⌁</span> Utilizatori
+          </button>
+          <button [class.active]="adminTab() === 'audit'" (click)="adminTab.set('audit')">
+            <span class="tab-icon">◷</span> Jurnal audit
+          </button>
+          <button [class.active]="adminTab() === 'powerbi'" (click)="adminTab.set('powerbi')"><span class="tab-icon">▣</span> Power BI</button>
+          <button [class.active]="adminTab() === 'ai'" (click)="adminTab.set('ai')"><span class="tab-icon">✦</span> Asistent AI</button>
         </nav>
-        @if (orderMessage()) { <div class="order-message">{{ orderMessage() }}<button (click)="orderMessage.set('')">×</button></div> }
-        @if (adminTab() === 'customers' || adminTab() === 'kyc' || adminTab() === 'audit') { <div class="admin-export">@if(adminTab() === 'customers'){<button (click)="exportAdminCustomers()">Export clienți CSV</button>}@if(adminTab() === 'kyc'){<button (click)="exportKyc()">Export KYC CSV</button>}@if(adminTab() === 'audit'){<button (click)="exportAudit()">Export audit CSV</button>}</div> }
-        @if (adminTab() === 'overview') { <app-admin-overview [data]="adminOverview()" /> } @else if (adminTab() === 'analytics') { <app-admin-analytics [data]="adminAnalytics()" (periodChange)="loadAdminAnalytics($event)" /> } @else if (adminTab() === 'powerbi') { <app-admin-powerbi [reportUrl]="powerBiReportUrl" /> } @else if (adminTab() === 'kyc') { <app-admin-kyc [records]="kycRecords()" (statusChange)="updateKycStatus($event)" /> } @else if (adminTab() === 'customers') { <app-admin-customers [customers]="adminCustomers()" (statusChange)="updateCustomerStatus($event)" (createCustomer)="createCustomerForAdmin($event)" (details)="loadAdminCustomerOverview($event)" /> @if(adminCustomerOverview()){<div class="modal-backdrop" (click)="adminCustomerOverview.set(null)"><section class="customer-overview-modal" (click)="$event.stopPropagation()"><button class="close-modal" (click)="adminCustomerOverview.set(null)">×</button><p>DETALII CLIENT</p><h2>{{adminCustomerOverview()!.firstName}} {{adminCustomerOverview()!.lastName}}</h2><span>{{adminCustomerOverview()!.email}} · {{adminCustomerOverview()!.status}}</span><h3>Conturi</h3>@for(account of adminCustomerOverview()!.accounts;track account.accountId){<article><b>{{account.accountNumber}}</b><span>{{account.currency}} · {{account.status}}</span></article>}@empty{<p>Nu există conturi.</p>}<h3>Solduri numerar</h3>@for(cash of adminCustomerOverview()!.cash;track cash.accountId + cash.currency){<article><b>{{cash.currency}}</b><span>{{cash.availableBalance}} disponibil · {{cash.blockedBalance}} blocat</span></article>}@empty{<p>Nu există solduri de numerar.</p>}<h3>Poziții</h3>@for(position of adminCustomerOverview()!.positions;track position.symbol){<article><b>{{position.symbol}}</b><span>{{position.quantity}} unități · preț mediu {{position.averagePrice}} {{position.currency}}</span></article>}@empty{<p>Nu există poziții deschise.</p>}</section></div>} } @else if (adminTab() === 'accounts') { <app-admin-accounts [accounts]="adminAccounts()" (changed)="updateAdminAccountStatus($event)" />@if(adminAccountDetails()){<section class="admin-customer-detail"><button (click)="adminAccountDetails.set(null)">×</button><h3>Detalii cont #{{adminAccountDetails()!.accountId}}</h3><b>Solduri</b>@for(cash of adminAccountDetails()!.cash;track cash.cashAccountId){<p>{{cash.currency}}: {{cash.availableBalance}} disponibil · {{cash.blockedBalance}} blocat</p>}<b>Poziții</b>@for(position of adminAccountDetails()!.positions;track position.symbol){<p>{{position.symbol}} · {{position.quantity}} unități · preț mediu {{position.averagePrice}} {{position.currency}}</p>}@empty{<p>Nu există poziții deschise.</p>}</section>} } @else if (adminTab() === 'users') { <app-admin-users [users]="adminUsers()" (statusChange)="updateAdminUserStatus($event)" (passwordReset)="resetAdminUserPassword($event)" (create)="createAdminUser($event)" /> } @else { <app-admin-audit [entries]="kycAudit()" /> }
-      } @else if (isBroker()) {
-        <div class="broker-refresh">
-          <span>Actualizare automată la fiecare 25 de secunde@if (brokerUpdatedAt()) { · Ultima actualizare: {{ brokerUpdatedAt() | date:'HH:mm:ss' }} }</span>
-          <div class="broker-tools"><label>Afișare în<select [value]="brokerDisplayCurrency()" (change)="selectBrokerDisplayCurrency($any($event.target).value)">@for(rate of displayRates();track rate.currency){<option [value]="rate.currency">{{rate.currency}}</option>}</select></label><button (click)="refreshBrokerData()">Actualizează acum</button></div>
-        </div>
-        <nav class="tabs"><button [class.active]="brokerTab() === 'overview'" (click)="brokerTab.set('overview')">Prezentare broker</button><button [class.active]="brokerTab() === 'orders'" (click)="brokerTab.set('orders')">Ordine active</button><button [class.active]="brokerTab() === 'executions'" (click)="brokerTab.set('executions')">Istoric execuții</button><button [class.active]="brokerTab() === 'rates'" (click)="brokerTab.set('rates')">Schimb valutar</button></nav>
-        @if (brokerTab() === 'orders' || brokerTab() === 'executions') {
-          <div class="broker-export">
-            @if (brokerTab() === 'orders') { <button (click)="exportBrokerOrders()">Descarcă istoricul ordinelor CSV</button> }
-            @if (brokerTab() === 'executions') { <button (click)="exportBrokerExecutions()">Descarcă istoricul execuțiilor CSV</button> }
+        @if (orderMessage()) {
+          <div class="order-message">
+            {{ orderMessage() }}<button (click)="orderMessage.set('')">×</button>
           </div>
         }
-        @if (orderMessage()) { <div class="order-message">{{ orderMessage() }}<button (click)="orderMessage.set('')">×</button></div> }
-        @if (brokerTab() === 'overview') { <app-broker-summary [orders]="orders()" [executions]="brokerExecutions()" [currency]="brokerDisplayCurrency()" [multiplier]="brokerDisplayMultiplier()" /><app-broker-alerts [orders]="orders()" (opened)="openBrokerOrder($event)" /> }
-        @if (brokerTab() === 'orders') { <app-broker-panel [orders]="orders()" (details)="loadBrokerOrderDetails($event)" /> }
-        @if (brokerTab() === 'executions') { <app-broker-executions [executions]="brokerExecutions()" [currency]="brokerDisplayCurrency()" [multiplier]="brokerDisplayMultiplier()" /> }
-        @if (brokerTab() === 'rates') { <app-broker-exchange-rates [rates]="displayRates()" /> }
-        <app-broker-order-details [details]="brokerOrderDetails()" (closed)="brokerOrderDetails.set(null)" (execute)="executeOrder($event)" (reject)="rejectBrokerOrder($event)" />
+        @if (adminTab() === 'customers' || adminTab() === 'kyc' || adminTab() === 'audit') {
+          <div class="admin-export">
+            @if (adminTab() === 'customers') {
+              <button (click)="exportAdminCustomers()">Export clienți CSV</button>
+            }
+            @if (adminTab() === 'kyc') {
+              <button (click)="exportKyc()">Export KYC CSV</button>
+            }
+            @if (adminTab() === 'audit') {
+              <button (click)="exportAudit()">Export audit CSV</button>
+            }
+          </div>
+        }
+        @if (adminTab() === 'overview') {
+          <section class="admin-monitoring-reports"><app-admin-overview [data]="adminOverview()" /><app-admin-analytics [data]="adminAnalytics()" (periodChange)="loadAdminAnalytics($event)" /></section>
+        } @else if (adminTab() === 'powerbi') {
+          @defer (when adminTab() === 'powerbi') { <app-admin-powerbi [reportUrl]="powerBiReportUrl" /> } @placeholder { <section class="deferred-placeholder">Se încarcă raportarea…</section> }
+        } @else if (adminTab() === 'ai') {
+          @defer (when adminTab() === 'ai') { <app-admin-ai-assistant [loading]="adminAiLoading()" [response]="adminAiResponse()" [error]="adminAiError()" (asked)="askAdminAi($event)" /> } @placeholder { <section class="deferred-placeholder">Se încarcă asistentul…</section> }
+        } @else if (adminTab() === 'kyc') {
+          @defer (when adminTab() === 'kyc') { <app-admin-kyc [records]="kycRecords()" (statusChange)="updateKycStatus($event)" /> } @placeholder { <section class="deferred-placeholder">Se încarcă dosarele KYC…</section> }
+        } @else if (adminTab() === 'customers') {
+          @defer (when adminTab() === 'customers') { <app-admin-customers
+            [customers]="adminCustomers()"
+            (statusChange)="updateCustomerStatus($event)"
+            (createCustomer)="createCustomerForAdmin($event)"
+            (details)="loadAdminCustomerOverview($event)"
+          /> }
+          @if (adminCustomerOverview()) { <div class="modal-backdrop" (click)="adminCustomerOverview.set(null)"><section class="customer-overview-modal" (click)="$event.stopPropagation()"><button class="close-modal" (click)="adminCustomerOverview.set(null)">×</button><p>DETALII CLIENT</p><h2>{{adminCustomerOverview()!.firstName}} {{adminCustomerOverview()!.lastName}}</h2><span>{{adminCustomerOverview()!.email}} · {{adminCustomerOverview()!.status}}</span><h3>Conturi</h3>@for(account of adminCustomerOverview()!.accounts;track account.accountId){<article><b>{{account.accountNumber}}</b><span>{{account.currency}} · {{account.status}}</span></article>}@empty{<p>Nu există conturi.</p>}<h3>Solduri numerar</h3>@for(cash of adminCustomerOverview()!.cash;track cash.accountId + cash.currency){<article><b>{{cash.currency}}</b><span>{{cash.availableBalance}} disponibil · {{cash.blockedBalance}} blocat</span></article>}@empty{<p>Nu există solduri.</p>}<h3>Poziții</h3>@for(position of adminCustomerOverview()!.positions;track position.symbol){<article><b>{{position.symbol}}</b><span>{{position.quantity}} unități · preț mediu {{position.averagePrice}} {{position.currency}}</span></article>}@empty{<p>Nu există poziții deschise.</p>}</section></div> }
+        } @else if (adminTab() === 'accounts') {
+          @defer (when adminTab() === 'accounts') { <app-admin-accounts
+            [accounts]="adminAccounts()"
+            (changed)="updateAdminAccountStatus($event)"
+          /> }
+          @if (adminAccountDetails()) {
+            <section class="admin-customer-detail">
+              <button (click)="adminAccountDetails.set(null)">×</button>
+              <h3>Detalii cont #{{ adminAccountDetails()!.accountId }}</h3>
+              <b>Solduri</b>
+              @for (cash of adminAccountDetails()!.cash; track cash.cashAccountId) {
+                <p>
+                  {{ cash.currency }}: {{ cash.availableBalance }} disponibil ·
+                  {{ cash.blockedBalance }} blocat
+                </p>
+              }
+              <b>Poziții</b>
+              @for (position of adminAccountDetails()!.positions; track position.symbol) {
+                <p>
+                  {{ position.symbol }} · {{ position.quantity }} unități · preț mediu
+                  {{ position.averagePrice }} {{ position.currency }}
+                </p>
+              } @empty {
+                <p>Nu există poziții deschise.</p>
+              }
+            </section>
+          }
+        } @else if (adminTab() === 'users') {
+          @defer (when adminTab() === 'users') { <app-admin-users
+            [users]="adminUsers()"
+            (statusChange)="updateAdminUserStatus($event)"
+            (passwordReset)="resetAdminUserPassword($event)"
+            (create)="createAdminUser($event)"
+          /> }
+        } @else {
+          @defer (when adminTab() === 'audit') { <app-admin-audit [entries]="kycAudit()" /> } @placeholder { <section class="deferred-placeholder">Se încarcă jurnalul…</section> }
+        }
+      } @else if (isBroker()) {
+        <div class="broker-refresh">
+          <span
+            >Actualizare automată la fiecare 25 de secunde
+            @if (brokerUpdatedAt()) {
+              · Ultima actualizare: {{ brokerUpdatedAt() | date: 'HH:mm:ss' }}
+            }
+          </span>
+          <div class="broker-tools">
+            <label
+              >Afișare în<select
+                [value]="brokerDisplayCurrency()"
+                (change)="selectBrokerDisplayCurrency($any($event.target).value)"
+              >
+                @for (rate of displayRates(); track rate.currency) {
+                  <option [value]="rate.currency">{{ rate.currency }}</option>
+                }
+              </select></label
+            ><button (click)="refreshBrokerData()">Actualizează acum</button>
+          </div>
+        </div>
+        <nav class="tabs">
+          <button [class.active]="brokerTab() === 'overview'" (click)="brokerTab.set('overview')">
+            Prezentare broker</button
+          ><button [class.active]="brokerTab() === 'orders'" (click)="brokerTab.set('orders')">
+            Ordine active</button
+          ><button
+            [class.active]="brokerTab() === 'executions'"
+            (click)="brokerTab.set('executions')"
+          >
+            Istoric execuții</button
+          ><button [class.active]="brokerTab() === 'rates'" (click)="brokerTab.set('rates')">
+            Schimb valutar
+          </button><button [class.active]="brokerTab() === 'profile'" (click)="brokerTab.set('profile')">Profil și securitate</button>
+        </nav>
+        @if (brokerTab() === 'orders' || brokerTab() === 'executions') {
+          <div class="broker-export">
+            @if (brokerTab() === 'orders') {
+              <button (click)="exportBrokerOrders()">Descarcă istoricul ordinelor CSV</button>
+            }
+            @if (brokerTab() === 'executions') {
+              <button (click)="exportBrokerExecutions()">Descarcă istoricul execuțiilor CSV</button>
+            }
+          </div>
+        }
+        @if (orderMessage()) {
+          <div class="order-message">
+            {{ orderMessage() }}<button (click)="orderMessage.set('')">×</button>
+          </div>
+        }
+        @if (brokerTab() === 'overview') {
+          <app-broker-summary
+            [orders]="orders()"
+            [executions]="brokerExecutions()"
+            [currency]="brokerDisplayCurrency()"
+            [multiplier]="brokerDisplayMultiplier()"
+          /><app-broker-alerts [alerts]="brokerIntelligentAlerts()" (opened)="openBrokerOrder($event)" />
+        }
+        @if (brokerTab() === 'orders') {
+          @defer (when brokerTab() === 'orders') { <app-broker-panel [orders]="orders()" (details)="loadBrokerOrderDetails($event)" /> } @placeholder { <section class="deferred-placeholder">Se încarcă ordinele…</section> }
+        }
+        @if (brokerTab() === 'executions') {
+          @defer (when brokerTab() === 'executions') { <app-broker-executions
+            [executions]="brokerExecutions()"
+            [currency]="brokerDisplayCurrency()"
+            [multiplier]="brokerDisplayMultiplier()"
+          /> }
+        }
+        @if (brokerTab() === 'rates') {
+          @defer (when brokerTab() === 'rates') { <app-broker-exchange-rates [rates]="displayRates()" /> } @placeholder { <section class="deferred-placeholder">Se încarcă cursurile…</section> }
+        }
+        @if (brokerTab() === 'profile') { @defer (when brokerTab() === 'profile') { <app-broker-profile (passwordChange)="changePassword($event)" /> } @placeholder { <section class="deferred-placeholder">Se încarcă profilul…</section> } }
+        <app-broker-order-details
+          [details]="brokerOrderDetails()"
+          (closed)="brokerOrderDetails.set(null)"
+          (execute)="executeOrder($event)"
+          (reject)="rejectBrokerOrder($event)"
+        />
       } @else {
-        <nav class="tabs"><button [class.active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">Prezentare generală</button><button [class.active]="activeTab() === 'market'" (click)="activeTab.set('market')">Instrumente</button><button [class.active]="activeTab() === 'trade'" (click)="activeTab.set('trade')">Tranzacționare</button><button [class.active]="activeTab() === 'cash'" (click)="activeTab.set('cash')">Istoric numerar</button><button [class.active]="activeTab() === 'orders'" (click)="activeTab.set('orders')">Istoric ordine</button><button [class.active]="activeTab() === 'profile'" (click)="activeTab.set('profile')">Profil și verificare</button></nav>
-        @if (orderMessage()) { <div class="order-message">{{ orderMessage() }}<button (click)="orderMessage.set('')">×</button></div> }
-        @if (activeTab() === 'overview') { <app-portfolio-currency-filter [currencies]="portfolioCurrencies()" [selected]="portfolioCurrencyFilter()" (changed)="selectPortfolioCurrency($event)" /><app-portfolio-summary [accounts]="accounts().length" [positions]="filteredPositions().length" [total]="overviewTotal()" [invested]="overviewInvested()" [profit]="overviewProfit()" [percent]="overviewPercent()" [currency]="overviewCurrency()" /><app-deposit-form [balances]="cashBalances()" [accounts]="accounts()" (deposited)="depositCash($event)" (cashAccountOpened)="openCashAccount($event)" /><app-withdrawal-form [balances]="cashBalances()" (withdrawn)="withdrawCash($event)" /><app-currency-exchange-form [balances]="cashBalances()" [quote]="exchangeQuote()" (quoteRequested)="loadExchangeQuote($event)" (exchanged)="exchangeCash($event)" />@if(portfolioCurrencyFilter()==='ALL'){<app-portfolio-chart [points]="displayHistory()" [currency]="displayCurrency()" (periodChange)="loadPortfolioHistory($event)" />}@else{<section class="filtered-history-note">Graficul istoric este disponibil pentru întregul portofoliu. Filtrul selectat se aplică valorilor curente, pozițiilor și numerarului în {{portfolioCurrencyFilter()}}.</section>}<app-accounts-list [accounts]="accounts()" /><app-cash-balances [balances]="filteredBalances()" /><app-positions-table [positions]="filteredPositions()" /> }
-        @if (activeTab() === 'market') { <app-instruments-list [instruments]="instruments()" /> }
-        @if (activeTab() === 'trade') { <app-order-form [accounts]="accounts()" [instruments]="instruments()" (submitted)="createOrder($event)" /> }
-        @if (activeTab() === 'cash') { <app-cash-history [transactions]="cashTransactions()" /> }
-        @if (activeTab() === 'orders') { <app-orders-history [orders]="orders()" (cancel)="cancelOrder($event)" /> }
-        @if (activeTab() === 'profile') { <app-profile-kyc [profile]="profile()" /> }
+        <nav class="tabs">
+          <button [class.active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
+            Prezentare generală</button
+          ><button [class.active]="activeTab() === 'market'" (click)="activeTab.set('market')">
+            Instrumente</button
+          ><button [class.active]="activeTab() === 'trade'" (click)="activeTab.set('trade')">
+            Tranzacționare</button
+          ><button [class.active]="activeTab() === 'cash'" (click)="activeTab.set('cash')">
+            Istoric numerar</button
+          ><button [class.active]="activeTab() === 'orders'" (click)="activeTab.set('orders')">
+            Istoric ordine</button
+          ><button [class.active]="activeTab() === 'profile'" (click)="activeTab.set('profile')">
+            Profil și verificare
+          </button>
+        </nav>
+        @if (orderMessage()) {
+          <div class="order-message">
+            {{ orderMessage() }}<button (click)="orderMessage.set('')">×</button>
+          </div>
+        }
+        @if (activeTab() === 'overview') {
+          <app-portfolio-currency-filter
+            [currencies]="portfolioCurrencies()"
+            [selected]="portfolioCurrencyFilter()"
+            (changed)="selectPortfolioCurrency($event)"
+          /><app-portfolio-summary
+            [accounts]="accounts().length"
+            [positions]="filteredPositions().length"
+            [total]="overviewTotal()"
+            [invested]="overviewInvested()"
+            [profit]="overviewProfit()"
+            [percent]="overviewPercent()"
+            [currency]="overviewCurrency()"
+          /><app-deposit-form
+            [balances]="cashBalances()"
+            [accounts]="accounts()"
+            (deposited)="depositCash($event)"
+            (cashAccountOpened)="openCashAccount($event)"
+          /><app-withdrawal-form
+            [balances]="cashBalances()"
+            (withdrawn)="withdrawCash($event)"
+          /><app-currency-exchange-form
+            [balances]="cashBalances()"
+            [quote]="exchangeQuote()"
+            (quoteRequested)="loadExchangeQuote($event)"
+            (exchanged)="exchangeCash($event)"
+          />
+          @if (portfolioCurrencyFilter() === 'ALL') {
+            <app-portfolio-chart
+              [points]="displayHistory()"
+              [currency]="displayCurrency()"
+              (periodChange)="loadPortfolioHistory($event)"
+            />
+          } @else {
+            <section class="filtered-history-note">
+              Graficul istoric este disponibil pentru întregul portofoliu. Filtrul selectat se
+              aplică valorilor curente, pozițiilor și numerarului în
+              {{ portfolioCurrencyFilter() }}.
+            </section>
+          }
+          <app-accounts-list [accounts]="accounts()" /><app-cash-balances
+            [balances]="filteredBalances()"
+          /><app-positions-table [positions]="filteredPositions()" />@defer (on viewport) { <app-customer-ai-assistant [loading]="customerAiLoading()" [response]="customerAiResponse()" [error]="customerAiError()" (asked)="askCustomerAi($event)" /> } @placeholder { <section class="deferred-placeholder">Se pregătește asistentul portofoliului…</section> }
+        }
+        @if (activeTab() === 'market') {
+          @defer (when activeTab() === 'market') { <app-instruments-list [instruments]="instruments()" /> } @placeholder { <section class="deferred-placeholder">Se încarcă instrumentele…</section> }
+        }
+        @if (activeTab() === 'trade') {
+          @defer (when activeTab() === 'trade') { <app-order-form
+            [accounts]="accounts()"
+            [instruments]="instruments()"
+            (submitted)="createOrder($event)"
+          /> }
+        }
+        @if (activeTab() === 'cash') {
+          @defer (when activeTab() === 'cash') { <app-cash-history [transactions]="cashTransactions()" /> } @placeholder { <section class="deferred-placeholder">Se încarcă istoricul…</section> }
+        }
+        @if (activeTab() === 'orders') {
+          @defer (when activeTab() === 'orders') { <app-orders-history [orders]="orders()" (cancel)="cancelOrder($event)" (partialCancel)="cancelOrderPartially($event)" /> } @placeholder { <section class="deferred-placeholder">Se încarcă ordinele…</section> }
+        }
+        @if (activeTab() === 'profile') {
+          <app-profile-kyc [profile]="profile()" />
+        }
       }
     </section>
   }
 </main>
-
-
-
-

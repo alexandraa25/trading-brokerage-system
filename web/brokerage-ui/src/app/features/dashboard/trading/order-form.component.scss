@@ -49,6 +49,10 @@ button {
   color: #092a3d;
   font-weight: 800
 }
+.estimate{grid-column:span 2;display:grid;gap:7px;padding:13px;border:1px solid #4c7782;border-radius:10px;background:#0b2739;color:#cce9e8}.estimate p{margin:0 0 3px;color:#7fdae0;font-size:11px;font-weight:800;letter-spacing:.1em}.estimate span{display:flex;justify-content:space-between;font-size:13px}.estimate strong{padding-top:7px;border-top:1px solid #4c7782;color:#fff}.estimate small{color:#a8c3cb;font-size:11px}
+.estimate-error { grid-column: span 2; margin: 0; color: #ffd0cc; font-weight: 700; }
+.confirm-backdrop{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:#061d2d99}.confirm-modal{display:grid;gap:13px;width:min(410px,100%);padding:27px;border-radius:18px;background:#fff;color:#173651}.confirm-modal p{margin:0;color:#087c8c;font-size:11px;font-weight:800;letter-spacing:.12em}.confirm-modal h2{margin:0}.confirm-modal>span{color:#657c92}.confirm-modal>div{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #e4edf1}.confirm-modal footer{display:flex;justify-content:flex-end;gap:10px}.confirm-modal button{grid-column:auto}.confirm-modal .secondary{background:#e8f1f4;color:#36566a}
+.confirm-modal .insufficient { padding: 11px; border-radius: 8px; background: #fff0ef; color: #a52a22; font-size: 13px; letter-spacing: 0; }.confirm-modal button:disabled, form > button:disabled { opacity: .55; cursor: not-allowed; }
 
 @media(max-width:650px) {
   form {

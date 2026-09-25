@@ -71,6 +71,10 @@ Autentificarea folosește JWT. Rolurile disponibile sunt:
 Operațiunile de numerar și ordine păstrează informația istorică necesară,
 inclusiv cursurile BCE pentru valorile de raportare în EUR.
 
+`POST /api/customer-ai/ask` oferă explicații despre portofoliul clientului și
+impactul cursurilor BCE. Endpointul citește automat numai conturile asociate
+identității JWT curente; nu acceptă un identificator de client în cerere.
+
 ### Broker
 
 | Metodă | Rută | Scop |
@@ -91,9 +95,30 @@ inclusiv cursurile BCE pentru valorile de raportare în EUR.
 | Conturi | `/api/admin/accounts`, suspendare/reactivare și conturi de numerar |
 | Acces | `/api/admin/users`, activare, resetare parolă și audit acces |
 | Analiză | `/api/admin/overview`, `/api/admin/analytics` |
+| Asistent AI | `POST /api/admin/ai/ask` |
 
 `GET /api/admin/analytics` citește agregări read-only din `BrokerageDW`, folosite
 și de tabul Rapoarte din interfața Angular.
+
+## Asistent AI pentru administrator
+
+Tabul **Asistent AI** este disponibil numai administratorilor. El trimite către
+serviciul AI doar indicatori agregați din `BrokerageDW`: valoarea totală a
+portofoliilor, fluxurile de numerar, comisioanele, ordinele și situația KYC.
+Nu transmite din interfață date personale ale clienților și nu execută operații
+în aplicație.
+
+Asistentul folosește Groq, cu modelul gratuit `openai/gpt-oss-20b`. Configurează
+cheia numai local, în User Secrets, din directorul
+`api/Brokerage/Brokerage`:
+
+```powershell
+dotnet user-secrets set "Groq:ApiKey" "CHEIA_TA_GROQ"
+dotnet user-secrets set "Groq:Model" "openai/gpt-oss-20b"
+```
+
+După configurare, repornește API-ul. Cheia nu se salvează în `appsettings.json`,
+în codul Angular sau în Git.
 
 ## Organizare cod
 

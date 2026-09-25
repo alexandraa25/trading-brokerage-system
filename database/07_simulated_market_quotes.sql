@@ -42,3 +42,32 @@ GO
 
 EXEC trading.usp_RefreshSimulatedMarketQuotes;
 GO
+
+/* Istoric demonstrativ pentru graficele de evoluție pe instrument. */
+CREATE OR ALTER PROCEDURE trading.usp_SeedSimulatedMarketQuoteHistory
+    @Days INT = 90
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET @Days = CASE WHEN @Days BETWEEN 7 AND 365 THEN @Days ELSE 90 END;
+
+    ;WITH Days AS
+    (
+        SELECT TOP (@Days) DATEADD(DAY, -ROW_NUMBER() OVER (ORDER BY (SELECT NULL)), CAST(SYSUTCDATETIME() AS DATE)) AS QuoteDate
+        FROM sys.all_objects
+    )
+    INSERT INTO trading.MarketQuote (InstrumentId, QuoteDate, MarketPrice, QuoteCurrency, SourceSystem)
+    SELECT instrument.InstrumentId, dayValue.QuoteDate,
+           CAST(ROUND(20 + instrument.InstrumentId * 7.31
+               + (ABS(CHECKSUM(dayValue.QuoteDate, instrument.InstrumentId)) % 2200) / 100.0
+               + DATEDIFF(DAY, dayValue.QuoteDate, CAST(SYSUTCDATETIME() AS DATE)) * .035, 8) AS DECIMAL(19,8)),
+           instrument.Currency, 'SIMULATED_HISTORY'
+    FROM trading.Instrument instrument
+    CROSS JOIN Days dayValue
+    WHERE instrument.IsActive = 1
+      AND NOT EXISTS (SELECT 1 FROM trading.MarketQuote quote WHERE quote.InstrumentId = instrument.InstrumentId AND quote.QuoteDate = dayValue.QuoteDate);
+END;
+GO
+
+EXEC trading.usp_SeedSimulatedMarketQuoteHistory @Days = 90;
+GO

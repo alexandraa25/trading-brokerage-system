@@ -253,6 +253,12 @@ sunt păstrate zilnic în baza de date.
 ## Documentație API (24.09.2026)
 
 - `api/Brokerage/README.md` descrie pornirea API-ului, User Secrets pentru JWT, Swagger, endpointurile pe roluri, configurația locală și testele automate.
+## Asistent AI pentru administrator (25.09.2026)
+
+- Tabul `Asistent AI` este disponibil exclusiv administratorului, în `web/brokerage-ui/src/app/features/admin/admin-ai-assistant.component.ts`.
+- `POST /api/admin/ai/ask` este protejat prin rolul `Administrator`. El construiește un context cu valori agregate, read-only, din `BrokerageDW` și îl trimite prin `Responses API`.
+- Serviciul `api/Brokerage/Brokerage/Services/AdminAiService.cs` nu transmite nume, e-mailuri, poziții individuale sau parole. Răspunsul este limitat la analiză operațională și nu poate executa ordine ori hotărâri KYC.
+- Integrarea folosește Groq prin endpointul compatibil OpenAI Chat Completions, cu modelul gratuit `openai/gpt-oss-20b`. Cheia `Groq:ApiKey` și modelul opțional `Groq:Model` se configurează numai în User Secrets pe server; ele nu se introduc în Angular, `appsettings.json`, Git sau acest document.
 ## Documentație
 
 - `README.md` este ghidul global actualizat: funcționalități, arhitectură,
@@ -285,3 +291,59 @@ sunt păstrate zilnic în baza de date.
 După fiecare etapă importantă implementată, actualizez acest document cu
 funcțiile noi, fișierele relevante, deciziile tehnice și următorii pași.
 Nu se salvează chei, parole sau alte secrete în acest document.
+
+## Monitorizare și rapoarte reunite (25.09.2026)
+
+- În panoul administratorului, taburile Monitorizare și Rapoarte au fost reunite în Monitorizare și rapoarte. Indicatorii și alertele operaționale apar înaintea analizelor din BrokerageDW și a graficului cu perioada selectabilă.
+
+## Asistent AI pentru client (25.09.2026)
+
+- Pagina Prezentare generală a clientului include `customer-ai-assistant.component`, pentru explicații despre profit/pierdere, structură de portofoliu și impactul cursurilor BCE.
+- `POST /api/customer-ai/ask` este disponibil numai rolului `Customer`. Contextul este calculat în backend pentru `customerId` din JWT, fără ca interfața să poată cere datele altui client.
+- Datele trimise către Groq sunt agregări ale conturilor proprii, soldurilor, valorilor investite la preț mediu și cursurilor BCE curente. Răspunsul are caracter informativ, nu de consultanță financiară.
+
+## Alerte inteligente broker (25.09.2026)
+
+- `GET /api/broker/alerts/intelligent` analizează ordinele active în backend și atribuie prioritate, motiv și acțiune sugerată.
+- Sunt semnalate ordinele executate parțial, ordinele în așteptare peste 60 de minute, lipsa cotației de piață, prețul în afara limitei clientului și ordinele care depășesc 15 minute.
+- Componenta `broker-alerts.component` afișează alertele cu paginare și deschide direct detaliile ordinului.
+
+## Date de piață și grafice pe instrument (25.09.2026)
+
+- `GET /api/instruments/{instrumentId}/quotes?days=7|30|90` oferă istoricul de cotații pentru un instrument activ.
+- Tabul Instrumente afișează un buton „Vezi evoluția”, un grafic de preț și variația procentuală pentru 7, 30 sau 90 de zile.
+- `database/07_simulated_market_quotes.sql` include `trading.usp_SeedSimulatedMarketQuoteHistory`, care creează 90 de zile de cotații demonstrative variate. Scriptul trebuie rulat în `BrokerageDB` după actualizare.
+
+## Ordine avansate și confirmare (25.09.2026)
+
+- Formularul clientului acceptă ordine `MARKET`, `LIMIT`, `STOP` și `STOP-LIMIT`, afișează valoarea, comisionul estimat de 0,25% și un pop-up de confirmare înainte de trimitere.
+- `database/17_advanced_orders.sql` adaugă prețul de declanșare și procedura `trading.usp_CancelOrderPartially`; `database/18_advanced_order_creation.sql` actualizează procedura de creare a ordinului.
+- `POST /api/orders/{orderId}/cancel-partial` și fereastra „Anulare parțială” permit clientului să anuleze doar o cantitate dintr-un ordin activ. Validarea finală a cantității rămâne în procedura SQL, pentru a preveni depășirea cantității rămase.
+- Asistentul AI al clientului este randat din nou în Prezentare generală, după solduri și poziții.
+
+## Încărcare la cerere a interfeței (25.09.2026)
+
+- Panourile secundare ale clientului, brokerului și administratorului folosesc `@defer`, astfel încât codul pentru tabul respectiv se descarcă numai când utilizatorul îl deschide.
+- Ecranul principal se încarcă mai repede, iar taburile afișează un mesaj scurt cât timp componenta este pregătită.
+
+## Estimare ordin în API (25.09.2026)
+
+- `POST /api/orders/estimate` calculează în backend prețul folosit, valoarea, comisionul de 0,25%, suma/cantitatea necesară și disponibilul real al contului.
+- Înaintea pop-up-ului de confirmare, formularul afișează estimarea venită din API. Dacă fondurile sau poziția sunt insuficiente, arată lipsa și blochează confirmarea.
+
+## Activarea automată a ordinelor STOP (25.09.2026)
+
+- `StopOrderActivationService` verifică la fiecare 30 de secunde ultima cotație a ordinelor `STOP` și `STOP-LIMIT` în așteptare. La atingerea pragului, starea devine `Triggered` și brokerii primesc o notificare.
+- `database/19_stop_order_activation.sql` adaugă stările `WaitingTrigger` și `Triggered`, actualizează crearea ordinelor STOP și permite execuția ordinelor declanșate. Pentru `STOP-LIMIT`, API-ul refuză orice preț de execuție care nu respectă limita clientului.
+
+## Istoric detaliat al ordinelor (25.09.2026)
+
+- `database/20_order_history_quantities.sql` adaugă cantitatea inițială și cantitatea anulată, iar anularea parțială le actualizează tranzacțional.
+- Istoricul clientului afișează cantitatea comandată, executată, anulată și rămasă, prețul STOP și limita, precum și etichete clare pentru stările de declanșare și anulare parțială.
+
+## Depozit de date pentru ordine avansate (25.09.2026)
+
+- `etl/09_stop_order_history_upgrade.sql` extinde `staging.[Order]` cu `StopPrice`, `OriginalQuantity` și `CancelledQuantity` și sincronizează datele operaționale.
+- `warehouse/17_upgrade_fact_order_lifecycle_stop_history.sql` extinde `dw.FactOrderLifecycle`; cantitatea rămasă este calculată ca `comandată - executată - anulată`.
+- Încărcarea incrementală, încărcarea inițială, reîmprospătarea staging și `dw.vwPowerBiOrderLifecycle` includ acum pragul STOP, momentul declanșării și cantitățile pentru analiza în Power BI.
+

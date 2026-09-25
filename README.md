@@ -29,6 +29,7 @@ de raportare.
 - suspendare/reactivare cu motiv obligatoriu;
 - indicatori operaționali, alerte și jurnale de audit;
 - export CSV pentru date administrative.
+- asistent AI pentru interpretarea indicatorilor agregați din depozitul de date.
 
 ## Arhitectură
 
@@ -93,6 +94,10 @@ Swagger: `https://localhost:7103/swagger`.
 
 Cheia JWT se configurează local prin User Secrets sub `Jwt:Key` și nu se
 salvează în Git.
+
+Pentru Asistentul AI al administratorului, adaugă local `Groq:ApiKey` și
+opțional `Groq:Model` prin User Secrets. Instrucțiunile complete sunt în
+[documentația API](api/Brokerage/README.md#asistent-ai-pentru-administrator).
 
 ### Interfață
 

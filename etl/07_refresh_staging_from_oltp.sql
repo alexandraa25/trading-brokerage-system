@@ -102,11 +102,11 @@ BEGIN TRY
     INSERT INTO staging.[Order]
     (
         OrderId, AccountId, InstrumentId, Side, OrderType,
-        Quantity, LimitPrice, Status, CreatedAt, UpdatedAt
+        Quantity, LimitPrice, StopPrice, OriginalQuantity, CancelledQuantity, Status, CreatedAt, UpdatedAt
     )
     SELECT
         OrderId, AccountId, InstrumentId, Side, OrderType,
-        Quantity, LimitPrice, Status, CreatedAt, UpdatedAt
+        Quantity, LimitPrice, StopPrice, OriginalQuantity, CancelledQuantity, Status, CreatedAt, UpdatedAt
     FROM trading.[Order];
 
     INSERT INTO staging.Execution

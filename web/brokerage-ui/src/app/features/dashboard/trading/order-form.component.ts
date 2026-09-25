@@ -1,52 +1,17 @@
-import { Component, input, output } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Account, Instrument } from '../../../core/models';
-import { CreateOrderRequest } from '../../../core/models/admin.models';
+import { CreateOrderRequest, OrderEstimate } from '../../../core/models/admin.models';
+import { ApiService } from '../../../core/api.service';
 @Component({
   selector: 'app-order-form',
-  imports: [FormsModule],
-  template: `<section class="card">
-    <p class="eyebrow">TRANZACȚIONARE</p>
-    <h2>Plasează un ordin</h2>
-    <form (ngSubmit)="submit()">
-      <label
-        >Cont<select [(ngModel)]="accountId" name="account">
-          @for (a of accounts(); track a.accountId) {
-            <option [value]="a.accountId">{{ a.accountNumber }}</option>
-          }
-        </select></label
-      ><label
-        >Instrument<select [(ngModel)]="instrumentId" name="instrument">
-          @for (i of instruments(); track i.instrumentId) {
-            <option [value]="i.instrumentId">{{ i.symbol }} — {{ i.instrumentName }}</option>
-          }
-        </select></label
-      ><label
-        >Acțiune<select [(ngModel)]="side" name="side">
-          <option value="BUY">Cumpărare</option>
-          <option value="SELL">Vânzare</option>
-        </select></label
-      ><label
-        >Tip ordin<select [(ngModel)]="orderType" name="orderType">
-          <option value="MARKET">La piață</option>
-          <option value="LIMIT">Limită</option>
-        </select></label
-      ><label
-        >Cantitate<input
-          [(ngModel)]="quantity"
-          name="quantity"
-          type="number"
-          min="0.0001"
-          step="0.0001" /></label
-      >@if (orderType === 'LIMIT') {
-        <label>Preț limită<input [(ngModel)]="limitPrice" name="limitPrice" type="number" min="0.0001" step="0.0001" required /></label>
-      }
-      ><button>Trimite ordinul</button>
-    </form>
-  </section>`,
+  imports: [FormsModule, DecimalPipe, DatePipe],
+  templateUrl: './order-form.component.html',
   styleUrl: './order-form.component.scss',
 })
 export class OrderFormComponent {
+  private readonly api = inject(ApiService);
   accounts = input<Account[]>([]);
   instruments = input<Instrument[]>([]);
   submitted = output<CreateOrderRequest>();
@@ -56,14 +21,36 @@ export class OrderFormComponent {
   orderType: CreateOrderRequest['orderType'] = 'MARKET';
   quantity = 1;
   limitPrice: number | null = null;
+  stopPrice: number | null = null;
+  selectedInstrument() { return this.instruments().find(x => x.instrumentId === +this.instrumentId); }
+  estimatedPrice() { return this.limitPrice ?? this.stopPrice ?? this.selectedInstrument()?.marketPrice ?? 0; }
+  estimatedValue() { return (+this.quantity || 0) * this.estimatedPrice(); }
+  estimatedCommission() { return this.estimatedValue() * 0.0025; }
+  estimatedTotal() { return this.estimatedValue() + this.estimatedCommission(); }
+  confirmOpen = signal(false);
+  estimate = signal<OrderEstimate | null>(null);
+  estimateLoading = signal(false);
+  estimateError = signal('');
+
+  private request(): CreateOrderRequest {
+    return {
+      accountId: +this.accountId, instrumentId: +this.instrumentId, side: this.side,
+      orderType: this.orderType, quantity: +this.quantity,
+      limitPrice: this.orderType === 'LIMIT' || this.orderType === 'STOP_LIMIT' ? +this.limitPrice! : null,
+      stopPrice: this.orderType === 'STOP' || this.orderType === 'STOP_LIMIT' ? +this.stopPrice! : null,
+    };
+  }
   submit() {
-    this.submitted.emit({
-      accountId: +this.accountId,
-      instrumentId: +this.instrumentId,
-      side: this.side,
-      orderType: this.orderType,
-      quantity: +this.quantity,
-      limitPrice: this.orderType === 'LIMIT' ? +this.limitPrice! : null,
-    });
+    if (!this.confirmOpen()) {
+      this.estimateLoading.set(true); this.estimateError.set(''); this.estimate.set(null);
+      this.api.estimateOrder(this.request()).subscribe({
+        next: estimate => { this.estimate.set(estimate); this.estimateLoading.set(false); this.confirmOpen.set(true); },
+        error: error => { this.estimateError.set(error.error?.detail ?? 'Estimarea nu a putut fi calculată.'); this.estimateLoading.set(false); },
+      });
+      return;
+    }
+    if (!this.estimate()?.canSubmit) return;
+    this.submitted.emit(this.request());
+    this.confirmOpen.set(false);
   }
 }

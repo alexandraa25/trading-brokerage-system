@@ -1,0 +1,39 @@
+<section class="card">
+  <div class="heading">
+    <div>
+      <p>JURNAL DE AUDIT</p>
+      <h2>Modificări KYC</h2><span>Istoricul automat înregistrat de baza de date.</span>
+    </div><strong>{{filtered().length}} evenimente</strong>
+  </div>
+  <div class="admin-toolbar"><label class="search-field">Caută eveniment<input [(ngModel)]="query"
+        (ngModelChange)="reset()" placeholder="Acțiune sau utilizator"></label><label>De la<input [(ngModel)]="from"
+        (ngModelChange)="reset()" type="date"></label><label>Până la<input [(ngModel)]="to" (ngModelChange)="reset()"
+        type="date"></label><button type="button" class="reset-filter" (click)="clearFilters()">Resetează</button></div>
+  @if(paged().length){<div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Moment</th>
+          <th>Acțiune</th>
+          <th>Utilizator</th>
+          <th>Detalii</th>
+        </tr>
+      </thead>
+      <tbody>@for(entry of paged();track entry.auditLogId){<tr>
+          <td>{{entry.changedAt|date:'dd.MM.yyyy, HH:mm'}}</td>
+          <td><span class="action">{{entry.action}}</span></td>
+          <td>{{entry.changedBy}}</td>
+          <td>
+            <details>
+              <summary>Vezi modificarea</summary>
+              <p>{{entry.newValues||entry.oldValues||'Fără detalii'}}</p>
+            </details>
+          </td>
+        </tr>}</tbody>
+    </table>
+  </div>
+  <div class="pagination"><button [disabled]="page()===0" (click)="page.set(page()-1)">‹ Anterior</button><span>Pagina
+      {{page()+1}} din {{pageCount()}}</span><button [disabled]="page()+1>=pageCount()"
+      (click)="page.set(page()+1)">Următor ›</button></div>}@else{<div class="empty"><b>Nu există evenimente pentru
+      filtrele alese.</b></div>}
+</section>

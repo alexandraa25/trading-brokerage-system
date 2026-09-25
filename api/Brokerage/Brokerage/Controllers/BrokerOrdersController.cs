@@ -18,10 +18,14 @@ public class BrokerOrdersController(BrokerageDbContext db, CustomerNotificationS
         var orders = await (
             from order in db.Orders.AsNoTracking()
             join instrument in db.Instruments.AsNoTracking() on order.InstrumentId equals instrument.InstrumentId
+            let executedQuantity = db.Executions.Where(item => item.OrderId == order.OrderId).Sum(item => (decimal?)item.ExecutedQuantity) ?? 0
             orderby order.CreatedAt descending
             select new OrderSummary(
                 order.OrderId, order.AccountId, instrument.Symbol, order.Side, order.OrderType,
-                order.Quantity, order.LimitPrice, order.Status, order.CreatedAt)
+                order.Quantity, order.LimitPrice, order.StopPrice,
+                order.OriginalQuantity ?? order.Quantity + order.CancelledQuantity,
+                executedQuantity, order.CancelledQuantity, order.Quantity - executedQuantity,
+                order.Status, order.CreatedAt)
         ).Take(500).ToListAsync();
 
         return Ok(orders);

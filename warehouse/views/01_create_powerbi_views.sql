@@ -64,8 +64,13 @@ SELECT
     fact.OrderStatus AS Stare,
     fact.OrderedQuantity AS CantitateCeruta,
     fact.ExecutedQuantity AS CantitateExecutata,
+    fact.CancelledQuantity AS CantitateAnulata,
     fact.RemainingQuantity AS CantitateRamasa,
     fact.ExecutionCount AS NumarExecutii,
+    fact.StopPrice AS PretStop,
+    fact.LimitPrice AS PretLimita,
+    fact.TriggeredAt AS DataDeclansarii,
+    fact.TriggerDelayMinutes AS MinutePanaLaDeclansare,
     fact.ResolutionMinutes AS MinutePanaLaSolutionare,
     fact.RejectionReason AS MotivRespingere
 FROM dw.FactOrderLifecycle fact

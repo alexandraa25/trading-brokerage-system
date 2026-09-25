@@ -37,6 +37,7 @@
   color: #e4fffc;
   font-size: 13px
 }
+.new-account,.deposit-card form>button{border-radius:10px;font-weight:800;letter-spacing:.01em;box-shadow:0 6px 14px #061d2d2b;cursor:pointer;transition:transform .16s,box-shadow .16s}.new-account:hover,.deposit-card form>button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 19px #061d2d38}.new-account{display:inline-flex;align-items:center;gap:7px}.deposit-card form>button{min-width:150px}
 
 .deposit-card form {
   display: grid;

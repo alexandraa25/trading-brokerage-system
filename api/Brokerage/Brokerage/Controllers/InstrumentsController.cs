@@ -34,4 +34,21 @@ public class InstrumentsController(BrokerageDbContext db) : ControllerBase
 
         return Ok(instruments);
     }
+
+    [HttpGet("{instrumentId:long}/quotes")]
+    public async Task<ActionResult<IEnumerable<InstrumentQuotePoint>>> GetQuoteHistory(long instrumentId, [FromQuery] int days = 30)
+    {
+        days = Math.Clamp(days, 7, 365);
+        if (!await db.Instruments.AnyAsync(x => x.InstrumentId == instrumentId && x.IsActive)) return NotFound();
+        var quotes = await db.Database.SqlQuery<InstrumentQuotePoint>($"""
+            SELECT TOP ({days}) QuoteDate, MarketPrice
+            FROM trading.MarketQuote
+            WHERE InstrumentId = {instrumentId}
+            ORDER BY QuoteDate DESC
+            """).ToListAsync();
+        quotes.Reverse();
+        return Ok(quotes);
+    }
 }
+
+public record InstrumentQuotePoint(DateTime QuoteDate, decimal MarketPrice);

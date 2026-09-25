@@ -61,7 +61,10 @@ public class TradeOrder
     public string Side { get; set; } = string.Empty;
     public string OrderType { get; set; } = string.Empty;
     public decimal Quantity { get; set; }
+    public decimal? OriginalQuantity { get; set; }
+    public decimal CancelledQuantity { get; set; }
     public decimal? LimitPrice { get; set; }
+    public decimal? StopPrice { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
@@ -126,3 +129,5 @@ public class BrokerNotification
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+public class CustomerWatchlist { public long CustomerWatchlistId { get; set; } public long CustomerId { get; set; } public long InstrumentId { get; set; } public DateTime CreatedAt { get; set; } }
+public class CustomerPriceAlert { public long CustomerPriceAlertId { get; set; } public long CustomerId { get; set; } public long InstrumentId { get; set; } public string Direction { get; set; } = string.Empty; public decimal TargetPrice { get; set; } public bool IsActive { get; set; } public DateTime? TriggeredAt { get; set; } public DateTime CreatedAt { get; set; } }

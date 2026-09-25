@@ -1,0 +1,186 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: #071b2e88;
+  backdrop-filter: blur(3px)
+}
+
+.price-chart {
+  position: relative;
+  width: min(820px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 28px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 30px 80px #071b2e66
+}
+
+.price-chart>p {
+  margin: 0;
+  color: #087b7a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .13em
+}
+
+.price-chart h2 {
+  margin: 7px 42px 18px 0;
+  color: #123152
+}
+
+.close {
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  border: 0;
+  background: #eef5f6;
+  color: #123152;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer
+}
+
+.periods {
+  display: flex;
+  gap: 8px
+}
+
+.periods button {
+  border: 1px solid #b9ddda;
+  border-radius: 9px;
+  background: #fff;
+  padding: 8px 12px;
+  color: #087b7a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer
+}
+
+.periods button:hover {
+  background: #e7f7f5
+}
+
+.summary {
+  display: flex;
+  gap: 36px;
+  margin: 22px 0 8px
+}
+
+.summary div {
+  display: grid;
+  gap: 4px
+}
+
+.summary span {
+  color: #6d8298;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em
+}
+
+.summary b {
+  font-size: 25px;
+  color: #18365c
+}
+
+.positive {
+  color: #16845b !important
+}
+
+.negative {
+  color: #b42318 !important
+}
+
+.chart-wrap {
+  position: relative;
+  height: 300px;
+  margin-top: 12px;
+  padding: 18px 0 0
+}
+
+.chart-wrap svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible
+}
+
+.chart-wrap polyline {
+  fill: none;
+  stroke: #087b7a;
+  stroke-width: 7;
+  stroke-linejoin: round;
+  stroke-linecap: round
+}
+
+.area {
+  fill: url(#priceArea)
+}
+
+circle {
+  fill: #fff;
+  stroke: #087b7a;
+  stroke-width: 5;
+  transition: r .15s
+}
+
+circle:hover {
+  r: 11
+}
+
+.scale {
+  position: absolute;
+  left: 0;
+  color: #718295;
+  font-size: 11px
+}
+
+.scale.top {
+  top: 0
+}
+
+.scale.bottom {
+  bottom: 0
+}
+
+.dates {
+  display: flex;
+  justify-content: space-between;
+  color: #718295;
+  font-size: 12px
+}
+
+.price-chart>small {
+  display: block;
+  margin-top: 15px;
+  color: #718295
+}
+
+.empty {
+  margin: 20px 0 !important;
+  color: #687e92 !important;
+  letter-spacing: normal !important;
+  font-size: 14px !important;
+  font-weight: 400 !important
+}
+
+@media(max-width:600px) {
+  .price-chart {
+    padding: 22px
+  }
+
+  .summary {
+    gap: 20px;
+    flex-direction: column
+  }
+
+  .chart-wrap {
+    height: 230px
+  }
+}

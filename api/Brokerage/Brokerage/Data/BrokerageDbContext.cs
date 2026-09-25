@@ -18,18 +18,20 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
     public DbSet<CashTransaction> CashTransactions => Set<CashTransaction>();
     public DbSet<CustomerNotification> CustomerNotifications => Set<CustomerNotification>();
     public DbSet<BrokerNotification> BrokerNotifications => Set<BrokerNotification>();
+    public DbSet<CustomerWatchlist> CustomerWatchlists => Set<CustomerWatchlist>();
+    public DbSet<CustomerPriceAlert> CustomerPriceAlerts => Set<CustomerPriceAlert>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ApiUser>(entity =>
         {
-            entity.ToTable("ApiUser", "security");
+            entity.ToTable("ApiUser", "security", table => table.HasTrigger("trg_ApiUser_Audit"));
             entity.HasKey(user => user.ApiUserId);
         });
 
         modelBuilder.Entity<Customer>(entity =>
         {
-            entity.ToTable("Customer", "core");
+            entity.ToTable("Customer", "core", table => table.HasTrigger("trg_Customer_Audit"));
             entity.HasKey(customer => customer.CustomerId);
         });
 
@@ -41,7 +43,7 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
 
         modelBuilder.Entity<TradingAccount>(entity =>
         {
-            entity.ToTable("Account", "core");
+            entity.ToTable("Account", "core", table => table.HasTrigger("trg_AccountAdministration_Audit"));
             entity.HasKey(account => account.AccountId);
         });
 
@@ -61,10 +63,13 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
 
         modelBuilder.Entity<TradeOrder>(entity =>
         {
-            entity.ToTable("Order", "trading");
+            entity.ToTable("Order", "trading", table => table.HasTrigger("trg_Order_StatusHistory"));
             entity.HasKey(order => order.OrderId);
             entity.Property(order => order.Quantity).HasPrecision(19, 8);
+            entity.Property(order => order.OriginalQuantity).HasPrecision(19, 8);
+            entity.Property(order => order.CancelledQuantity).HasPrecision(19, 8);
             entity.Property(order => order.LimitPrice).HasPrecision(19, 8);
+            entity.Property(order => order.StopPrice).HasPrecision(19, 8);
         });
 
         modelBuilder.Entity<Position>(entity =>
@@ -104,5 +109,7 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
             entity.ToTable("BrokerNotification", "audit");
             entity.HasKey(notification => notification.BrokerNotificationId);
         });
+        modelBuilder.Entity<CustomerWatchlist>(entity => { entity.ToTable("CustomerWatchlist", "core"); entity.HasKey(x => x.CustomerWatchlistId); });
+        modelBuilder.Entity<CustomerPriceAlert>(entity => { entity.ToTable("CustomerPriceAlert", "core"); entity.HasKey(x => x.CustomerPriceAlertId); });
     }
 }

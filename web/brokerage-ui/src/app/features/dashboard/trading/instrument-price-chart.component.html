@@ -1,0 +1,63 @@
+@if (instrument()) {
+  <div class="backdrop" (click)="closed.emit()">
+    <section class="price-chart" (click)="$event.stopPropagation()">
+      <button class="close" (click)="closed.emit()" aria-label="Închide">×</button>
+      <p>EVOLUȚIE COTAȚIE</p>
+      <h2>{{ instrument()!.symbol }} · {{ instrument()!.instrumentName }}</h2>
+      <div class="periods">
+        <button (click)="periodChange.emit(7)">7 zile</button
+        ><button (click)="periodChange.emit(30)">30 zile</button
+        ><button (click)="periodChange.emit(90)">3 luni</button><button (click)="periodChange.emit(365)">12 luni</button>
+      </div>
+      @if (points().length > 1) {
+        <div class="summary">
+          <div>
+            <span>ULTIMUL PREȚ</span
+            ><b
+              >{{ points().at(-1)!.marketPrice | number: '1.2-4' }} {{ instrument()!.currency }}</b
+            >
+          </div>
+          <div>
+            <span>VARIAȚIE</span
+            ><b [class.positive]="change() >= 0" [class.negative]="change() < 0"
+              >{{ change() >= 0 ? '+' : '' }}{{ change() | number: '1.2-2' }}%</b
+            >
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <span class="scale top">{{ max() | number: '1.2-4' }} {{ instrument()!.currency }}</span
+          ><span class="scale bottom"
+            >{{ min() | number: '1.2-4' }} {{ instrument()!.currency }}</span
+          ><svg viewBox="0 0 1000 260" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="priceArea" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#22a99b" stop-opacity=".35" />
+                <stop offset="100%" stop-color="#22a99b" stop-opacity=".02" />
+              </linearGradient>
+            </defs>
+            <path class="area" [attr.d]="area()"></path>
+            <polyline [attr.points]="line()"></polyline>
+            @for (point of chart(); track point.quoteDate) {
+              <circle [attr.cx]="point.x" [attr.cy]="point.y" r="7">
+                <title>
+                  {{ point.quoteDate }} · {{ point.marketPrice | number: '1.2-4' }}
+                  {{ instrument()!.currency }}
+                </title>
+              </circle>
+            }
+          </svg>
+        </div>
+        <div class="dates">
+          <span>{{ points()[0].quoteDate }}</span
+          ><span>{{ points().at(-1)!.quoteDate }}</span>
+        </div>
+        <small>Treci cu cursorul peste un punct pentru data și prețul exact.</small>
+      } @else {
+        <p class="empty">
+          Nu există suficiente cotații istorice pentru grafic. Rulează actualizarea zilnică sau
+          scriptul de date demonstrative.
+        </p>
+      }
+    </section>
+  </div>
+}

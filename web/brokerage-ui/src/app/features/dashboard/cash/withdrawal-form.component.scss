@@ -67,6 +67,7 @@
   justify-self: end;
   background: #b54708
 }
+.withdrawal-card button{min-width:150px;border-radius:10px;font-weight:800;box-shadow:0 6px 14px #6e30132b;cursor:pointer;transition:transform .16s,box-shadow .16s}.withdrawal-card button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 19px #6e30133b}
 
 .withdrawal-card button:disabled {
   background: #e5c9bb;

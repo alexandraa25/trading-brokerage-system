@@ -1,0 +1,37 @@
+<section class="ai-hero">
+  <div>
+    <p>ANALIZĂ ASISTATĂ</p>
+    <h2>Asistent AI</h2>
+    <span>Întreabă despre indicatorii agregați din depozitul de date.</span>
+  </div>
+  <span class="ai-badge">Doar administrator</span>
+</section>
+
+<section class="ai-workspace">
+  <div class="ai-question-card">
+    <label for="ai-question">Întrebarea ta</label>
+    <textarea id="ai-question" [ngModel]="question()" (ngModelChange)="question.set($event)" maxlength="500" placeholder="De exemplu: Ce necesită atenție în operațiunile de astăzi?"></textarea>
+    <div class="ai-form-footer">
+      <small>{{ question().length }}/500 caractere</small>
+      <button type="button" (click)="submit()" [disabled]="loading() || question().trim().length < 5">@if (loading()) { Analizez… } @else { Generează analiza }</button>
+    </div>
+    <div class="ai-suggestions">
+      <span>Întrebări sugerate</span>
+      @for (suggestion of suggestions; track suggestion) {
+        <button type="button" (click)="useSuggestion(suggestion)">{{ suggestion }}</button>
+      }
+    </div>
+  </div>
+
+  <article class="ai-answer-card">
+    <p>RĂSPUNS</p>
+    @if (error()) {
+      <div class="ai-error">{{ error() }}</div>
+    } @else if (response()) {
+      <div class="ai-answer">{{ response()!.answer }}</div>
+      <small>{{ response()!.disclaimer }}</small>
+    } @else {
+      <div class="ai-empty">Analiza va apărea aici după ce trimiți o întrebare.</div>
+    }
+  </article>
+</section>

@@ -3,18 +3,57 @@ import { FormsModule } from '@angular/forms';
 import { AdminUser } from '../../core/models';
 
 @Component({
-  selector: 'app-admin-users', imports: [FormsModule], styleUrl: './admin-users.component.scss',
-  template: `<section class="card"><div class="heading"><div><p>CONTROL ACCES</p><h2>Utilizatori personal</h2><span>Gestionează accesul brokerilor și administratorilor.</span></div><div class="heading-actions"><strong>{{filtered().length}} utilizatori</strong><button type="button" (click)="createOpen.set(true)">+ Angajat nou</button></div></div>
-  <div class="admin-toolbar"><label class="search-field">Caută utilizator<input [(ngModel)]="query" (ngModelChange)="page.set(0)" placeholder="E-mail" /></label><label>Rol<select [(ngModel)]="role" (ngModelChange)="page.set(0)"><option value="ALL">Toate rolurile</option><option>Broker</option><option>Administrator</option></select></label><label>Stare<select [(ngModel)]="active" (ngModelChange)="page.set(0)"><option value="ALL">Toate stările</option><option value="ACTIVE">Activi</option><option value="INACTIVE">Dezactivați</option></select></label><button type="button" class="reset-filter" (click)="resetFilters()">Resetează</button></div>
-  <div class="table-wrap"><table><thead><tr><th>E-mail</th><th>Rol</th><th>Stare</th><th>Acțiuni</th></tr></thead><tbody>@for(user of paged();track user.apiUserId){<tr><td><b>{{user.email}}</b></td><td><span class="role">{{user.role}}</span></td><td><span class="status" [class.inactive]="!user.isActive">{{user.isActive?'Activ':'Dezactivat'}}</span></td><td class="actions"><button type="button" (click)="statusChange.emit({id:user.apiUserId,isActive:!user.isActive})">{{user.isActive?'Dezactivează':'Activează'}}</button><button type="button" class="reset" (click)="selectForReset(user.apiUserId)">Resetează parola</button></td></tr>}</tbody></table></div>@if(!filtered().length){<p class="empty">Nu există utilizatori pentru filtrele alese.</p>}@if(pages()>1){<div class="pagination"><button [disabled]="page()===0" (click)="page.set(page()-1)">‹ Anterior</button><span>Pagina {{page()+1}} din {{pages()}}</span><button [disabled]="page()+1>=pages()" (click)="page.set(page()+1)">Următor ›</button></div>}</section>
-  @if(createOpen()){<div class="modal-backdrop" (click)="createOpen.set(false)"><section class="create-modal" (click)="$event.stopPropagation()"><button class="close-modal" type="button" (click)="createOpen.set(false)">×</button><p>ANGAJAT NOU</p><h2>Adaugă utilizator</h2><span>Poate fi broker sau administrator al platformei.</span><form (ngSubmit)="submitCreate()"><label>E-mail<input name="email" [(ngModel)]="newUser.email" type="email" required /></label><label>Parolă inițială<input name="password" [(ngModel)]="newUser.password" type="password" minlength="8" required /></label><label>Rol<select name="role" [(ngModel)]="newUser.role"><option>Broker</option><option>Administrator</option></select></label><div class="modal-actions"><button class="secondary" type="button" (click)="createOpen.set(false)">Anulează</button><button>Adaugă angajat</button></div></form></section></div>}
-  @if(resetId){<div class="modal-backdrop"><section class="create-modal"><button class="close-modal" type="button" (click)="resetId=''">×</button><p>CONTROL ACCES</p><h2>Parolă nouă</h2><label>Parolă nouă<input [(ngModel)]="newPassword" type="password" minlength="8" /></label><div class="modal-actions"><button class="secondary" type="button" (click)="resetId=''">Anulează</button><button [disabled]="newPassword.length<8" (click)="savePassword()">Salvează parola</button></div></section></div>}`
+  selector: 'app-admin-users',
+  imports: [FormsModule],
+  styleUrl: './admin-users.component.scss',
+  templateUrl: './admin-users.component.html',
 })
 export class AdminUsersComponent {
-  users=input<AdminUser[]>([]); statusChange=output<{id:string;isActive:boolean}>(); passwordReset=output<{id:string;password:string}>(); create=output<{email:string;password:string;role:string}>();
-  newUser={email:'',password:'',role:'Broker'}; resetId=''; newPassword=''; createOpen=signal(false); query=''; role='ALL'; active='ALL'; page=signal(0); readonly size=10;
-  filtered = () =>{const q=this.query.toLowerCase().trim(); return this.users().filter(x=>(!q||x.email.toLowerCase().includes(q))&&(this.role==='ALL'||x.role===this.role)&&(this.active==='ALL'||(this.active==='ACTIVE')===x.isActive));};
-  pages(){return Math.max(1,Math.ceil(this.filtered().length/this.size));} paged(){return this.filtered().slice(this.page()*this.size,(this.page()+1)*this.size);}
-  resetFilters(){this.query='';this.role='ALL';this.active='ALL';this.page.set(0);} selectForReset(id:string){this.resetId=id;this.newPassword='';} savePassword(){this.passwordReset.emit({id:this.resetId,password:this.newPassword});this.resetId='';}
-  submitCreate(){this.create.emit({...this.newUser});this.newUser={email:'',password:'',role:'Broker'};this.createOpen.set(false);}
+  users = input<AdminUser[]>([]);
+  statusChange = output<{ id: string; isActive: boolean }>();
+  passwordReset = output<{ id: string; password: string }>();
+  create = output<{ email: string; password: string; role: string }>();
+  newUser = { email: '', password: '', role: 'Broker' };
+  resetId = '';
+  newPassword = '';
+  createOpen = signal(false);
+  query = '';
+  role = 'ALL';
+  active = 'ALL';
+  page = signal(0);
+  readonly size = 10;
+  filtered = () => {
+    const q = this.query.toLowerCase().trim();
+    return this.users().filter(
+      (x) =>
+        (!q || x.email.toLowerCase().includes(q)) &&
+        (this.role === 'ALL' || x.role === this.role) &&
+        (this.active === 'ALL' || (this.active === 'ACTIVE') === x.isActive),
+    );
+  };
+  pages() {
+    return Math.max(1, Math.ceil(this.filtered().length / this.size));
+  }
+  paged() {
+    return this.filtered().slice(this.page() * this.size, (this.page() + 1) * this.size);
+  }
+  resetFilters() {
+    this.query = '';
+    this.role = 'ALL';
+    this.active = 'ALL';
+    this.page.set(0);
+  }
+  selectForReset(id: string) {
+    this.resetId = id;
+    this.newPassword = '';
+  }
+  savePassword() {
+    this.passwordReset.emit({ id: this.resetId, password: this.newPassword });
+    this.resetId = '';
+  }
+  submitCreate() {
+    this.create.emit({ ...this.newUser });
+    this.newUser = { email: '', password: '', role: 'Broker' };
+    this.createOpen.set(false);
+  }
 }

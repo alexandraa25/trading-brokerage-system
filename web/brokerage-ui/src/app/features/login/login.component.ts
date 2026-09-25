@@ -15,7 +15,13 @@ export class LoginComponent {
   error = signal('');
   success = signal('');
   registering = signal(false);
-  registration = { firstName: '', lastName: '', email: '', password: '', documentType: 'Carte de identitate' };
+  registration = {
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    documentType: 'Carte de identitate',
+  };
   constructor(private api: ApiService) {}
   login() {
     this.loading.set(true);
@@ -32,10 +38,23 @@ export class LoginComponent {
     });
   }
   register() {
-    this.loading.set(true); this.error.set(''); this.success.set('');
-    this.api.register({ ...this.registration, documentType: this.registration.documentType || null }).subscribe({
-      next: () => { this.email = this.registration.email; this.password = this.registration.password; this.registering.set(false); this.success.set('Contul a fost creat. Autentifică-te pentru a vedea starea KYC.'); this.loading.set(false); },
-      error: error => { this.error.set(error.error?.detail ?? 'Contul nu a putut fi creat.'); this.loading.set(false); }
-    });
+    this.loading.set(true);
+    this.error.set('');
+    this.success.set('');
+    this.api
+      .register({ ...this.registration, documentType: this.registration.documentType || null })
+      .subscribe({
+        next: () => {
+          this.email = this.registration.email;
+          this.password = this.registration.password;
+          this.registering.set(false);
+          this.success.set('Contul a fost creat. Autentifică-te pentru a vedea starea KYC.');
+          this.loading.set(false);
+        },
+        error: (error) => {
+          this.error.set(error.error?.detail ?? 'Contul nu a putut fi creat.');
+          this.loading.set(false);
+        },
+      });
   }
 }

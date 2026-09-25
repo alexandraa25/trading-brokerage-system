@@ -1,0 +1,31 @@
+
+    <section class="alerts-card">
+      <div class="heading">
+        <div><p>ALERTE BROKER</p><h2>Ordine care necesită atenție</h2></div>
+        <strong>{{ alerts().length }}</strong>
+      </div>
+
+      @if (alerts().length) {
+        <div class="alerts-list">
+          @for (alert of pagedAlerts(); track alert.orderId) {
+            <article>
+              <div>
+                <b [class.high]="alert.severity === 'High'">{{ alert.severity === 'High' ? '● Prioritate ridicată' : '● Atenție' }} · Ordinul #{{ alert.orderId }} · {{ alert.symbol }}</b>
+                <span><strong>{{ alert.title }}</strong> · {{ alert.reason }}<small>{{ alert.suggestedAction }}</small></span>
+              </div>
+              <button (click)="opened.emit(alert.orderId)">Verifică ordinul</button>
+            </article>
+          }
+        </div>
+        @if (pages() > 1) {
+          <div class="pagination">
+            <button [disabled]="currentPage() === 0" (click)="page = currentPage() - 1">Anterior</button>
+            <span>Pagina {{ currentPage() + 1 }} din {{ pages() }}</span>
+            <button [disabled]="currentPage() + 1 >= pages()" (click)="page = currentPage() + 1">Următor</button>
+          </div>
+        }
+      } @else {
+        <p class="empty">Nu există ordine care necesită atenție.</p>
+      }
+    </section>
+  

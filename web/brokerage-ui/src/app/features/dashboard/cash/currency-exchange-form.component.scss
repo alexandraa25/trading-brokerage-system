@@ -105,6 +105,7 @@
   color: #47206e;
   padding: 11px 15px
 }
+.exchange-card button{min-width:150px;border-radius:10px;font-weight:800;box-shadow:0 6px 14px #24153f35;cursor:pointer;transition:transform .16s,box-shadow .16s}.exchange-card button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 19px #24153f45}
 
 .exchange-card button:disabled {
   background: #ffffff55;

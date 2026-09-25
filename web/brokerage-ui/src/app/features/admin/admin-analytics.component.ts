@@ -3,16 +3,64 @@ import { CurrencyPipe, DecimalPipe } from '@angular/common';
 import { AdminAnalytics } from '../../core/models';
 
 @Component({
-  selector:'app-admin-analytics', imports:[CurrencyPipe,DecimalPipe], styleUrl:'./admin-analytics.component.scss',
-  template:`@if(data()){<section class="analytics-hero"><div><p>DEPOZIT DE DATE</p><h2>Rapoarte și analiză</h2><span>Indicatori actualizați din depozitul analitic BrokerageDW.</span></div><button type="button" class="refresh" (click)="periodChange.emit(selectedPeriod())">↻ Actualizează datele</button></section>
-  <section class="metrics"><article><span>Portofolii în EUR</span><strong>{{data()!.portfolioValue|currency:'EUR':'symbol':'1.0-0'}}</strong><small>valoarea agregată curentă</small></article><article><span>Flux net numerar</span><strong [class.negative]="data()!.netCashFlow<0">{{data()!.netCashFlow|currency:'EUR':'symbol':'1.0-0'}}</strong><small>depuneri, retrageri și conversii</small></article><article><span>Comisioane</span><strong>{{data()!.commissions|currency:'EUR':'symbol':'1.0-0'}}</strong><small>înregistrate în execuții</small></article><article><span>KYC în așteptare</span><strong>{{data()!.pendingKyc}}</strong><small>dosare care necesită atenție</small></article></section>
-  <section class="analytics-grid"><article class="card chart-card"><div class="chart-header"><div><p>EVOLUȚIE PORTOFOLII</p><h2>Valoare totală în EUR</h2></div><div class="periods">@for(period of periods;track period.value){<button type="button" [class.active]="selectedPeriod()===period.value" (click)="choosePeriod(period.value)">{{period.label}}</button>}</div></div><div class="chart-summary"><b>{{lastValue()|currency:'EUR':'symbol':'1.0-0'}}</b><span [class.positive]="change()>=0" [class.negative]="change()<0">{{change()>=0?'+':''}}{{change()|number:'1.1-1'}}% în perioadă</span></div><div class="line-chart"><span class="scale top">{{maxValue()|number:'1.0-0'}} €</span><span class="scale bottom">{{minValue()|number:'1.0-0'}} €</span><svg viewBox="0 0 1000 260" preserveAspectRatio="none" aria-label="Evoluția valorii portofoliilor"><defs><linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#26a69a" stop-opacity=".32"/><stop offset="100%" stop-color="#26a69a" stop-opacity=".02"/></linearGradient></defs><path class="area" [attr.d]="areaPath()"></path><polyline class="line" [attr.points]="points()"></polyline>@for(point of chartPoints();track point.date){<circle class="point" [attr.cx]="point.x" [attr.cy]="point.y" r="7"><title>{{point.date}} · {{point.value|number:'1.0-0'}} EUR</title></circle>}</svg></div><div class="chart-dates"><span>{{firstDate()}}</span><span>{{lastDate()}}</span></div></article><article class="card status-card"><p>ORDINE</p><h2>Stare operațională</h2><div class="stat-row"><span>Active</span><b>{{data()!.activeOrders}}</b></div><div class="stat-row"><span>Executate</span><b class="positive">{{data()!.completedOrders}}</b></div><div class="stat-row"><span>Respinse</span><b class="negative">{{data()!.rejectedOrders}}</b></div></article><article class="card status-card"><p>KYC</p><h2>Procesare dosare</h2><div class="stat-row"><span>În așteptare</span><b>{{data()!.pendingKyc}}</b></div><div class="stat-row"><span>Durată medie</span><b>{{data()!.averageKycDays|number:'1.0-1'}} zile</b></div><small>Fiecare dosar păstrează data depunerii și soluționării.</small></article></section>}@else{<section class="card"><h2>Rapoarte și analiză</h2><p>Datele analitice nu au putut fi încărcate.</p></section>}`
+  selector: 'app-admin-analytics',
+  imports: [CurrencyPipe, DecimalPipe],
+  styleUrl: './admin-analytics.component.scss',
+  templateUrl: './admin-analytics.component.html',
 })
 export class AdminAnalyticsComponent {
-  data=input<AdminAnalytics|null>(null); periodChange=output<number>(); selectedPeriod=signal(30); readonly periods=[{value:7,label:'7 zile'},{value:30,label:'30 zile'},{value:90,label:'3 luni'},{value:365,label:'12 luni'}];
-  values=computed(()=>this.data()?.trend.map(item=>item.value)??[]); rawMax=computed(()=>{const values=this.values();return values.length?Math.max(...values):1;}); rawMin=computed(()=>{const values=this.values();return values.length?Math.min(...values):0;}); valueRange=computed(()=>Math.max(this.rawMax()-this.rawMin(),this.rawMax()*0.01,1)); maxValue=computed(()=>this.rawMax()+this.valueRange()*0.12); minValue=computed(()=>Math.max(0,this.rawMin()-this.valueRange()*0.12));
-  chartPoints=computed(()=>{const points=this.data()?.trend??[];const range=Math.max(this.maxValue()-this.minValue(),1);return points.map((item,index)=>({ ...item,x:points.length===1?500:index/(points.length-1)*1000,y:238-(item.value-this.minValue())/range*210 }));});
-  points=computed(()=>this.chartPoints().map(item=>`${item.x},${item.y}`).join(' ')); areaPath=computed(()=>{const p=this.chartPoints();return p.length?`M ${p[0].x} 250 L ${p.map(x=>`${x.x} ${x.y}`).join(' L ')} L ${p[p.length-1].x} 250 Z`:'';});
-  firstDate=computed(()=>this.data()?.trend[0]?.date??'—'); lastDate=computed(()=>this.data()?.trend.at(-1)?.date??'—'); lastValue=computed(()=>this.data()?.trend.at(-1)?.value??0); change=computed(()=>{const values=this.values();return values.length>1&&values[0]!==0?(values.at(-1)!-values[0])/values[0]*100:0;});
-  choosePeriod(days:number){this.selectedPeriod.set(days);this.periodChange.emit(days);}
+  data = input<AdminAnalytics | null>(null);
+  periodChange = output<number>();
+  selectedPeriod = signal(30);
+  readonly periods = [
+    { value: 7, label: '7 zile' },
+    { value: 30, label: '30 zile' },
+    { value: 90, label: '3 luni' },
+    { value: 365, label: '12 luni' },
+  ];
+  values = computed(() => this.data()?.trend.map((item) => item.value) ?? []);
+  rawMax = computed(() => {
+    const values = this.values();
+    return values.length ? Math.max(...values) : 1;
+  });
+  rawMin = computed(() => {
+    const values = this.values();
+    return values.length ? Math.min(...values) : 0;
+  });
+  valueRange = computed(() => Math.max(this.rawMax() - this.rawMin(), this.rawMax() * 0.01, 1));
+  maxValue = computed(() => this.rawMax() + this.valueRange() * 0.12);
+  minValue = computed(() => Math.max(0, this.rawMin() - this.valueRange() * 0.12));
+  chartPoints = computed(() => {
+    const points = this.data()?.trend ?? [];
+    const range = Math.max(this.maxValue() - this.minValue(), 1);
+    return points.map((item, index) => ({
+      ...item,
+      x: points.length === 1 ? 500 : (index / (points.length - 1)) * 1000,
+      y: 238 - ((item.value - this.minValue()) / range) * 210,
+    }));
+  });
+  points = computed(() =>
+    this.chartPoints()
+      .map((item) => `${item.x},${item.y}`)
+      .join(' '),
+  );
+  areaPath = computed(() => {
+    const p = this.chartPoints();
+    return p.length
+      ? `M ${p[0].x} 250 L ${p.map((x) => `${x.x} ${x.y}`).join(' L ')} L ${p[p.length - 1].x} 250 Z`
+      : '';
+  });
+  firstDate = computed(() => this.data()?.trend[0]?.date ?? '—');
+  lastDate = computed(() => this.data()?.trend.at(-1)?.date ?? '—');
+  lastValue = computed(() => this.data()?.trend.at(-1)?.value ?? 0);
+  change = computed(() => {
+    const values = this.values();
+    return values.length > 1 && values[0] !== 0
+      ? ((values.at(-1)! - values[0]) / values[0]) * 100
+      : 0;
+  });
+  choosePeriod(days: number) {
+    this.selectedPeriod.set(days);
+    this.periodChange.emit(days);
+  }
 }

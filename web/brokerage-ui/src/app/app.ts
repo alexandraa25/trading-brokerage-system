@@ -10,6 +10,7 @@ import { OrdersHistoryComponent } from './features/dashboard/trading/orders-hist
 import { InstrumentsListComponent } from './features/dashboard/trading/instruments-list.component';
 import { AccountsListComponent } from './features/dashboard/portfolio/accounts-list.component';
 import { PortfolioChartComponent } from './features/dashboard/portfolio/portfolio-chart.component';
+import { CustomerAiAssistantComponent } from './features/dashboard/portfolio/customer-ai-assistant.component';
 import { BrokerPanelComponent } from './features/dashboard/broker/broker-panel.component';
 import { BrokerAlertsComponent } from './features/dashboard/broker/broker-alerts.component';
 import { BrokerExchangeRatesComponent } from './features/dashboard/broker/broker-exchange-rates.component';
@@ -23,6 +24,7 @@ import { CurrencyExchangeFormComponent } from './features/dashboard/cash/currenc
 import { PortfolioCurrencyFilterComponent } from './features/dashboard/portfolio/portfolio-currency-filter.component';
 import { ProfileKycComponent } from './features/dashboard/profile/profile-kyc.component';
 import { BrokerExecutionsComponent } from './features/dashboard/broker/broker-executions.component';
+import { BrokerProfileComponent } from './features/dashboard/broker/broker-profile.component';
 import { AdminKycComponent } from './features/admin/admin-kyc.component';
 import { AdminAuditComponent } from './features/admin/admin-audit.component';
 import { KycAuditEntry } from './core/models/admin.models';
@@ -32,16 +34,17 @@ import { AdminUsersComponent } from './features/admin/admin-users.component';
 import { AdminAccountsComponent } from './features/admin/admin-accounts.component';
 import { AdminAnalyticsComponent } from './features/admin/admin-analytics.component';
 import { AdminPowerBiComponent } from './features/admin/admin-powerbi.component';
+import { AdminAiAssistantComponent } from './features/admin/admin-ai-assistant.component';
 import { powerBiConfig } from './core/config/powerbi.config';
 import { AdminAccount, AdminAnalytics, AdminCustomer, AdminOverview, AdminUser, BrokerNotification, CashTransaction, CurrencyExchangeQuote, CurrencyPortfolioValue, CustomerNotification, CustomerProfile, DisplayExchangeRate, Instrument, Order, PortfolioHistoryPoint } from './core/models';
 import { ApiService } from './core/api.service';
 import { CashBalance, PortfolioPosition, PortfolioValuation, TradingAccount } from './core/models/dashboard.models';
-import { AdminCustomerOverview, BrokerExecution, BrokerOrderDetails, CreateOrderRequest, KycRecord } from './core/models/admin.models';
+import { AdminAiResponse, AdminCustomerOverview, BrokerExecution, BrokerIntelligentAlert, BrokerOrderDetails, CreateOrderRequest, KycRecord } from './core/models/admin.models';
 import { CustomerDashboardService } from './core/services/customer-dashboard.service';
 import { BrokerDashboardService } from './core/services/broker-dashboard.service';
 import { AdminDashboardService } from './core/services/admin-dashboard.service';
 
-@Component({ selector: 'app-root', imports: [DatePipe, LoginComponent, PortfolioSummaryComponent, CashBalancesComponent, PositionsTableComponent, OrderFormComponent, OrdersHistoryComponent, InstrumentsListComponent, AccountsListComponent, PortfolioChartComponent, BrokerPanelComponent, BrokerAlertsComponent, BrokerExchangeRatesComponent, BrokerSummaryComponent, BrokerOrderDetailsComponent, DepositFormComponent, WithdrawalFormComponent, CurrencyExchangeFormComponent, PortfolioCurrencyFilterComponent, CashHistoryComponent, ProfileKycComponent, NotificationPanelComponent, BrokerExecutionsComponent, AdminKycComponent, AdminAuditComponent, AdminCustomersComponent, AdminOverviewComponent, AdminUsersComponent, AdminAccountsComponent, AdminAnalyticsComponent, AdminPowerBiComponent], templateUrl: './app.html', styleUrl: './app.scss' })
+@Component({ selector: 'app-root', imports: [DatePipe, LoginComponent, PortfolioSummaryComponent, CashBalancesComponent, PositionsTableComponent, OrderFormComponent, OrdersHistoryComponent, InstrumentsListComponent, AccountsListComponent, PortfolioChartComponent, CustomerAiAssistantComponent, BrokerPanelComponent, BrokerAlertsComponent, BrokerExchangeRatesComponent, BrokerSummaryComponent, BrokerOrderDetailsComponent, BrokerProfileComponent, DepositFormComponent, WithdrawalFormComponent, CurrencyExchangeFormComponent, PortfolioCurrencyFilterComponent, CashHistoryComponent, ProfileKycComponent, NotificationPanelComponent, BrokerExecutionsComponent, AdminKycComponent, AdminAuditComponent, AdminCustomersComponent, AdminOverviewComponent, AdminUsersComponent, AdminAccountsComponent, AdminAnalyticsComponent, AdminPowerBiComponent, AdminAiAssistantComponent], templateUrl: './app.html', styleUrl: './app.scss' })
 export class App {
   email = 'customer.demo@brokerage.local';
   password = 'DemoCustomer!2026';
@@ -80,6 +83,7 @@ export class App {
   orders = signal<Order[]>([]);
   brokerOrderHistory = signal<Order[]>([]);
   brokerExecutions = signal<BrokerExecution[]>([]);
+  brokerIntelligentAlerts = signal<BrokerIntelligentAlert[]>([]);
   brokerUpdatedAt = signal<Date | null>(null);
   brokerDisplayCurrency = signal('EUR');
   brokerDisplayMultiplier = computed(() => 1 / (this.displayRates().find(rate => rate.currency === this.brokerDisplayCurrency())?.midRate ?? 1));
@@ -90,6 +94,12 @@ export class App {
   adminCustomerOverview = signal<AdminCustomerOverview | null>(null);
   adminOverview = signal<AdminOverview | null>(null);
   adminAnalytics = signal<AdminAnalytics | null>(null);
+  adminAiResponse = signal<AdminAiResponse | null>(null);
+  adminAiError = signal('');
+  adminAiLoading = signal(false);
+  customerAiResponse = signal<AdminAiResponse | null>(null);
+  customerAiError = signal('');
+  customerAiLoading = signal(false);
   adminUsers = signal<AdminUser[]>([]);
   adminAccounts = signal<AdminAccount[]>([]);
   adminAccountDetails = signal<{ accountId: number; cash: CashBalance[]; positions: PortfolioPosition[] } | null>(null);
@@ -101,10 +111,10 @@ export class App {
   activeTab = signal<'overview' | 'market' | 'trade' | 'cash' | 'orders' | 'profile' | 'broker'>('overview');
   isBroker = signal(localStorage.getItem('brokerage_role') === 'Broker');
   isAdmin = signal(localStorage.getItem('brokerage_role') === 'Administrator');
-  brokerTab = signal<'overview' | 'orders' | 'executions' | 'rates'>('overview');
-  adminTab = signal<'overview' | 'analytics' | 'powerbi' | 'kyc' | 'customers' | 'accounts' | 'users' | 'audit'>('overview');
+  brokerTab = signal<'overview' | 'orders' | 'executions' | 'rates' | 'profile'>('overview');
+  adminTab = signal<'overview' | 'powerbi' | 'ai' | 'kyc' | 'customers' | 'accounts' | 'users' | 'audit'>('overview');
   powerBiReportUrl = powerBiConfig.reportUrl;
-  order: CreateOrderRequest = { accountId: 0, instrumentId: 0, side: 'BUY', orderType: 'MARKET', quantity: 1, limitPrice: null };
+  order: CreateOrderRequest = { accountId: 0, instrumentId: 0, side: 'BUY', orderType: 'MARKET', quantity: 1, limitPrice: null, stopPrice: null };
 
   refreshTimer?: ReturnType<typeof setInterval>;
   notificationTimer?: ReturnType<typeof setInterval>;
@@ -149,6 +159,18 @@ export class App {
     this.api.adminCustomerOverview(customerId).subscribe({ next: item => this.adminCustomerOverview.set(item), error: () => this.orderMessage.set('Detaliile clientului nu au putut fi încărcate.') });
   }
   loadAdminAnalytics(days = 30) { this.api.adminAnalytics(days).subscribe({ next: item => this.adminAnalytics.set(item), error: () => this.adminAnalytics.set(null) }); }
+  askAdminAi(question: string) {
+    this.adminAiLoading.set(true); this.adminAiError.set(''); this.adminAiResponse.set(null);
+    this.api.askAdminAi(question).subscribe({
+      next: response => { this.adminAiResponse.set(response); this.adminAiLoading.set(false); },
+      error: error => { this.adminAiError.set(error.error?.detail ?? 'Analiza nu a putut fi generată. Încearcă din nou.'); this.adminAiLoading.set(false); },
+    });
+  }
+  askCustomerAi(question: string) {
+    this.customerAiLoading.set(true); this.customerAiError.set(''); this.customerAiResponse.set(null);
+    this.api.askCustomerAi(question).subscribe({ next: response => { this.customerAiResponse.set(response); this.customerAiLoading.set(false); }, error: error => { this.customerAiError.set(error.error?.detail ?? 'Explicația nu a putut fi generată. Încearcă din nou.'); this.customerAiLoading.set(false); } });
+  }
+  changePassword(change:{currentPassword:string;newPassword:string}) { this.api.changePassword(change.currentPassword, change.newPassword).subscribe({ next: () => this.orderMessage.set('Parola a fost schimbată cu succes.'), error: error => this.orderMessage.set(error.error?.detail ?? 'Parola nu a putut fi schimbată.') }); }
   updateAdminUserStatus(change:{id:string;isActive:boolean}) { this.api.updateAdminUserStatus(change.id,change.isActive).subscribe({next:()=>{this.orderMessage.set('Starea utilizatorului a fost actualizată.');this.loadAdminData();}}); }
   resetAdminUserPassword(change:{id:string;password:string}) { this.api.resetAdminUserPassword(change.id,change.password).subscribe({next:()=>this.orderMessage.set('Parola utilizatorului a fost resetată.'),error:()=>this.orderMessage.set('Parola nu a putut fi resetată.')}); }
   createAdminUser(user:{email:string;password:string;role:string}) { this.api.createAdminUser(user).subscribe({next:()=>{this.orderMessage.set('Utilizatorul a fost creat.');this.loadAdminData();},error:error=>this.orderMessage.set(error.error?.detail??'Utilizatorul nu a putut fi creat.')}); }
@@ -203,7 +225,7 @@ export class App {
       const staleOrderIds = data.orders.filter(order => (order.status === 'Pending' || order.status === 'PartiallyExecuted') && Date.now() - new Date(order.createdAt).getTime() >= 15 * 60 * 1000).map(order => order.orderId);
       const newlyStale = staleOrderIds.filter(id => !this.alertedStaleOrderIds.has(id)); this.alertedStaleOrderIds = new Set(staleOrderIds);
       if (hasNewOrders) this.orderMessage.set('Au apărut ordine noi în lista brokerului.'); else if (newlyStale.length) this.orderMessage.set(`${newlyStale.length} ordin(e) activ(e) necesită atenție.`);
-      this.orders.set(data.orders); this.brokerExecutions.set(data.executions as BrokerExecution[]); this.brokerOrderHistory.set(data.history); this.displayRates.set(data.rates); this.brokerNotifications.set(data.notifications); this.brokerUpdatedAt.set(new Date());
+      this.orders.set(data.orders); this.brokerExecutions.set(data.executions as BrokerExecution[]); this.brokerIntelligentAlerts.set(data.alerts); this.brokerOrderHistory.set(data.history); this.displayRates.set(data.rates); this.brokerNotifications.set(data.notifications); this.brokerUpdatedAt.set(new Date());
     });
   }
   loadBrokerOrderDetails(orderId: number) {
@@ -308,6 +330,13 @@ export class App {
   }
 
   cancelOrder(orderId: number) { this.api.cancelOrder(orderId).subscribe({ next: () => this.loadAccounts(), error: () => this.orderMessage.set('Ordinul nu a putut fi anulat.') }); }
+
+  cancelOrderPartially(request: { orderId: number; quantity: number }) {
+    this.api.cancelOrderPartially(request.orderId, request.quantity).subscribe({
+      next: result => { this.orderMessage.set(`Au fost anulate ${result.cancelledQuantity} unități. Au rămas ${result.remainingQuantity} unități.`); this.loadAccounts(); },
+      error: error => this.orderMessage.set(error.error?.detail ?? 'Anularea parțială nu a putut fi înregistrată.'),
+    });
+  }
 
   executeOrder(execution: { id: number; quantity: number; price: number }) {
     const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };

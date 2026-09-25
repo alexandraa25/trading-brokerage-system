@@ -22,9 +22,13 @@ BEGIN
         OrderStatus VARCHAR(20) NOT NULL,
         OrderedQuantity DECIMAL(19,8) NOT NULL,
         ExecutedQuantity DECIMAL(19,8) NOT NULL,
-        RemainingQuantity AS (OrderedQuantity - ExecutedQuantity) PERSISTED,
+        CancelledQuantity DECIMAL(19,8) NOT NULL DEFAULT (0),
+        RemainingQuantity AS (OrderedQuantity - ExecutedQuantity - CancelledQuantity) PERSISTED,
         ExecutionCount INT NOT NULL,
         LimitPrice DECIMAL(19,8) NULL,
+        StopPrice DECIMAL(19,8) NULL,
+        TriggeredAt DATETIME2(3) NULL,
+        TriggerDelayMinutes INT NULL,
         CreatedAt DATETIME2(3) NOT NULL,
         ResolvedAt DATETIME2(3) NULL,
         ResolutionMinutes INT NULL,
@@ -32,7 +36,7 @@ BEGIN
         DWCreatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
         DWUpdatedAt DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME(),
         CONSTRAINT CK_FactOrderLifecycle_Quantity CHECK
-            (OrderedQuantity > 0 AND ExecutedQuantity >= 0 AND ExecutedQuantity <= OrderedQuantity)
+            (OrderedQuantity > 0 AND ExecutedQuantity >= 0 AND CancelledQuantity >= 0 AND ExecutedQuantity + CancelledQuantity <= OrderedQuantity)
     );
 END;
 GO

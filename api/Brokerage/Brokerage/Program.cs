@@ -76,6 +76,11 @@ builder.Services.AddScoped<IPasswordHasher<ApiUser>, PasswordHasher<ApiUser>>();
 builder.Services.AddScoped<DevelopmentUserSeeder>();
 builder.Services.AddScoped<CustomerNotificationService>();
 builder.Services.AddScoped<BrokerNotificationService>();
+builder.Services.AddHostedService<StopOrderActivationService>();
+builder.Services.AddHttpClient<AdminAiService>();
+builder.Services.AddScoped<AdminAiService>();
+builder.Services.AddHttpClient<CustomerAiService>();
+builder.Services.AddScoped<CustomerAiService>();
 
 var app = builder.Build();
 

@@ -1,0 +1,20 @@
+<section class="customer-ai">
+  <div class="ai-intro">
+    <p>ASISTENT PORTOFOLIU</p>
+    <h2>Înțelege-ți portofoliul</h2><span>Explicații despre profit/pierdere și impactul cursului BCE.</span>
+  </div>
+  <div class="ai-content">
+    <div>
+      <div class="suggestions">@for (suggestion of suggestions; track suggestion) { <button type="button"
+          (click)="question.set(suggestion)">{{ suggestion }}</button> }</div><textarea [ngModel]="question()"
+        (ngModelChange)="question.set($event)" maxlength="500"
+        placeholder="Scrie o întrebare despre portofoliul tău..."></textarea>
+      <div class="actions"><small>{{ question().length }}/500</small><button type="button" (click)="submit()"
+          [disabled]="loading() || question().trim().length < 5">{{ loading() ? 'Analizez…' : 'Explică-mi' }}</button>
+      </div>
+    </div>
+    <article>@if(error()){<p class="error">{{error()}}</p>}@else if(response()){<div class="answer">
+        {{response()!.answer}}</div><small>{{response()!.disclaimer}}</small>}@else{<p>Răspunsul va folosi numai datele
+        din conturile și portofoliul tău.</p>}</article>
+  </div>
+</section>

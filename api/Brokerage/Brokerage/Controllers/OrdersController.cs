@@ -27,8 +27,10 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
                 on order.AccountId equals account.AccountId
             join instrument in db.Instruments.AsNoTracking()
                 on order.InstrumentId equals instrument.InstrumentId
+            let executedQuantity = db.Executions.Where(item => item.OrderId == order.OrderId).Sum(item => (decimal?)item.ExecutedQuantity) ?? 0
             where (IsStaff() || (customerId.HasValue && account.CustomerId == customerId.Value))
-                && (!IsStaff() || order.Status == "Pending" || order.Status == "PartiallyExecuted")
+                && (!IsStaff() || order.Status == "Pending" || order.Status == "WaitingTrigger"
+                    || order.Status == "Triggered" || order.Status == "PartiallyExecuted")
             orderby order.CreatedAt descending
             select new OrderSummary(
                 order.OrderId,
@@ -38,6 +40,11 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
                 order.OrderType,
                 order.Quantity,
                 order.LimitPrice,
+                order.StopPrice,
+                order.OriginalQuantity ?? order.Quantity + order.CancelledQuantity,
+                executedQuantity,
+                order.CancelledQuantity,
+                order.Quantity - executedQuantity,
                 order.Status,
                 order.CreatedAt)
         ).Take(IsStaff() ? 100 : int.MaxValue).ToListAsync();
@@ -56,6 +63,7 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
                 on tradeOrder.AccountId equals account.AccountId
             join instrument in db.Instruments.AsNoTracking()
                 on tradeOrder.InstrumentId equals instrument.InstrumentId
+            let executedQuantity = db.Executions.Where(item => item.OrderId == tradeOrder.OrderId).Sum(item => (decimal?)item.ExecutedQuantity) ?? 0
             where tradeOrder.OrderId == orderId
                 && (IsStaff() || (customerId.HasValue && account.CustomerId == customerId.Value))
             select new OrderSummary(
@@ -66,6 +74,11 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
                 tradeOrder.OrderType,
                 tradeOrder.Quantity,
                 tradeOrder.LimitPrice,
+                tradeOrder.StopPrice,
+                tradeOrder.OriginalQuantity ?? tradeOrder.Quantity + tradeOrder.CancelledQuantity,
+                executedQuantity,
+                tradeOrder.CancelledQuantity,
+                tradeOrder.Quantity - executedQuantity,
                 tradeOrder.Status,
                 tradeOrder.CreatedAt)
         ).SingleOrDefaultAsync();
@@ -102,8 +115,7 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
     [HttpPost]
     public async Task<ActionResult<CreatedOrder>> CreateOrder(CreateOrderRequest request)
     {
-        if ((request.OrderType == "LIMIT" && (!request.LimitPrice.HasValue || request.LimitPrice <= 0))
-            || (request.OrderType == "MARKET" && request.LimitPrice.HasValue))
+        if ((request.OrderType == "LIMIT" && (!request.LimitPrice.HasValue || request.LimitPrice <= 0)) || ((request.OrderType == "STOP" || request.OrderType == "STOP_LIMIT") && (!request.StopPrice.HasValue || request.StopPrice <= 0)) || (request.OrderType == "STOP_LIMIT" && (!request.LimitPrice.HasValue || request.LimitPrice <= 0)))
         {
             ModelState.AddModelError(nameof(request.LimitPrice),
                 "Prețul limită este obligatoriu doar pentru ordine LIMIT.");
@@ -127,6 +139,7 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
             command.Parameters.Add(new SqlParameter("@OrderType", request.OrderType));
             command.Parameters.Add(new SqlParameter("@Quantity", request.Quantity));
             command.Parameters.Add(new SqlParameter("@LimitPrice", request.LimitPrice ?? (object)DBNull.Value));
+            command.Parameters.Add(new SqlParameter("@StopPrice", request.StopPrice ?? (object)DBNull.Value));
 
             await using var reader = await command.ExecuteReaderAsync();
             if (!await reader.ReadAsync())
@@ -145,6 +158,53 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
         {
             return BadRequest(new ProblemDetails { Detail = exception.Message });
         }
+    }
+
+    [HttpPost("estimate")]
+    public async Task<ActionResult<OrderEstimate>> EstimateOrder(CreateOrderRequest request)
+    {
+        if (!await CanAccessAccountAsync(request.AccountId)) return NotFound();
+
+        var instrument = await db.Instruments.AsNoTracking()
+            .Where(item => item.InstrumentId == request.InstrumentId && item.IsActive)
+            .Select(item => new { item.InstrumentId, item.Currency })
+            .SingleOrDefaultAsync();
+        if (instrument is null) return NotFound();
+
+        var quote = await db.Database.SqlQuery<OrderEstimateQuote>($"""
+            SELECT TOP 1 MarketPrice, QuoteDate FROM trading.MarketQuote
+            WHERE InstrumentId = {instrument.InstrumentId} ORDER BY QuoteDate DESC
+            """).SingleOrDefaultAsync();
+        if (quote is null)
+            return BadRequest(new ProblemDetails { Detail = "Nu există o cotație disponibilă pentru acest instrument." });
+
+        var price = request.OrderType is "LIMIT" or "STOP_LIMIT" ? request.LimitPrice ?? 0 : quote.MarketPrice;
+        if (request.Quantity <= 0 || price <= 0)
+            return ValidationProblem("Cantitatea și prețul estimat trebuie să fie pozitive.");
+
+        var orderValue = decimal.Round(request.Quantity * price, 4);
+        var commission = decimal.Round(orderValue * 0.0025m, 4);
+        var requiredAmount = request.Side == "BUY" ? orderValue + commission : request.Quantity;
+        decimal availableAmount;
+        string? reason = null;
+        if (request.Side == "BUY")
+        {
+            availableAmount = await db.CashAccounts.AsNoTracking()
+                .Where(item => item.AccountId == request.AccountId && item.Currency == instrument.Currency)
+                .Select(item => (decimal?)item.AvailableBalance).SingleOrDefaultAsync() ?? 0;
+            if (availableAmount < requiredAmount) reason = "Soldul disponibil nu acoperă valoarea ordinului și comisionul estimat.";
+        }
+        else
+        {
+            availableAmount = await db.Positions.AsNoTracking()
+                .Where(item => item.AccountId == request.AccountId && item.InstrumentId == request.InstrumentId)
+                .Select(item => (decimal?)item.Quantity).SingleOrDefaultAsync() ?? 0;
+            if (availableAmount < requiredAmount) reason = "Cantitatea disponibilă în poziție nu acoperă ordinul de vânzare.";
+        }
+
+        return Ok(new OrderEstimate(instrument.Currency, price, quote.QuoteDate, orderValue, commission,
+            requiredAmount, availableAmount, decimal.Max(requiredAmount - availableAmount, 0),
+            availableAmount >= requiredAmount, reason));
     }
 
     [HttpPost("{orderId:long}/cancel")]
@@ -167,6 +227,37 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
                 return Problem("Procedura de anulare nu a returnat un rezultat.");
 
             return Ok(new CreatedOrder(reader.GetInt64(0), reader.GetString(1)));
+        }
+        catch (SqlException exception) when (exception.Number is >= 50000 and < 60000)
+        {
+            return BadRequest(new ProblemDetails { Detail = exception.Message });
+        }
+    }
+
+    [HttpPost("{orderId:long}/cancel-partial")]
+    public async Task<ActionResult<PartialOrderCancellationResult>> CancelOrderPartially(
+        long orderId,
+        PartialOrderCancellationRequest request)
+    {
+        if (!await CanAccessOrderAsync(orderId))
+            return NotFound();
+
+        try
+        {
+            await using var connection = db.Database.GetDbConnection();
+            await connection.OpenAsync();
+            await using var command = connection.CreateCommand();
+            command.CommandText = "trading.usp_CancelOrderPartially";
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@OrderId", orderId));
+            command.Parameters.Add(new SqlParameter("@CancelledQuantity", request.CancelledQuantity));
+
+            await using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return Problem("Procedura de anulare parțială nu a returnat un rezultat.");
+
+            return Ok(new PartialOrderCancellationResult(
+                reader.GetInt64(0), reader.GetDecimal(1), reader.GetDecimal(2)));
         }
         catch (SqlException exception) when (exception.Number is >= 50000 and < 60000)
         {
@@ -207,3 +298,5 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
         || User.IsInRole("ComplianceOfficer")
         || User.IsInRole("Administrator");
 }
+
+public record OrderEstimateQuote(decimal MarketPrice, DateTime QuoteDate);

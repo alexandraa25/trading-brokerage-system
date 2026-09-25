@@ -165,6 +165,9 @@ BEGIN TRY
         OrderType,
         Quantity,
         LimitPrice,
+        StopPrice,
+        OriginalQuantity,
+        CancelledQuantity,
         Status,
         CreatedAt,
         UpdatedAt
@@ -177,6 +180,9 @@ BEGIN TRY
         OrderType,
         Quantity,
         LimitPrice,
+        StopPrice,
+        OriginalQuantity,
+        CancelledQuantity,
         Status,
         CreatedAt,
         UpdatedAt

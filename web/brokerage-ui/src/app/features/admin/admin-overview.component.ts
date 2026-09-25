@@ -2,4 +2,12 @@ import { Component, input } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { AdminOverview } from '../../core/models';
 
-@Component({selector:'app-admin-overview',imports:[DatePipe],styleUrl:'./admin-overview.component.scss',template:`@if(data()){<section class="metrics"><article><span>Clienți activi</span><strong>{{data()!.activeCustomers}}</strong></article><article><span>KYC în așteptare</span><strong>{{data()!.pendingKyc}}</strong></article><article><span>Ordine active</span><strong>{{data()!.activeOrders}}</strong></article><article><span>Execuții azi</span><strong>{{data()!.dailyExecutions}}</strong></article></section><section class="alerts"><h2>Monitorizare operațională</h2>@if(data()!.delayedKyc){<p>⚠ {{data()!.delayedKyc}} dosare KYC sunt în așteptare de peste 7 zile.</p>}@if(data()!.blockedCustomers){<p>⚠ {{data()!.blockedCustomers}} clienți sunt blocați.</p>}@if(data()!.exchangeRateOutdated){<p>⚠ Cursul BCE necesită actualizare.</p>}@else{<p>✓ Curs BCE actualizat: {{data()!.latestRateDate|date:'dd.MM.yyyy'}}.</p>}</section>}`}) export class AdminOverviewComponent{readonly data=input<AdminOverview|null>(null);}
+@Component({
+  selector: 'app-admin-overview',
+  imports: [DatePipe],
+  styleUrl: './admin-overview.component.scss',
+  templateUrl: './admin-overview.component.html',
+})
+export class AdminOverviewComponent {
+  readonly data = input<AdminOverview | null>(null);
+}

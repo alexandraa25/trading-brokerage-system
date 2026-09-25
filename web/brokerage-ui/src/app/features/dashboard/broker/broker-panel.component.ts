@@ -7,61 +7,7 @@ import { Order } from '../../../core/models';
   selector: 'app-broker-panel',
   imports: [DatePipe, FormsModule],
   styleUrl: './broker-panel.component.scss',
-  template: `
-    <section class="card">
-      <p>PANOU BROKER</p>
-      <h2>Ordine în așteptare</h2>
-
-      <div class="filters">
-        <input [(ngModel)]="symbolFilter" (ngModelChange)="resetPage()" placeholder="Caută simbol" />
-        <select [(ngModel)]="sideFilter" (ngModelChange)="resetPage()">
-          <option value="ALL">Cumpărare și vânzare</option>
-          <option value="Buy">Cumpărare</option>
-          <option value="Sell">Vânzare</option>
-        </select>
-        <select [(ngModel)]="typeFilter" (ngModelChange)="resetPage()">
-          <option value="ALL">Toate tipurile</option>
-          <option value="Market">La piață</option>
-          <option value="Limit">Limită</option>
-        </select>
-        <label>De la
-          <input type="date" [(ngModel)]="fromDate" (ngModelChange)="resetPage()" />
-        </label>
-        <label>Până la
-          <input type="date" [(ngModel)]="toDate" (ngModelChange)="resetPage()" />
-        </label>
-        <select [(ngModel)]="sortBy" (ngModelChange)="resetPage()">
-          <option value="newest">Cele mai noi</option>
-          <option value="oldest">Cele mai vechi</option>
-          <option value="quantity">Cantitate descrescător</option>
-        </select>
-      </div>
-
-      <p class="count">{{ filtered().length }} ordine active afișate</p>
-
-      <div class="orders">
-        @for (order of paged(); track order.orderId) {
-          <article>
-            <div>
-              <b>#{{ order.orderId }} · {{ order.symbol }}</b>
-              <span>{{ order.side }} · {{ order.quantity }} · {{ order.orderType }} · {{ order.createdAt | date:'dd.MM.yyyy HH:mm' }}</span>
-            </div>
-            <button class="details" (click)="details.emit(order.orderId)">Detalii și execuție</button>
-          </article>
-        } @empty {
-          <p>Nu există ordine pentru filtrele alese.</p>
-        }
-      </div>
-
-      @if (pages() > 1) {
-        <div class="pagination">
-          <button [disabled]="page === 0" (click)="page = page - 1">Anterior</button>
-          <span>Pagina {{ page + 1 }} din {{ pages() }}</span>
-          <button [disabled]="page + 1 >= pages()" (click)="page = page + 1">Următor</button>
-        </div>
-      }
-    </section>
-  `
+  templateUrl: './broker-panel.component.html'
 })
 export class BrokerPanelComponent {
   readonly orders = input<Order[]>([]);
@@ -88,8 +34,8 @@ export class BrokerPanelComponent {
     const items = this.orders().filter(order => {
       const createdAt = new Date(order.createdAt);
       return (order.status === 'Pending' || order.status === 'PartiallyExecuted')
-        && (this.sideFilter === 'ALL' || order.side === this.sideFilter)
-        && (this.typeFilter === 'ALL' || order.orderType === this.typeFilter)
+        && (this.sideFilter === 'ALL' || order.side.toUpperCase() === this.sideFilter.toUpperCase())
+        && (this.typeFilter === 'ALL' || order.orderType.toUpperCase() === this.typeFilter.toUpperCase())
         && (!symbol || order.symbol.toLowerCase().includes(symbol))
         && (!from || createdAt >= from)
         && (!to || createdAt <= to);

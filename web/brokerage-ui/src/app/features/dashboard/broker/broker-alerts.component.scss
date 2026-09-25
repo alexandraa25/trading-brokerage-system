@@ -57,6 +57,8 @@
 .alerts-list span {
   display: block
 }
+.alerts-list span small { display: block; margin-top: 5px; color: #8a6b49; font-weight: 700 }
+.alerts-list b.high { color: #b42318 }
 
 .alerts-list span {
   margin-top: 5px;

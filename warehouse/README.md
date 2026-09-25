@@ -21,6 +21,8 @@ raportare consolidată.
 14. `views/01_create_powerbi_views.sql`
 15. `15_create_fact_kyc.sql`
 16. `16_load_fact_kyc.sql`
+17. `17_upgrade_fact_order_lifecycle_stop_history.sql` pentru un depozit deja
+    creat, înainte de reîncărcarea `13_load_fact_order_lifecycle.sql`.
 
 Înainte de încărcările de la pașii 4, 5 și 9, actualizează staging-ul cu
 `etl/07_refresh_staging_from_oltp.sql` atunci când ai date operaționale noi.
@@ -34,7 +36,8 @@ raportare consolidată.
 - `dw.FactPortfolioDailySnapshot`: valoarea zilnică în EUR a unui portofoliu,
   împărțită în valoare investită, poziții, numerar și valoare totală.
 - `dw.FactOrderLifecycle`: un ordin, cu starea curentă, execuțiile, timpul
-  până la soluționare și motivul respingerii, dacă există.
+  până la soluționare și motivul respingerii, dacă există. Pentru ordine STOP
+  păstrează pragul, momentul declanșării, cantitatea anulată și cea rămasă.
 - `dw.FactKyc`: un dosar KYC, cu starea, data depunerii și soluționării,
   durata în zile și motivul respingerii.
 

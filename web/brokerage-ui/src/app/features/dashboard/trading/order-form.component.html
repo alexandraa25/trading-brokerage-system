@@ -1,0 +1,30 @@
+<section class="card">
+  <p class="eyebrow">TRANZACȚIONARE</p>
+  <h2>Plasează un ordin</h2>
+  <form (ngSubmit)="submit()">
+    <label>Cont<select [(ngModel)]="accountId" name="account">
+        @for (a of accounts(); track a.accountId) {
+        <option [value]="a.accountId">{{ a.accountNumber }}</option>
+        }
+      </select></label><label>Instrument<select [(ngModel)]="instrumentId" name="instrument">
+        @for (i of instruments(); track i.instrumentId) {
+        <option [value]="i.instrumentId">{{ i.symbol }} — {{ i.instrumentName }}</option>
+        }
+      </select></label><label>Acțiune<select [(ngModel)]="side" name="side">
+        <option value="BUY">Cumpărare</option>
+        <option value="SELL">Vânzare</option>
+      </select></label><label>Tip ordin<select [(ngModel)]="orderType" name="orderType">
+        <option value="MARKET">La piață</option>
+        <option value="LIMIT">Limită</option>
+        <option value="STOP">STOP</option><option value="STOP_LIMIT">STOP-LIMIT</option>
+      </select></label><label>Cantitate<input [(ngModel)]="quantity" name="quantity" type="number" min="0.0001"
+        step="0.0001" /></label>@if (orderType === 'STOP' || orderType === 'STOP_LIMIT') {<label>Preț declanșare<input [(ngModel)]="stopPrice" name="stopPrice" type="number" min="0.0001" required /></label>}@if (orderType === 'LIMIT' || orderType === 'STOP_LIMIT') {
+    <label>Preț limită<input [(ngModel)]="limitPrice" name="limitPrice" type="number" min="0.0001" step="0.0001"
+        required /></label>
+    }
+    <section class="estimate"><p>ESTIMARE ÎN TIMP REAL</p><span>Preț folosit <b>{{estimatedPrice()|number:'1.2-4'}} {{selectedInstrument()?.currency}}</b></span><span>Valoare estimată <b>{{estimatedValue()|number:'1.2-2'}} {{selectedInstrument()?.currency}}</b></span><span>Comision estimat (0,25%) <b>{{estimatedCommission()|number:'1.2-2'}} {{selectedInstrument()?.currency}}</b></span><strong>Total estimat {{estimatedTotal()|number:'1.2-2'}} {{selectedInstrument()?.currency}}</strong><small>La confirmare, API-ul recalculează estimarea cu soldul disponibil și ultima cotație.</small></section>
+    @if (estimateError()) { <p class="estimate-error">{{ estimateError() }}</p> }
+    <button [disabled]="estimateLoading()">{{ estimateLoading() ? 'Se verifică…' : 'Trimite ordinul' }}</button>
+  </form>
+  @if(confirmOpen() && estimate()){<div class="confirm-backdrop" (click)="confirmOpen.set(false)"><section class="confirm-modal" (click)="$event.stopPropagation()"><p>CONFIRMĂ ORDINUL</p><h2>{{side==='BUY'?'Cumpărare':'Vânzare'}} {{selectedInstrument()?.symbol}}</h2><span>{{orderType}} · {{quantity}} unități · cotație din {{estimate()!.quoteDate | date:'dd.MM.yyyy'}}</span><div><span>Preț estimat API</span><b>{{estimate()!.price|number:'1.2-4'}} {{estimate()!.currency}}</b></div><div><span>Comision estimat</span><b>{{estimate()!.commission|number:'1.2-2'}} {{estimate()!.currency}}</b></div><div><span>{{side==='BUY'?'Total necesar':'Cantitate necesară'}}</span><b>{{estimate()!.requiredAmount|number:'1.2-4'}} {{side==='BUY'?estimate()!.currency:'unități'}}</b></div><div><span>{{side==='BUY'?'Sold disponibil':'Poziție disponibilă'}}</span><b>{{estimate()!.availableAmount|number:'1.2-4'}} {{side==='BUY'?estimate()!.currency:'unități'}}</b></div>@if(!estimate()!.canSubmit){<p class="insufficient">Lipsesc {{estimate()!.shortfall|number:'1.2-4'}} {{side==='BUY'?estimate()!.currency:'unități'}}. {{estimate()!.reason}}</p>}<footer><button type="button" class="secondary" (click)="confirmOpen.set(false)">Înapoi</button><button type="button" [disabled]="!estimate()!.canSubmit" (click)="submit()">Confirmă ordinul</button></footer></section></div>}
+</section>

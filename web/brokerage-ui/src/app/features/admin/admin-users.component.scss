@@ -1,1 +1,109 @@
-.heading{display:flex;justify-content:space-between;gap:18px}.heading p{margin:0;color:#078094;font-size:12px;font-weight:800;letter-spacing:1.4px}.heading h2{margin:8px 0}.heading span,.empty{color:#637083}.heading-actions{display:flex;align-items:center;gap:10px}.heading-actions strong{padding:9px 12px;border-radius:10px;background:#e3f6f2;color:#08736f}.table-wrap{overflow:auto;border:1px solid #e4edf1;border-radius:12px}table{width:100%;min-width:620px;border-collapse:collapse}.role,.status{display:inline-block;padding:5px 9px;border-radius:16px;background:#e7f4f2;color:#08736f;font-size:12px;font-weight:800}.status.inactive{background:#f2e9e8;color:#9e312b}.actions{display:flex;gap:7px;flex-wrap:wrap}.actions button{padding:8px 10px}.reset{background:#eaf1f5;color:#365466}.pagination{display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:18px;color:#637083;font-size:13px}.empty{margin:18px 0 0}@media(max-width:650px){.heading,.heading-actions{align-items:stretch;flex-direction:column}.heading-actions button{width:100%}.pagination{justify-content:center}}
+.heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px
+}
+
+.heading p {
+  margin: 0;
+  color: #078094;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.4px
+}
+
+.heading h2 {
+  margin: 8px 0
+}
+
+.heading span,
+.empty {
+  color: #637083
+}
+
+.heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px
+}
+
+.heading-actions strong {
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #e3f6f2;
+  color: #08736f
+}
+
+.table-wrap {
+  overflow: auto;
+  border: 1px solid #e4edf1;
+  border-radius: 12px
+}
+
+table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse
+}
+
+.role,
+.status {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 16px;
+  background: #e7f4f2;
+  color: #08736f;
+  font-size: 12px;
+  font-weight: 800
+}
+
+.status.inactive {
+  background: #f2e9e8;
+  color: #9e312b
+}
+
+.actions {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap
+}
+
+.actions button {
+  padding: 8px 10px
+}
+
+.reset {
+  background: #eaf1f5;
+  color: #365466
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+  color: #637083;
+  font-size: 13px
+}
+
+.empty {
+  margin: 18px 0 0
+}
+
+@media(max-width:650px) {
+
+  .heading,
+  .heading-actions {
+    align-items: stretch;
+    flex-direction: column
+  }
+
+  .heading-actions button {
+    width: 100%
+  }
+
+  .pagination {
+    justify-content: center
+  }
+}

@@ -24,10 +24,22 @@ public class ExecutionsController(BrokerageDbContext db, CustomerNotificationSer
             join account in db.Accounts.AsNoTracking() on order.AccountId equals account.AccountId
             join instrument in db.Instruments.AsNoTracking() on order.InstrumentId equals instrument.InstrumentId
             where order.OrderId == orderId
-            select new { account.CustomerId, instrument.Symbol, order.Side }
+            select new { account.CustomerId, instrument.Symbol, order.Side, order.OrderType, order.LimitPrice, order.Status }
         ).SingleOrDefaultAsync();
         if (orderDetails is null)
             return NotFound();
+
+        if (orderDetails.OrderType is "STOP" or "STOP_LIMIT" && orderDetails.Status != "Triggered")
+            return BadRequest(new ProblemDetails { Detail = "Ordinul STOP nu a atins încă prețul de declanșare." });
+
+        if (orderDetails.OrderType == "STOP_LIMIT" && orderDetails.LimitPrice.HasValue)
+        {
+            var respectsLimit = orderDetails.Side == "BUY"
+                ? request.ExecutionPrice <= orderDetails.LimitPrice.Value
+                : request.ExecutionPrice >= orderDetails.LimitPrice.Value;
+            if (!respectsLimit)
+                return BadRequest(new ProblemDetails { Detail = "Prețul de execuție nu respectă limita ordinului STOP-LIMIT." });
+        }
 
         try
         {

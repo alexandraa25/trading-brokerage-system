@@ -71,7 +71,8 @@ public class AuthService : IAuthService
             ?? throw new InvalidOperationException(
                 "JWT audience is not configured.");
 
-        var expiresAt = DateTime.UtcNow.AddMinutes(60);
+        var expirationMinutes = Math.Clamp(_configuration.GetValue<int?>("Jwt:ExpirationMinutes") ?? 60, 15, 480);
+        var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
         var claims = new List<Claim>
         {

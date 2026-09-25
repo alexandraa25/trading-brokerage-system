@@ -1,0 +1,86 @@
+<section class="exchange-card">
+    <div class="intro">
+      <p>SCHIMB VALUTAR</p>
+      <h2>Convertește numerar</h2>
+      <span
+        >Este folosit ultimul curs BCE disponibil. Cursul aplicat rămâne salvat în istoricul
+        conversiei.</span
+      >
+    </div>
+    <form (ngSubmit)="submit()">
+      <div class="fields">
+        <label
+          >Din cont<select
+            name="sourceAccount"
+            [(ngModel)]="sourceCashAccountId"
+            (ngModelChange)="accountsChanged()"
+          >
+            <option [ngValue]="0" disabled>Alege moneda sursă</option>
+            @for (balance of balances(); track balance.cashAccountId) {
+              <option [ngValue]="balance.cashAccountId">
+                {{ balance.currency }} · disponibil {{ balance.availableBalance | number: '1.2-2' }}
+              </option>
+            }
+          </select></label
+        ><span class="arrow">→</span
+        ><label
+          >În cont<select
+            name="targetAccount"
+            [(ngModel)]="targetCashAccountId"
+            (ngModelChange)="accountsChanged()"
+          >
+            <option [ngValue]="0" disabled>Alege moneda destinație</option>
+            @for (balance of targetBalances(); track balance.cashAccountId) {
+              <option
+                [ngValue]="balance.cashAccountId"
+                [disabled]="balance.currency === sourceBalance()?.currency"
+              >
+                {{ balance.currency
+                }}{{ balance.currency === sourceBalance()?.currency ? ' · aceeași monedă' : '' }}
+              </option>
+            }
+          </select></label
+        >
+      </div>
+      <small class="account-help"
+        >Sunt afișate toate conturile. Cele în aceeași monedă nu pot fi folosite pentru schimb
+        valutar.</small
+      ><label
+        >Sumă de schimbat<input
+          name="sourceAmount"
+          type="number"
+          min="0.01"
+          [attr.max]="sourceBalance()?.availableBalance"
+          step="0.01"
+          [(ngModel)]="sourceAmount"
+          placeholder="0,00"
+      /></label>
+      @if (quote()) {
+        <div class="quote">
+          <div>
+            <span>Curs aplicat</span
+            ><b
+              >1 {{ quote()!.sourceCurrency }} = {{ quote()!.exchangeRate | number: '1.4-6' }}
+              {{ quote()!.targetCurrency }}</b
+            ><small>BCE · actualizat {{ quote()!.sourceRateDate | date: 'dd.MM.yyyy' }}</small>
+          </div>
+          <div>
+            <span>Vei primi</span
+            ><b>{{ estimatedAmount() | number: '1.2-4' }} {{ quote()!.targetCurrency }}</b>
+          </div>
+        </div>
+      } @else if (sourceCashAccountId && targetCashAccountId) {
+        <small class="waiting">Se caută cursul disponibil...</small>
+      }
+      <button
+        [disabled]="
+          !quote() ||
+          !sourceAmount ||
+          sourceAmount <= 0 ||
+          sourceAmount > (sourceBalance()?.availableBalance ?? 0)
+        "
+      >
+        Schimbă valuta
+      </button>
+    </form>
+  </section>

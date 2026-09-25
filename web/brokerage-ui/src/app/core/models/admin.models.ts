@@ -2,9 +2,23 @@ export type CreateOrderRequest = {
   accountId: number;
   instrumentId: number;
   side: 'BUY' | 'SELL';
-  orderType: 'MARKET' | 'LIMIT';
+  orderType: 'MARKET' | 'LIMIT' | 'STOP' | 'STOP_LIMIT';
   quantity: number;
   limitPrice: number | null;
+  stopPrice: number | null;
+};
+
+export type OrderEstimate = {
+  currency: string;
+  price: number;
+  quoteDate: string;
+  orderValue: number;
+  commission: number;
+  requiredAmount: number;
+  availableAmount: number;
+  shortfall: number;
+  canSubmit: boolean;
+  reason: string | null;
 };
 
 export type KycAuditEntry = {
@@ -109,4 +123,19 @@ export type BrokerOrderDetails = {
   executedQuantity: number;
   marketPrice: number | null;
   quoteDate: string | null;
+};
+
+export type AdminAiResponse = {
+  answer: string;
+  generatedAtUtc: string;
+  disclaimer: string;
+};
+
+export type BrokerIntelligentAlert = {
+  orderId: number;
+  symbol: string;
+  severity: 'High' | 'Medium' | string;
+  title: string;
+  reason: string;
+  suggestedAction: string;
 };

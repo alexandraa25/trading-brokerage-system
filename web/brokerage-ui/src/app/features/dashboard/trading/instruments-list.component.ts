@@ -1,86 +1,23 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { Instrument } from '../../../core/models';
+import { Instrument, InstrumentQuotePoint } from '../../../core/models';
+import { ApiService } from '../../../core/api.service';
+import { InstrumentPriceChartComponent } from './instrument-price-chart.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-instruments-list',
-  imports: [DatePipe, DecimalPipe],
+  imports: [DatePipe, DecimalPipe, FormsModule, InstrumentPriceChartComponent],
   styleUrl: './instruments-list.component.scss',
-  template: `<section class="card">
-    <div class="heading">
-      <div>
-        <p>PIAȚĂ</p>
-        <h2>Instrumente disponibile</h2>
-        <span>Active financiare care pot fi cumpărate sau vândute prin ordine.</span>
-      </div>
-      <strong>{{ filtered().length }} instrumente</strong>
-    </div>
-    <div class="filters">
-      <input
-        placeholder="Caută simbol sau nume"
-        [value]="query()"
-        (input)="setQuery($any($event.target).value)"
-      /><select [value]="typeFilter()" (change)="setType($any($event.target).value)">
-        <option value="ALL">Toate tipurile</option>
-        <option value="Stock">Acțiuni</option>
-        <option value="ETF">ETF-uri</option>
-        <option value="Bond">Obligațiuni</option>
-      </select>
-    </div>
-    <div class="grid">
-      @for (instrument of filtered(); track instrument.instrumentId) {
-        <article>
-          <div class="instrument-head">
-            <div>
-              <b>{{ instrument.symbol }}</b
-              ><span>{{ typeLabel(instrument.instrumentType) }}</span>
-            </div>
-            <strong
-              >{{
-                instrument.marketPrice === null ? '—' : (instrument.marketPrice | number: '1.2-4')
-              }}
-              {{ instrument.currency }}</strong
-            >
-          </div>
-          <h3>{{ instrument.instrumentName }}</h3>
-          <dl>
-            <div>
-              <dt>Emitent</dt>
-              <dd>{{ instrument.issuerName }}</dd>
-            </div>
-            <div>
-              <dt>Piață</dt>
-              <dd>{{ instrument.marketName }}</dd>
-            </div>
-            <div>
-              <dt>Ultima cotație</dt>
-              <dd>
-                {{
-                  instrument.quoteDate
-                    ? (instrument.quoteDate | date: 'dd.MM.yyyy')
-                    : 'Indisponibilă'
-                }}
-              </dd>
-            </div>
-          </dl>
-        </article>
-      } @empty {
-        <p class="empty">Nu am găsit instrumente pentru filtrul selectat.</p>
-      }
-    </div>
-    <details class="guide">
-      <summary>Ce înseamnă tipurile de instrumente?</summary>
-      <p>
-        <b>Acțiune:</b> o parte dintr-o companie. <b>ETF:</b> un pachet de instrumente urmărit
-        într-o singură poziție. <b>Obligațiune:</b> un împrumut acordat unui emitent, de regulă cu
-        dobândă.
-      </p>
-    </details>
-    <small class="source">Prețurile sunt cotații simulate zilnice, în moneda instrumentului.</small>
-  </section>`,
+  templateUrl: './instruments-list.component.html',
 })
 export class InstrumentsListComponent {
+  constructor(private readonly api: ApiService) {}
   instruments = input<Instrument[]>([]);
+  selected = signal<Instrument | null>(null);
+  quotes = signal<InstrumentQuotePoint[]>([]);
+  favorites=signal<number[]>([]); priceAlerts=signal<{customerPriceAlertId:number;symbol:string;direction:string;targetPrice:number;isActive:boolean;triggeredAt:string|null}[]>([]); alertInstrument=signal<Instrument|null>(null); alertDirection='Above'; alertPrice:number|null=null;
+  ngOnInit(){this.api.watchlist().subscribe({next:items=>this.favorites.set(items)});this.loadAlerts();}
   query = signal('');
   typeFilter = signal('ALL');
   filtered = computed(() => {
@@ -100,6 +37,12 @@ export class InstrumentsListComponent {
   setType(value: string) {
     this.typeFilter.set(value);
   }
+  openHistory(instrument: Instrument) { this.selected.set(instrument); this.loadQuotes(30); }
+  loadQuotes(days: number) { const instrument = this.selected(); if (instrument) this.api.instrumentQuotes(instrument.instrumentId, days).subscribe({ next: points => this.quotes.set(points), error: () => this.quotes.set([]) }); }
+  isFavorite(id:number){return this.favorites().includes(id);} toggleFavorite(id:number){const exists=this.isFavorite(id);(exists?this.api.removeWatchlist(id):this.api.addWatchlist(id)).subscribe({next:()=>this.favorites.update(items=>exists?items.filter(x=>x!==id):[...items,id])});}
+  openAlert(instrument:Instrument){this.alertInstrument.set(instrument);this.alertPrice=instrument.marketPrice;}
+  saveAlert(){const instrument=this.alertInstrument();if(instrument&&this.alertPrice&&this.alertPrice>0)this.api.createPriceAlert(instrument.instrumentId,this.alertDirection,this.alertPrice).subscribe({next:()=>{this.alertInstrument.set(null);this.loadAlerts();}});}
+  favoriteInstruments(){return this.instruments().filter(x=>this.isFavorite(x.instrumentId));} loadAlerts(){this.api.priceAlerts().subscribe({next:items=>this.priceAlerts.set(items)});} removeAlert(id:number){this.api.deletePriceAlert(id).subscribe({next:()=>this.loadAlerts()});}
   typeLabel(type: string) {
     return (
       ({ Stock: 'Acțiune', ETF: 'ETF', Bond: 'Obligațiune' } as Record<string, string>)[type] ??
