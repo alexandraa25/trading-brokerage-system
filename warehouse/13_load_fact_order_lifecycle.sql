@@ -13,17 +13,17 @@ BEGIN TRY
 
     SELECT
         CONVERT(INT, CONVERT(CHAR(8), CAST(o.CreatedAt AS DATE), 112)) AS CreatedDateKey,
-        CASE WHEN o.Status IN ('Executed', 'Rejected', 'Cancelled')
+        CASE WHEN o.Status IN ('Executed', 'Rejected', 'Cancelled', 'Expired')
              THEN CONVERT(INT, CONVERT(CHAR(8), CAST(COALESCE(status_change.ChangedAt, o.UpdatedAt) AS DATE), 112)) END AS ResolutionDateKey,
         customer.CustomerKey, account.AccountKey, instrument.InstrumentKey,
         o.OrderId, o.Side, o.OrderType, o.Status AS OrderStatus,
         COALESCE(o.OriginalQuantity, o.Quantity + o.CancelledQuantity) AS OrderedQuantity,
         CAST(ISNULL(execution_summary.ExecutedQuantity, 0) AS DECIMAL(19,8)) AS ExecutedQuantity,
-        o.CancelledQuantity, ISNULL(execution_summary.ExecutionCount, 0) AS ExecutionCount, o.LimitPrice, o.StopPrice, o.CreatedAt,
+        o.CancelledQuantity, ISNULL(execution_summary.ExecutionCount, 0) AS ExecutionCount, o.LimitPrice, o.StopPrice, o.TimeInForce, o.ExpiresAt, o.CreatedAt,
         triggered.ChangedAt AS TriggeredAt,
         CASE WHEN triggered.ChangedAt IS NOT NULL THEN DATEDIFF(MINUTE, o.CreatedAt, triggered.ChangedAt) END AS TriggerDelayMinutes,
-        CASE WHEN o.Status IN ('Executed', 'Rejected', 'Cancelled') THEN COALESCE(status_change.ChangedAt, o.UpdatedAt) END AS ResolvedAt,
-        CASE WHEN o.Status IN ('Executed', 'Rejected', 'Cancelled') THEN DATEDIFF(MINUTE, o.CreatedAt, COALESCE(status_change.ChangedAt, o.UpdatedAt)) END AS ResolutionMinutes,
+        CASE WHEN o.Status IN ('Executed', 'Rejected', 'Cancelled', 'Expired') THEN COALESCE(status_change.ChangedAt, o.UpdatedAt) END AS ResolvedAt,
+        CASE WHEN o.Status IN ('Executed', 'Rejected', 'Cancelled', 'Expired') THEN DATEDIFF(MINUTE, o.CreatedAt, COALESCE(status_change.ChangedAt, o.UpdatedAt)) END AS ResolutionMinutes,
         decision.Reason AS RejectionReason
     INTO #SourceOrders
     FROM BrokerageDB.staging.[Order] o
@@ -41,7 +41,7 @@ BEGIN TRY
     UPDATE target SET
         CreatedDateKey=s.CreatedDateKey, ResolutionDateKey=s.ResolutionDateKey, CustomerKey=s.CustomerKey, AccountKey=s.AccountKey, InstrumentKey=s.InstrumentKey,
         Side=s.Side, OrderType=s.OrderType, OrderStatus=s.OrderStatus, OrderedQuantity=s.OrderedQuantity, ExecutedQuantity=s.ExecutedQuantity, CancelledQuantity=s.CancelledQuantity,
-        ExecutionCount=s.ExecutionCount, LimitPrice=s.LimitPrice, StopPrice=s.StopPrice, TriggeredAt=s.TriggeredAt, TriggerDelayMinutes=s.TriggerDelayMinutes, CreatedAt=s.CreatedAt, ResolvedAt=s.ResolvedAt, ResolutionMinutes=s.ResolutionMinutes,
+        ExecutionCount=s.ExecutionCount, LimitPrice=s.LimitPrice, StopPrice=s.StopPrice, TimeInForce=s.TimeInForce, ExpiresAt=s.ExpiresAt, TriggeredAt=s.TriggeredAt, TriggerDelayMinutes=s.TriggerDelayMinutes, CreatedAt=s.CreatedAt, ResolvedAt=s.ResolvedAt, ResolutionMinutes=s.ResolutionMinutes,
         RejectionReason=s.RejectionReason, DWUpdatedAt=SYSUTCDATETIME()
     FROM dw.FactOrderLifecycle target INNER JOIN #SourceOrders s ON s.OrderId=target.OrderId
     WHERE target.CreatedDateKey<>s.CreatedDateKey OR ISNULL(target.ResolutionDateKey,-1)<>ISNULL(s.ResolutionDateKey,-1)
@@ -49,6 +49,7 @@ BEGIN TRY
        OR target.Side<>s.Side OR target.OrderType<>s.OrderType OR target.OrderStatus<>s.OrderStatus
        OR target.OrderedQuantity<>s.OrderedQuantity OR target.ExecutedQuantity<>s.ExecutedQuantity OR target.CancelledQuantity<>s.CancelledQuantity
        OR target.ExecutionCount<>s.ExecutionCount OR ISNULL(target.LimitPrice,-1)<>ISNULL(s.LimitPrice,-1) OR ISNULL(target.StopPrice,-1)<>ISNULL(s.StopPrice,-1)
+       OR target.TimeInForce<>s.TimeInForce OR ISNULL(target.ExpiresAt,'19000101')<>ISNULL(s.ExpiresAt,'19000101')
        OR ISNULL(target.TriggeredAt,'19000101')<>ISNULL(s.TriggeredAt,'19000101') OR ISNULL(target.TriggerDelayMinutes,-1)<>ISNULL(s.TriggerDelayMinutes,-1)
        OR target.CreatedAt<>s.CreatedAt OR ISNULL(target.ResolvedAt,'19000101')<>ISNULL(s.ResolvedAt,'19000101')
        OR ISNULL(target.ResolutionMinutes,-1)<>ISNULL(s.ResolutionMinutes,-1)
@@ -56,8 +57,8 @@ BEGIN TRY
     SET @Updated=@@ROWCOUNT;
 
     INSERT INTO dw.FactOrderLifecycle
-    (CreatedDateKey,ResolutionDateKey,CustomerKey,AccountKey,InstrumentKey,OrderId,Side,OrderType,OrderStatus,OrderedQuantity,ExecutedQuantity,CancelledQuantity,ExecutionCount,LimitPrice,StopPrice,TriggeredAt,TriggerDelayMinutes,CreatedAt,ResolvedAt,ResolutionMinutes,RejectionReason)
-    SELECT CreatedDateKey,ResolutionDateKey,CustomerKey,AccountKey,InstrumentKey,OrderId,Side,OrderType,OrderStatus,OrderedQuantity,ExecutedQuantity,CancelledQuantity,ExecutionCount,LimitPrice,StopPrice,TriggeredAt,TriggerDelayMinutes,CreatedAt,ResolvedAt,ResolutionMinutes,RejectionReason
+    (CreatedDateKey,ResolutionDateKey,CustomerKey,AccountKey,InstrumentKey,OrderId,Side,OrderType,OrderStatus,OrderedQuantity,ExecutedQuantity,CancelledQuantity,ExecutionCount,LimitPrice,StopPrice,TimeInForce,ExpiresAt,TriggeredAt,TriggerDelayMinutes,CreatedAt,ResolvedAt,ResolutionMinutes,RejectionReason)
+    SELECT CreatedDateKey,ResolutionDateKey,CustomerKey,AccountKey,InstrumentKey,OrderId,Side,OrderType,OrderStatus,OrderedQuantity,ExecutedQuantity,CancelledQuantity,ExecutionCount,LimitPrice,StopPrice,TimeInForce,ExpiresAt,TriggeredAt,TriggerDelayMinutes,CreatedAt,ResolvedAt,ResolutionMinutes,RejectionReason
     FROM #SourceOrders s WHERE NOT EXISTS (SELECT 1 FROM dw.FactOrderLifecycle t WHERE t.OrderId=s.OrderId);
     SET @Inserted=@@ROWCOUNT;
     COMMIT TRANSACTION;

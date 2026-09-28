@@ -138,3 +138,4 @@ button:disabled { cursor: not-allowed; opacity: .5; }
   :host ::ng-deep .modal-actions { flex-direction: column-reverse; }.modal-actions button { width: 100%; }
 }
 .deferred-placeholder { min-height: 120px; display: grid; place-items: center; margin: 22px 0; border: 1px dashed #bed1db; border-radius: 14px; color: #60778b; background: #f8fbfc; }
+.session-warning{display:flex;align-items:center;gap:12px;margin:12px 0;padding:13px 16px;border:1px solid #ebcf86;border-radius:12px;background:#fff8e7;color:#754f00}.session-warning span{flex:1}.session-warning button{border:0;border-radius:8px;padding:8px 12px;background:#a56b00;color:#fff;font-weight:700}

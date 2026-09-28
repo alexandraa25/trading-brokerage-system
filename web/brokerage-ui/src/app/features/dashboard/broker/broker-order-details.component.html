@@ -82,7 +82,7 @@
               [disabled]="executionFeedback() !== null"
               (click)="execute.emit({ id: details()!.orderId, quantity: quantity!, price: price! })"
             >
-              Confirmă execuția
+              {{ (details()!.orderType === 'STOP' || details()!.orderType === 'STOP_LIMIT') && details()!.status === 'Triggered' ? 'Execută ordin declanșat' : 'Confirmă execuția' }}
             </button>
           </div>
           @if (executionFeedback()) {

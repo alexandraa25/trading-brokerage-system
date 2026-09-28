@@ -27,6 +27,13 @@ public sealed class StopOrderActivationService(IServiceScopeFactory scopeFactory
         await using var scope = scopeFactory.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<BrokerageDbContext>();
         var notifications = scope.ServiceProvider.GetRequiredService<BrokerNotificationService>();
+        var orderAudit = scope.ServiceProvider.GetRequiredService<OrderAuditService>();
+        var now = DateTime.UtcNow;
+        var expired = await db.Orders.Where(order => (order.Status == "Pending" || order.Status == "WaitingTrigger" || order.Status == "Triggered" || order.Status == "PartiallyExecuted")
+            && ((order.TimeInForce == "DAY" && order.CreatedAt.Date < now.Date) || (order.TimeInForce == "DATE" && order.ExpiresAt.HasValue && order.ExpiresAt <= now)))
+            .ToListAsync(cancellationToken);
+        foreach (var order in expired) { order.Status = "Expired"; order.UpdatedAt = now; }
+        if (expired.Count > 0) await db.SaveChangesAsync(cancellationToken);
 
         var candidates = await (
             from order in db.Orders
@@ -52,6 +59,7 @@ public sealed class StopOrderActivationService(IServiceScopeFactory scopeFactory
             candidate.Order.Status = "Triggered";
             candidate.Order.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync(cancellationToken);
+            await orderAudit.LogAsync(candidate.Order.OrderId, "StopTriggered", $"Prag STOP {candidate.Order.StopPrice:0.####} atins; ultima cotație {quote.MarketPrice:0.####} la {quote.QuoteDate:O}.", "Proces automat");
             await notifications.CreateAsync("StopOrderTriggered", "Ordin STOP declanșat",
                 $"Ordinul #{candidate.Order.OrderId} pentru {candidate.Symbol} a atins pragul {candidate.Order.StopPrice:0.####} și este pregătit pentru execuție.");
         }

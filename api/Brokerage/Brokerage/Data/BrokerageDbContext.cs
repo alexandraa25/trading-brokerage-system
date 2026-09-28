@@ -70,6 +70,7 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
             entity.Property(order => order.CancelledQuantity).HasPrecision(19, 8);
             entity.Property(order => order.LimitPrice).HasPrecision(19, 8);
             entity.Property(order => order.StopPrice).HasPrecision(19, 8);
+            entity.Property(order => order.TimeInForce).HasMaxLength(10);
         });
 
         modelBuilder.Entity<Position>(entity =>

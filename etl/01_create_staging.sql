@@ -125,6 +125,8 @@ CREATE TABLE staging.[Order]
     Quantity     DECIMAL(19,8) NOT NULL,
     LimitPrice   DECIMAL(19,8) NULL,
     StopPrice    DECIMAL(19,8) NULL,
+    TimeInForce  VARCHAR(10)   NOT NULL DEFAULT ('GTC'),
+    ExpiresAt    DATETIME2(3)  NULL,
     OriginalQuantity DECIMAL(19,8) NULL,
     CancelledQuantity DECIMAL(19,8) NOT NULL DEFAULT (0),
     Status       VARCHAR(20)   NOT NULL,

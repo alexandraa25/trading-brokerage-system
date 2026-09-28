@@ -9,16 +9,24 @@ namespace Brokerage.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IAuthService authService, Brokerage.Api.Data.BrokerageDbContext db, Microsoft.AspNetCore.Identity.IPasswordHasher<Brokerage.Api.Models.ApiUser> passwordHasher) : ControllerBase
+public class AuthController(IAuthService authService, Brokerage.Api.Data.BrokerageDbContext db, Microsoft.AspNetCore.Identity.IPasswordHasher<Brokerage.Api.Models.ApiUser> passwordHasher, ILogger<AuthController> logger) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponse>> Login(LoginRequest request)
     {
         var response = await authService.LoginAsync(request);
-        return response is null
-            ? Unauthorized(new ProblemDetails { Detail = "Emailul sau parola sunt incorecte." })
-            : Ok(response);
+        if (response is null) return Unauthorized(new ProblemDetails { Detail = "Emailul sau parola sunt incorecte." });
+        var user = await db.ApiUsers.SingleAsync(item => item.Email == request.Email.Trim().ToLowerInvariant());
+        try
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO audit.UserSessionHistory(ApiUserId,DeviceInfo,IpAddress) VALUES({user.ApiUserId},{Request.Headers.UserAgent.ToString()},{HttpContext.Connection.RemoteIpAddress?.ToString()})");
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Autentificarea a reușit, dar sesiunea nu a putut fi înregistrată în audit.");
+        }
+        return Ok(response);
     }
 
     [Authorize]

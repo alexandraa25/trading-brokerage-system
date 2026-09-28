@@ -14,7 +14,7 @@ namespace Brokerage.Api.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/orders")]
-public class OrdersController(BrokerageDbContext db, BrokerNotificationService brokerNotifications) : ControllerBase
+public class OrdersController(BrokerageDbContext db, BrokerNotificationService brokerNotifications, OrderAuditService orderAudit) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<IEnumerable<OrderSummary>>> GetOrders()
@@ -147,6 +147,10 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
 
             var result = new CreatedOrder(reader.GetInt64(0), reader.GetString(1));
             await reader.DisposeAsync();
+            var savedOrder = await db.Orders.SingleAsync(item => item.OrderId == result.OrderId);
+            savedOrder.TimeInForce = request.TimeInForce;
+            savedOrder.ExpiresAt = request.TimeInForce == "DATE" ? request.ExpiresAt?.ToUniversalTime() : null;
+            await db.SaveChangesAsync();
             if (!IsStaff())
             {
                 await brokerNotifications.CreateAsync("NewOrder", "Ordin nou în așteptare",
@@ -171,10 +175,9 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
             .SingleOrDefaultAsync();
         if (instrument is null) return NotFound();
 
-        var quote = await db.Database.SqlQuery<OrderEstimateQuote>($"""
-            SELECT TOP 1 MarketPrice, QuoteDate FROM trading.MarketQuote
-            WHERE InstrumentId = {instrument.InstrumentId} ORDER BY QuoteDate DESC
-            """).SingleOrDefaultAsync();
+        var quote = db.Database.ProviderName?.Contains("Sqlite", StringComparison.OrdinalIgnoreCase) == true
+            ? await db.Database.SqlQuery<OrderEstimateQuote>($"""SELECT MarketPrice, QuoteDate FROM trading.MarketQuote WHERE InstrumentId = {instrument.InstrumentId} ORDER BY QuoteDate DESC LIMIT 1""").SingleOrDefaultAsync()
+            : await db.Database.SqlQuery<OrderEstimateQuote>($"""SELECT TOP 1 MarketPrice, QuoteDate FROM trading.MarketQuote WHERE InstrumentId = {instrument.InstrumentId} ORDER BY QuoteDate DESC""").SingleOrDefaultAsync();
         if (quote is null)
             return BadRequest(new ProblemDetails { Detail = "Nu există o cotație disponibilă pentru acest instrument." });
 
@@ -202,9 +205,13 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
             if (availableAmount < requiredAmount) reason = "Cantitatea disponibilă în poziție nu acoperă ordinul de vânzare.";
         }
 
-        return Ok(new OrderEstimate(instrument.Currency, price, quote.QuoteDate, orderValue, commission,
+        var estimate = new OrderEstimate(instrument.Currency, price, quote.QuoteDate, orderValue, commission,
             requiredAmount, availableAmount, decimal.Max(requiredAmount - availableAmount, 0),
-            availableAmount >= requiredAmount, reason));
+            availableAmount >= requiredAmount, reason);
+        await orderAudit.LogAsync(null, "OrderEstimate",
+            $"Cont #{request.AccountId}; instrument #{request.InstrumentId}; {request.Side} {request.Quantity:0.####}; preț {price:0.####}; comision {commission:0.####}; rezultat {(estimate.CanSubmit ? "acceptat" : "fonduri insuficiente")}",
+            User.Identity?.Name ?? "Utilizator");
+        return Ok(estimate);
     }
 
     [HttpPost("{orderId:long}/cancel")]
@@ -256,8 +263,12 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
             if (!await reader.ReadAsync())
                 return Problem("Procedura de anulare parțială nu a returnat un rezultat.");
 
-            return Ok(new PartialOrderCancellationResult(
-                reader.GetInt64(0), reader.GetDecimal(1), reader.GetDecimal(2)));
+            var result = new PartialOrderCancellationResult(reader.GetInt64(0), reader.GetDecimal(1), reader.GetDecimal(2));
+            await reader.DisposeAsync();
+            await orderAudit.LogAsync(orderId, "PartialCancellation",
+                $"Cantitate anulată {result.CancelledQuantity:0.####}; cantitate rămasă {result.RemainingQuantity:0.####}",
+                User.Identity?.Name ?? "Utilizator");
+            return Ok(result);
         }
         catch (SqlException exception) when (exception.Number is >= 50000 and < 60000)
         {

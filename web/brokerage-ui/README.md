@@ -1,59 +1,32 @@
-# BrokerageUi
+# Interfața Angular
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.16.
+Interfața Angular 20 oferă ecrane separate pentru client, broker și administrator. Componentele au fișiere `.ts`, `.html` și `.scss` separate și sunt încărcate lazy pentru zonele principale.
 
-## Development server
+## Pornire
 
-To start a local development server, run:
-
-```bash
-ng serve
+```powershell
+npm install
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Interfața locală rulează la `http://localhost:4200` și comunică cu API-ul la `https://localhost:7103/api`.
 
-## Code scaffolding
+## Ecrane
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- **Client:** prezentare portofoliu, instrumente, tranzacționare, numerar, ordine, notificări și profil;
+- **Broker:** prezentare, ordine active, ordine STOP, execuții, cursuri valutare și profil;
+- **Administrator:** monitorizare, KYC, clienți, conturi, utilizatori, jurnal audit, Power BI și Asistent AI.
 
-```bash
-ng generate component component-name
+Jurnalul administratorului include subtaburi pentru modificările KYC și activitatea ordinelor. Toate listele operaționale au filtre și paginare; exportul CSV este disponibil în zonele administrative și broker.
+
+## Comenzi
+
+```powershell
+npm start        # server de dezvoltare
+npm run build    # build de producție
+npm run test:ci  # teste automate headless
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Securitate în interfață
 
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Tokenul JWT este păstrat local pentru sesiunea curentă. Interfața avertizează cu cinci minute înainte de expirare și deconectează automat utilizatorul la expirare. API-ul invalidează tokenul și dacă administratorul deconectează toate sesiunile unui utilizator.

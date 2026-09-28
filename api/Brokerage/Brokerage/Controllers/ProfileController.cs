@@ -38,7 +38,16 @@ public class ProfileController(BrokerageDbContext db) : ControllerBase
         return profile is null ? NotFound() : Ok(profile);
     }
 
+    [HttpGet("sessions")]
+    public async Task<IActionResult> GetSessions()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userId, out var id)) return Forbid();
+        return Ok(await db.Database.SqlQuery<SessionEntry>($"SELECT TOP 10 UserSessionHistoryId, DeviceInfo, IpAddress, LoggedInAt FROM audit.UserSessionHistory WHERE ApiUserId={id} ORDER BY LoggedInAt DESC").ToListAsync());
+    }
+
     private bool IsStaff() => User.IsInRole("Broker")
         || User.IsInRole("ComplianceOfficer")
         || User.IsInRole("Administrator");
 }
+public record SessionEntry(long UserSessionHistoryId, string? DeviceInfo, string? IpAddress, DateTime LoggedInAt);

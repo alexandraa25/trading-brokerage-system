@@ -1,17 +1,20 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AdminUser } from '../../core/models';
+import { AdminSession, AdminUser } from '../../core/models';
 
 @Component({
   selector: 'app-admin-users',
-  imports: [FormsModule],
+  imports: [DatePipe, FormsModule],
   styleUrl: './admin-users.component.scss',
   templateUrl: './admin-users.component.html',
 })
 export class AdminUsersComponent {
   users = input<AdminUser[]>([]);
+  sessions = input<AdminSession[]>([]);
   statusChange = output<{ id: string; isActive: boolean }>();
   passwordReset = output<{ id: string; password: string }>();
+  signOutAll = output<string>();
   create = output<{ email: string; password: string; role: string }>();
   newUser = { email: '', password: '', role: 'Broker' };
   resetId = '';
@@ -55,5 +58,13 @@ export class AdminUsersComponent {
     this.create.emit({ ...this.newUser });
     this.newUser = { email: '', password: '', role: 'Broker' };
     this.createOpen.set(false);
+  }
+  deviceLabel(deviceInfo: string | null) {
+    if (!deviceInfo) return 'Dispozitiv necunoscut';
+    if (deviceInfo.includes('Edg/')) return 'Microsoft Edge pe Windows';
+    if (deviceInfo.includes('Chrome/')) return 'Google Chrome pe Windows';
+    if (deviceInfo.includes('Firefox/')) return 'Mozilla Firefox';
+    if (deviceInfo.includes('Safari/')) return 'Safari';
+    return 'Browser web';
   }
 }

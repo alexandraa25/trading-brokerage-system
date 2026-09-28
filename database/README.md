@@ -1,26 +1,39 @@
 # Baza operațională
 
-`BrokerageDB` este baza folosită de API și de interfața Angular. Nu este sursa
-directă pentru Power BI; datele analitice sunt încărcate ulterior în
-`BrokerageDW`.
+`BrokerageDB` este baza operațională folosită de API. Ea păstrează datele clienților, KYC, conturi, numerar, instrumente, cotații, ordine, execuții, audit și notificări. Pentru Power BI, datele sunt extrase ulterior în `BrokerageDW`.
 
-## Ordine de instalare
+## Diagramă ERD
 
-1. `01_create_database_schemas_tables.sql`
-2. `02_seed_data.sql`
-3. `04_currency_conversion_eur.sql`
-4. `05_ecb_daily_exchange_rates.sql`
-5. `06_api_identity.sql` până la `15_account_administration_audit.sql`
-6. scripturile din `procedures/`, `triggers/`, `views/` și `indexes/`
+[erd.png](erd.png) este diagrama pentru vizualizare rapidă. Sursa editabilă este
+[erd.svg](erd.svg) și include structura actuală pentru `security`, `core`,
+`trading` și `audit`, inclusiv ordinele avansate, sesiunile și jurnalele noi.
 
-Scriptul opțional `demo/01_seed_diverse_demo_data.sql` introduce date extinse
-pentru demonstrații, teste și Power BI. Nu este necesar pentru aplicația de
-bază.
+## Instalare
 
-## Rolul directoarelor
+Rulează scripturile în ordine numerică:
 
-- `procedures/`: operații tranzacționale sigure;
-- `triggers/`: jurnalizare automată și audit;
-- `views/`: date pregătite pentru listări sau administrare;
-- `indexes/`: optimizări pentru interogările frecvente;
-- `demo/`: date demonstrative, separate de instalarea normală.
+1. `01_create_database_schemas_tables.sql` și `02_seed_data.sql`;
+2. `04_currency_conversion_eur.sql` până la `16_watchlist_price_alerts.sql`;
+3. `17_advanced_orders.sql` până la `21_order_expiration.sql`;
+4. `22_security_activity_audit.sql` și `23_session_revocation.sql`.
+
+Scripturile `17`–`21` adaugă ordine STOP/STOP-LIMIT, procedurile actualizate, cantitățile de istoric și valabilitatea ordinelor. Scriptul `22` creează jurnalele pentru autentificări și activitatea ordinelor. Scriptul `23` adaugă versiunea de sesiune necesară pentru deconectarea tuturor sesiunilor unui utilizator.
+
+După instalare, rulează scripturile din subdirectoarele `procedures/`, `triggers/`, `views/` și `indexes/` dacă acestea nu au fost incluse în instalarea inițială.
+
+## Date demonstrative
+
+- `demo/01_seed_diverse_demo_data.sql`: clienți, conturi, ordine și tranzacții diverse;
+- `demo/02_seed_advanced_order_demo.sql`: ordine STOP/STOP-LIMIT, ordine declanșate și anulări parțiale.
+
+Rulează `demo/02_seed_advanced_order_demo.sql` după scripturile `17`–`21`.
+
+## Audit și reguli
+
+- `audit.UserSessionHistory`: autentificări și dispozitive;
+- `audit.OrderActivityLog`: estimări, anulări parțiale și activări STOP;
+- `audit.AccessAuditLog`: modificări de acces ale personalului;
+- `audit.AccountAdministrationLog`: suspendări și reactivări de cont;
+- triggerele păstrează istoricul KYC, clienților, utilizatorilor și ordinelor.
+
+EUR rămâne moneda de raportare; cursurile BCE și conversiile sunt păstrate cu data utilizată la operațiune.

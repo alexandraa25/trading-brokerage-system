@@ -34,13 +34,29 @@
           <td><span class="status" [class.inactive]="!user.isActive">{{user.isActive?'Activ':'Dezactivat'}}</span></td>
           <td class="actions"><button type="button"
               (click)="statusChange.emit({id:user.apiUserId,isActive:!user.isActive})">{{user.isActive?'Dezactivează':'Activează'}}</button><button
-              type="button" class="reset" (click)="selectForReset(user.apiUserId)">Resetează parola</button></td>
+              type="button" class="reset" (click)="selectForReset(user.apiUserId)">Resetează parola</button><button type="button" class="sign-out" (click)="signOutAll.emit(user.apiUserId)">Deconectează sesiunile</button></td>
         </tr>}</tbody>
     </table>
   </div>@if(!filtered().length){<p class="empty">Nu există utilizatori pentru filtrele alese.</p>}@if(pages()>1){<div
     class="pagination"><button [disabled]="page()===0" (click)="page.set(page()-1)">‹ Anterior</button><span>Pagina
       {{page()+1}} din {{pages()}}</span><button [disabled]="page()+1>=pages()" (click)="page.set(page()+1)">Următor
       ›</button></div>}
+</section>
+<section class="sessions-card">
+  <div class="sessions-heading">
+    <div><p>SECURITATE PERSONAL</p><h2>Conectări recente</h2><span>Ultimele autentificări ale brokerilor și administratorilor.</span></div>
+    <strong>{{ sessions().length }} conectări</strong>
+  </div>
+  <div class="sessions-list">
+    @for(session of sessions(); track session.userSessionHistoryId) {
+      <article class="session">
+        <span class="session-icon">◉</span>
+        <div class="session-user"><b>{{ session.email }}</b><span class="role">{{ session.role }}</span></div>
+        <div class="session-device"><b>{{ deviceLabel(session.deviceInfo) }}</b><span>{{ session.loggedInAt | date:'dd MMMM yyyy, HH:mm' }}</span></div>
+        <span class="session-ip">{{ session.ipAddress || 'IP indisponibil' }}</span>
+      </article>
+    } @empty { <p class="empty">Nu există conectări înregistrate încă.</p> }
+  </div>
 </section>
 @if(createOpen()){<div class="modal-backdrop" (click)="createOpen.set(false)">
   <section class="create-modal" (click)="$event.stopPropagation()"><button class="close-modal" type="button"

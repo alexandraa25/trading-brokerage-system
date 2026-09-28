@@ -1,7 +1,7 @@
 
     <section class="card">
       <p>PANOU BROKER</p>
-      <h2>Ordine în așteptare</h2>
+      <h2>{{ stopOnly() ? 'Ordine STOP în așteptare' : 'Ordine în așteptare' }}</h2>
 
       <div class="filters">
         <input [(ngModel)]="symbolFilter" (ngModelChange)="resetPage()" placeholder="Caută simbol" />
@@ -14,6 +14,7 @@
           <option value="ALL">Toate tipurile</option>
           <option value="Market">La piață</option>
           <option value="Limit">Limită</option>
+          <option value="STOP">STOP</option><option value="STOP_LIMIT">STOP-LIMIT</option>
         </select>
         <label>De la
           <input type="date" [(ngModel)]="fromDate" (ngModelChange)="resetPage()" />
@@ -52,4 +53,4 @@
         </div>
       }
     </section>
-  
+

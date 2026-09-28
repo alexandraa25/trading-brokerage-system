@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using System.Security.Claims;
 using System.Text;
 
 
@@ -28,6 +29,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(1)
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var version = context.Principal?.FindFirstValue("sessionVersion");
+                if (!Guid.TryParse(userId, out var id) || !int.TryParse(version, out var tokenVersion))
+                {
+                    context.Fail("Sesiune nevalidă.");
+                    return;
+                }
+                var db = context.HttpContext.RequestServices.GetRequiredService<BrokerageDbContext>();
+                var user = await db.ApiUsers.AsNoTracking().SingleOrDefaultAsync(item => item.ApiUserId == id);
+                if (user is null || !user.IsActive || user.SessionVersion != tokenVersion)
+                    context.Fail("Sesiunea a fost deconectată.");
+            }
         };
     });
 
@@ -76,6 +94,7 @@ builder.Services.AddScoped<IPasswordHasher<ApiUser>, PasswordHasher<ApiUser>>();
 builder.Services.AddScoped<DevelopmentUserSeeder>();
 builder.Services.AddScoped<CustomerNotificationService>();
 builder.Services.AddScoped<BrokerNotificationService>();
+builder.Services.AddScoped<OrderAuditService>();
 builder.Services.AddHostedService<StopOrderActivationService>();
 builder.Services.AddHttpClient<AdminAiService>();
 builder.Services.AddScoped<AdminAiService>();

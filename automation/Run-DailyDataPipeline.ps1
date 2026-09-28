@@ -39,12 +39,14 @@ try {
     }
 
     Invoke-SqlFile -Database $OperationalDatabase -RelativePath 'etl/07_refresh_staging_from_oltp.sql'
+    Invoke-SqlFile -Database $OperationalDatabase -RelativePath 'etl/11_refresh_audit_staging.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/04_load_dimensions.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/05_load_fact_trade.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/09_load_fact_cash_transaction.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/11_load_fact_portfolio_daily_snapshot.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/13_load_fact_order_lifecycle.sql'
     Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/16_load_fact_kyc.sql'
+    Invoke-SqlFile -Database $WarehouseDatabase -RelativePath 'warehouse/19_operational_audit_analytics.sql'
 
     Write-PipelineLog 'Fluxul zilnic de date s-a finalizat cu succes.'
 }

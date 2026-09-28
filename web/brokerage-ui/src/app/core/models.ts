@@ -73,6 +73,8 @@ export type AdminOverview = {
   delayedKyc: number;
   latestRateDate: string | null;
   exchangeRateOutdated: boolean;
+  latestQuoteDate: string | null;
+  marketQuotesOutdated: boolean;
 };
 export type AdminUser = {
   apiUserId: string;
@@ -80,6 +82,14 @@ export type AdminUser = {
   role: string;
   isActive: boolean;
   createdAt: string;
+};
+export type AdminSession = {
+  userSessionHistoryId: number;
+  email: string;
+  role: string;
+  deviceInfo: string | null;
+  ipAddress: string | null;
+  loggedInAt: string;
 };
 export type AdminAccount = {
   accountId: number;

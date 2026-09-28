@@ -1,7 +1,8 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, inject, input, output, signal, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomerProfile } from '../../../core/models';
+import { ApiService } from '../../../core/api.service';
 
 @Component({
   selector: 'app-profile-kyc',
@@ -9,7 +10,11 @@ import { CustomerProfile } from '../../../core/models';
   styleUrl: './profile-kyc.component.scss',
   templateUrl: './profile-kyc.component.html',
 })
-export class ProfileKycComponent {
+export class ProfileKycComponent implements OnInit {
+  private api=inject(ApiService);
+  sessions=signal<{deviceInfo:string|null;ipAddress:string|null;loggedInAt:string}[]>([]);
+  ngOnInit(){this.api.profileSessions().subscribe({next:items=>this.sessions.set(items)});}
+  deviceLabel(value:string|null){ if(!value)return 'Dispozitiv necunoscut'; if(value.includes('Edg/'))return 'Microsoft Edge · Windows'; if(value.includes('Chrome/'))return 'Google Chrome · Windows'; if(value.includes('Firefox/'))return 'Mozilla Firefox'; if(value.includes('Safari/'))return 'Safari'; return 'Browser web'; }
   profile = input<CustomerProfile | null>(null);
   passwordChange = output<{currentPassword:string;newPassword:string}>();
   currentPassword=''; newPassword=''; confirmPassword=''; localError=signal('');

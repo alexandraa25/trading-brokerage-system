@@ -86,7 +86,9 @@ public class AuthService : IAuthService
 
             new(
                 ClaimTypes.Role,
-                user.Role)
+                user.Role),
+
+            new("sessionVersion", user.SessionVersion.ToString())
         };
 
         if (user.CustomerId.HasValue)

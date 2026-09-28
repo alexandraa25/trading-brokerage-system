@@ -65,6 +65,8 @@ public class TradeOrder
     public decimal CancelledQuantity { get; set; }
     public decimal? LimitPrice { get; set; }
     public decimal? StopPrice { get; set; }
+    public string TimeInForce { get; set; } = "GTC";
+    public DateTime? ExpiresAt { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

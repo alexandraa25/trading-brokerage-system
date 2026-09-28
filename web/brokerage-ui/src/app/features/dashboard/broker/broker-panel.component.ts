@@ -11,6 +11,7 @@ import { Order } from '../../../core/models';
 })
 export class BrokerPanelComponent {
   readonly orders = input<Order[]>([]);
+  readonly stopOnly = input(false);
   readonly details = output<number>();
   readonly size = 10;
 
@@ -33,7 +34,8 @@ export class BrokerPanelComponent {
 
     const items = this.orders().filter(order => {
       const createdAt = new Date(order.createdAt);
-      return (order.status === 'Pending' || order.status === 'PartiallyExecuted')
+      return (order.status === 'Pending' || order.status === 'WaitingTrigger' || order.status === 'Triggered' || order.status === 'PartiallyExecuted')
+        && (!this.stopOnly() || order.orderType === 'STOP' || order.orderType === 'STOP_LIMIT')
         && (this.sideFilter === 'ALL' || order.side.toUpperCase() === this.sideFilter.toUpperCase())
         && (this.typeFilter === 'ALL' || order.orderType.toUpperCase() === this.typeFilter.toUpperCase())
         && (!symbol || order.symbol.toLowerCase().includes(symbol))

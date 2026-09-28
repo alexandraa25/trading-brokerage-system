@@ -33,9 +33,9 @@ export class BrokerOrderDetailsComponent {
     if (this.quantity > this.remaining())
       return 'Cantitatea propusă depășește cantitatea rămasă din ordin.';
     if (item.side === 'BUY' && item.limitPrice !== null && this.price > item.limitPrice)
-      return 'Prețul de execuție depășește prețul limită acceptat pentru cumpărare.';
+      return item.orderType === 'STOP_LIMIT' ? 'STOP-LIMIT nu poate fi executat: prețul propus depășește limita clientului.' : 'Prețul de execuție depășește prețul limită acceptat pentru cumpărare.';
     if (item.side === 'SELL' && item.limitPrice !== null && this.price < item.limitPrice)
-      return 'Prețul de execuție este sub prețul limită acceptat pentru vânzare.';
+      return item.orderType === 'STOP_LIMIT' ? 'STOP-LIMIT nu poate fi executat: prețul propus este sub limita clientului.' : 'Prețul de execuție este sub prețul limită acceptat pentru vânzare.';
     if (item.side === 'BUY' && this.quantity * this.price * 1.0025 > item.availableCash)
       return 'Soldul disponibil nu acoperă valoarea execuției și comisionul estimat de 0,25%.';
     if (item.side === 'SELL' && this.quantity > item.positionQuantity)

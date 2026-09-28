@@ -13,6 +13,8 @@ export class AdminDashboardService {
       overview: this.api.adminOverview(),
       analytics: this.api.adminAnalytics(days),
       users: this.api.adminUsers(),
+      sessions: this.api.adminSessions(),
+      orderAudit: this.api.orderAudit(),
       accounts: this.api.adminAccounts(),
     });
   }

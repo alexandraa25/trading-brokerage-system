@@ -52,6 +52,13 @@ public sealed class BrokerageApiFactory : WebApplicationFactory<Program>, IAsync
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BrokerageDbContext>();
         await db.Database.EnsureCreatedAsync();
+        await db.Database.ExecuteSqlRawAsync("ATTACH DATABASE ':memory:' AS trading;");
+        await db.Database.ExecuteSqlRawAsync("ATTACH DATABASE ':memory:' AS audit;");
+        await db.Database.ExecuteSqlRawAsync("CREATE TABLE trading.MarketQuote (InstrumentId INTEGER NOT NULL, MarketPrice REAL NOT NULL, QuoteDate TEXT NOT NULL);");
+        await db.Database.ExecuteSqlRawAsync("INSERT INTO trading.MarketQuote (InstrumentId, MarketPrice, QuoteDate) VALUES (401, 100, '2026-09-28T00:00:00Z');");
+        await db.Database.ExecuteSqlRawAsync("CREATE TABLE audit.UserSessionHistory (UserSessionHistoryId INTEGER PRIMARY KEY AUTOINCREMENT, ApiUserId TEXT NOT NULL, DeviceInfo TEXT NULL, IpAddress TEXT NULL, LoggedInAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);");
+        await db.Database.ExecuteSqlRawAsync("CREATE TABLE audit.AccessAuditLog (AccessAuditLogId INTEGER PRIMARY KEY AUTOINCREMENT, ApiUserId TEXT NOT NULL, Action TEXT NOT NULL, TargetEmail TEXT NOT NULL, Details TEXT NULL, ChangedBy TEXT NOT NULL, ChangedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);");
+        await db.Database.ExecuteSqlRawAsync("CREATE TABLE audit.OrderActivityLog (OrderActivityLogId INTEGER PRIMARY KEY AUTOINCREMENT, OrderId INTEGER NULL, Activity TEXT NOT NULL, Details TEXT NULL, ChangedBy TEXT NOT NULL, ChangedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);");
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<ApiUser>>();
         var now = DateTime.UtcNow;
         ApiUser User(string email, string role, long? customerId = null) { var user = new ApiUser { ApiUserId = Guid.NewGuid(), Email = email, Role = role, CustomerId = customerId, IsActive = true, CreatedAt = now, UpdatedAt = now }; user.PasswordHash = hasher.HashPassword(user, "TestPass!2026"); return user; }

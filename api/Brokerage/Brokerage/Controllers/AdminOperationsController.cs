@@ -30,6 +30,7 @@ public class AdminOperationsController(BrokerageDbContext db, IPasswordHasher<Ap
     {
         var today = DateTime.UtcNow.Date;
         var latestRateDate = await db.Database.SqlQuery<DateTime?>($"SELECT MAX(RateDate) AS Value FROM core.ExchangeRate").SingleAsync();
+        var latestQuoteDate = await db.Database.SqlQuery<DateTime?>($"SELECT MAX(QuoteDate) AS Value FROM trading.MarketQuote").SingleAsync();
         return Ok(new {
             ActiveCustomers = await db.Customers.CountAsync(item => item.Status == "Active"),
             PendingKyc = await db.KycRecords.CountAsync(item => item.Status == "Pending"),
@@ -38,7 +39,9 @@ public class AdminOperationsController(BrokerageDbContext db, IPasswordHasher<Ap
             BlockedCustomers = await db.Customers.CountAsync(item => item.Status == "Blocked"),
             DelayedKyc = await db.KycRecords.CountAsync(item => item.Status == "Pending" && item.CreatedAt < today.AddDays(-7)),
             LatestRateDate = latestRateDate,
-            ExchangeRateOutdated = !latestRateDate.HasValue || latestRateDate.Value.Date < today.AddDays(-3)
+            ExchangeRateOutdated = !latestRateDate.HasValue || latestRateDate.Value.Date < today.AddDays(-3),
+            LatestQuoteDate = latestQuoteDate,
+            MarketQuotesOutdated = !latestQuoteDate.HasValue || latestQuoteDate.Value.Date < today.AddDays(-1)
         });
     }
 
@@ -113,8 +116,36 @@ public class AdminOperationsController(BrokerageDbContext db, IPasswordHasher<Ap
         return NoContent();
     }
 
+    [HttpPost("users/{userId:guid}/sign-out-all")]
+    public async Task<IActionResult> SignOutAllSessions(Guid userId)
+    {
+        var user = await db.ApiUsers.FindAsync(userId);
+        if (user is null || user.Role == "Customer") return NotFound();
+        user.SessionVersion++;
+        user.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        await AuditAsync(user, "SignedOutAllSessions", user.Email, "Toate sesiunile active au fost invalidate.");
+        return NoContent();
+    }
+
     [HttpGet("access-audit")]
     public async Task<IActionResult> GetAccessAudit() => Ok(await db.Database.SqlQuery<AccessAuditEntry>($"SELECT TOP 200 AccessAuditLogId, Action, TargetEmail, Details, ChangedBy, ChangedAt FROM audit.AccessAuditLog ORDER BY ChangedAt DESC").ToListAsync());
+
+    [HttpGet("sessions")]
+    public async Task<IActionResult> GetRecentStaffSessions() => Ok(await db.Database.SqlQuery<AdminSessionEntry>($"""
+        SELECT TOP 100 sessionHistory.UserSessionHistoryId, userAccount.Email, userAccount.Role,
+               sessionHistory.DeviceInfo, sessionHistory.IpAddress, sessionHistory.LoggedInAt
+        FROM audit.UserSessionHistory AS sessionHistory
+        INNER JOIN security.ApiUser AS userAccount ON userAccount.ApiUserId = sessionHistory.ApiUserId
+        WHERE userAccount.Role IN ('Broker', 'Administrator')
+        ORDER BY sessionHistory.LoggedInAt DESC
+        """).ToListAsync());
+
+    [HttpGet("order-audit")]
+    public async Task<IActionResult> GetOrderAudit() => Ok(await db.Database.SqlQuery<OrderAuditEntry>($"""
+        SELECT TOP 500 OrderActivityLogId, OrderId, Activity, Details, ChangedBy, ChangedAt
+        FROM audit.OrderActivityLog ORDER BY ChangedAt DESC
+        """).ToListAsync());
 
     private Task AuditAsync(ApiUser user, string action, string email, string? details)
     {
@@ -129,3 +160,5 @@ public record ResetPasswordRequest(string NewPassword);
 public record AdminOpenCashAccountRequest(string Currency);
 public record CreateStaffUserRequest(string Email, string Password, string Role);
 public record AccessAuditEntry(long AccessAuditLogId, string Action, string TargetEmail, string? Details, string ChangedBy, DateTime ChangedAt);
+public record AdminSessionEntry(long UserSessionHistoryId, string Email, string Role, string? DeviceInfo, string? IpAddress, DateTime LoggedInAt);
+public record OrderAuditEntry(long OrderActivityLogId, long? OrderId, string Activity, string? Details, string ChangedBy, DateTime ChangedAt);

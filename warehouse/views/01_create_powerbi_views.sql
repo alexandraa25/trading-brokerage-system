@@ -69,6 +69,8 @@ SELECT
     fact.ExecutionCount AS NumarExecutii,
     fact.StopPrice AS PretStop,
     fact.LimitPrice AS PretLimita,
+    fact.TimeInForce AS Valabilitate,
+    fact.ExpiresAt AS ExpiraLa,
     fact.TriggeredAt AS DataDeclansarii,
     fact.TriggerDelayMinutes AS MinutePanaLaDeclansare,
     fact.ResolutionMinutes AS MinutePanaLaSolutionare,
@@ -79,6 +81,25 @@ LEFT JOIN dw.DimDate resolved ON resolved.DateKey=fact.ResolutionDateKey
 INNER JOIN dw.DimCustomer customer ON customer.CustomerKey=fact.CustomerKey
 INNER JOIN dw.DimAccount account ON account.AccountKey=fact.AccountKey
 INNER JOIN dw.DimInstrument instrument ON instrument.InstrumentKey=fact.InstrumentKey;
+GO
+
+CREATE OR ALTER VIEW dw.vwPowerBiOperationalAudit
+AS
+SELECT
+    d.FullDate AS Data,
+    d.YearNumber AS An,
+    d.MonthNumber AS Luna,
+    d.YearMonth AS AnLuna,
+    userAccount.Email AS Utilizator,
+    userAccount.UserRole AS Rol,
+    audit.SourceType AS Sursa,
+    audit.Activity AS Actiune,
+    audit.RelatedOrderId AS IdOrdin,
+    audit.Details AS Detalii,
+    audit.OccurredAt AS Moment
+FROM dw.FactOperationalAudit audit
+INNER JOIN dw.DimDate d ON d.DateKey=audit.DateKey
+LEFT JOIN dw.DimApplicationUser userAccount ON userAccount.ApplicationUserKey=audit.ApplicationUserKey;
 GO
 
 PRINT N'Vizualizările Power BI au fost create cu succes.';

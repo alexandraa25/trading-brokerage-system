@@ -52,6 +52,17 @@ public class ApiAuthorizationTests(BrokerageApiFactory factory) : IClassFixture<
     }
 
     [Fact]
+    public async Task Estimarea_indică_fonduri_insuficiente_pentru_cumpărare()
+    {
+        using var client = await ClientFor("client@test.local");
+        var response = await client.PostAsJsonAsync("/api/orders/estimate", new { accountId = BrokerageApiFactory.AccountId, instrumentId = 401, side = "BUY", orderType = "MARKET", quantity = 20m, limitPrice = (decimal?)null, stopPrice = (decimal?)null, timeInForce = "GTC" });
+        response.EnsureSuccessStatusCode();
+        var estimate = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(estimate.GetProperty("canSubmit").GetBoolean());
+        Assert.True(estimate.GetProperty("shortfall").GetDecimal() > 0);
+    }
+
+    [Fact]
     public async Task Brokerul_poate_citi_executiile_dar_clientul_nu_poate_executa_ordine()
     {
         using var broker = await ClientFor("broker@test.local");
@@ -66,5 +77,20 @@ public class ApiAuthorizationTests(BrokerageApiFactory factory) : IClassFixture<
         using var admin = await ClientFor("admin@test.local");
         Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/api/admin/kyc")).StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await admin.GetAsync("/api/admin/users")).StatusCode);
+    }
+
+    [Fact]
+    public async Task Administratorul_poate_deconecta_toate_sesiunile_brokerului()
+    {
+        using var admin = await ClientFor("admin@test.local");
+        using var broker = await ClientFor("broker@test.local");
+        var users = await admin.GetFromJsonAsync<JsonElement>("/api/admin/users");
+        var brokerId = users.EnumerateArray().Single(item => item.GetProperty("email").GetString() == "broker@test.local")
+            .GetProperty("apiUserId").GetString();
+
+        var signOut = await admin.PostAsync($"/api/admin/users/{brokerId}/sign-out-all", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, signOut.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await broker.GetAsync("/api/broker/executions")).StatusCode);
     }
 }

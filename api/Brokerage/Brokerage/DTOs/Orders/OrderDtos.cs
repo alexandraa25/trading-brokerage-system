@@ -21,6 +21,9 @@ public class CreateOrderRequest
 
     public decimal? LimitPrice { get; init; }
     public decimal? StopPrice { get; init; }
+    [RegularExpression("^(DAY|DATE|GTC)$")]
+    public string TimeInForce { get; init; } = "GTC";
+    public DateTime? ExpiresAt { get; init; }
 }
 
 public record OrderSummary(

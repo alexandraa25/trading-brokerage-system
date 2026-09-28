@@ -4,6 +4,7 @@ import {
   AdminAiResponse,
   AdminCustomerOverview,
   AccessAuditEntry,
+  OrderAuditEntry,
   BrokerExecution,
   BrokerIntelligentAlert,
   BrokerOrderDetails,
@@ -18,6 +19,7 @@ import {
   AdminAnalytics,
   AdminCustomer,
   AdminOverview,
+  AdminSession,
   AdminUser,
   BrokerNotification,
   CashBalance,
@@ -53,6 +55,7 @@ export class ApiService {
       { headers: this.headers },
     );
   }
+  profileSessions() { return this.http.get<{deviceInfo:string|null;ipAddress:string|null;loggedInAt:string}[]>(`${this.url}/profile/sessions`, { headers: this.headers }); }
   register(customer: {
     firstName: string;
     lastName: string;
@@ -112,6 +115,9 @@ export class ApiService {
   adminUsers() {
     return this.http.get<AdminUser[]>(`${this.url}/admin/users`, { headers: this.headers });
   }
+  adminSessions() {
+    return this.http.get<AdminSession[]>(`${this.url}/admin/sessions`, { headers: this.headers });
+  }
   updateAdminUserStatus(id: string, isActive: boolean) {
     return this.http.post(
       `${this.url}/admin/users/${id}/status`,
@@ -133,6 +139,12 @@ export class ApiService {
     return this.http.get<AccessAuditEntry[]>(`${this.url}/admin/access-audit`, {
       headers: this.headers,
     });
+  }
+  orderAudit() {
+    return this.http.get<OrderAuditEntry[]>(`${this.url}/admin/order-audit`, { headers: this.headers });
+  }
+  signOutAllSessions(id: string) {
+    return this.http.post(`${this.url}/admin/users/${id}/sign-out-all`, {}, { headers: this.headers });
   }
   adminAccounts() {
     return this.http.get<AdminAccount[]>(`${this.url}/admin/accounts`, { headers: this.headers });

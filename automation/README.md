@@ -1,26 +1,29 @@
 # Automatizarea fluxului zilnic
 
-`Run-DailyDataPipeline.ps1` execută, în această ordine:
+`Run-DailyDataPipeline.ps1` actualizează datele necesare aplicației și raportării.
 
-1. importul cursurilor oficiale BCE;
-2. actualizarea cotațiilor simulate și capturarea valorii zilnice a portofoliilor;
-3. reconstruirea staging-ului din `BrokerageDB`;
-4. încărcarea dimensiunilor și a faptelor în `BrokerageDW`;
-5. scrierea unui jurnal în `automation/logs/`.
+## Flux
 
-Poți testa local fluxul fără apelul BCE:
+1. importă cursurile oficiale BCE;
+2. reîmprospătează cotațiile simulate și snapshoturile zilnice de portofoliu;
+3. reconstruiește staging-ul din `BrokerageDB`, inclusiv jurnalul operațional;
+4. încarcă dimensiunile și faptele în `BrokerageDW`, inclusiv auditul operațional;
+5. scrie rezultatul în `automation/logs/`.
+
+Cotațiile și cursurile actualizate permit estimări, ordine STOP și monitorizare administrativă bazate pe datele zilei. Administratorul este avertizat în aplicație când ultimele date BCE sau cotații sunt prea vechi.
+
+## Rulare
+
+Test local fără apel BCE:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Run-DailyDataPipeline.ps1 -SkipEcbImport
 ```
 
-Pentru rularea zilnică la 17:15:
+Instalarea sarcinii zilnice la 17:15:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Install-DailyEcbRateTask.ps1
 ```
 
-În Power BI Desktop, apasă **Reîmprospătare** după terminarea fluxului. Pentru
-Power BI Service, publică raportul și configurează un gateway local plus o
-reîmprospătare programată după ora 17:30; serviciul va interoga aceleași
-vizualizări din `BrokerageDW`.
+După finalizare, reîmprospătează raportul în Power BI Desktop. În Power BI Service configurează un gateway local și o reîmprospătare programată după 17:30.

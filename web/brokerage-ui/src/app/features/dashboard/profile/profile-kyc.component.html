@@ -56,6 +56,7 @@
         }
       </section>
       <section class="details-card password-card"><h2>Schimbă parola</h2><p>Noua parolă trebuie să aibă minimum 10 caractere, literă mare, literă mică, cifră și simbol.</p><form (ngSubmit)="submit()"><label>Parola curentă<input type="password" name="currentPassword" [(ngModel)]="currentPassword" required minlength="8" /></label><label>Parola nouă<input type="password" name="newPassword" [(ngModel)]="newPassword" required minlength="8" /></label><label>Confirmă parola nouă<input type="password" name="confirmPassword" [(ngModel)]="confirmPassword" required minlength="8" /></label>@if(localError()){<span class="password-error">{{localError()}}</span>}<button type="submit">Schimbă parola</button></form></section>
+      <section class="details-card sessions-card"><div class="sessions-heading"><div><p>SECURITATE CONT</p><h2>Autentificări recente</h2></div><span class="session-count">{{ sessions().length }} sesiuni</span></div><div class="sessions-list">@for(session of sessions();track session.loggedInAt){<article class="session"><span class="session-icon">◉</span><div class="session-main"><b>{{ deviceLabel(session.deviceInfo) }}</b><span>{{ session.loggedInAt | date:'dd MMMM yyyy, HH:mm' }}</span></div><span class="session-ip">{{session.ipAddress || 'IP indisponibil'}}</span></article>}@empty{<p class="empty-sessions">Nu există autentificări înregistrate încă.</p>}</div></section>
     } @else {
       <section class="details-card empty"><b>Profilul nu a putut fi încărcat.</b></section>
     }

@@ -27,6 +27,8 @@ BEGIN
         ExecutionCount INT NOT NULL,
         LimitPrice DECIMAL(19,8) NULL,
         StopPrice DECIMAL(19,8) NULL,
+        TimeInForce VARCHAR(10) NOT NULL DEFAULT ('GTC'),
+        ExpiresAt DATETIME2(3) NULL,
         TriggeredAt DATETIME2(3) NULL,
         TriggerDelayMinutes INT NULL,
         CreatedAt DATETIME2(3) NOT NULL,

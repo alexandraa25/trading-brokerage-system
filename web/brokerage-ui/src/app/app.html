@@ -45,6 +45,7 @@
           <button class="logout" (click)="logout()">Deconectare</button>
         </div>
       </header>
+      @if(sessionWarning()){<div class="session-warning"><b>Sesiunea expiră în mai puțin de 5 minute.</b><span>Salvează ce ai de făcut înainte de deconectarea automată.</span><button (click)="logout()">Deconectare acum</button></div>}
       @if (isAdmin()) {
         <nav class="tabs admin-tabs">
           <button [class.active]="adminTab() === 'overview'" (click)="adminTab.set('overview')">
@@ -62,9 +63,9 @@
           <button [class.active]="adminTab() === 'users'" (click)="adminTab.set('users')">
             <span class="tab-icon">⌁</span> Utilizatori
           </button>
-          <button [class.active]="adminTab() === 'audit'" (click)="adminTab.set('audit')">
-            <span class="tab-icon">◷</span> Jurnal audit
-          </button>
+           <button [class.active]="adminTab() === 'audit'" (click)="adminTab.set('audit')">
+             <span class="tab-icon">◷</span> Jurnal audit
+            </button>
           <button [class.active]="adminTab() === 'powerbi'" (click)="adminTab.set('powerbi')"><span class="tab-icon">▣</span> Power BI</button>
           <button [class.active]="adminTab() === 'ai'" (click)="adminTab.set('ai')"><span class="tab-icon">✦</span> Asistent AI</button>
         </nav>
@@ -73,16 +74,13 @@
             {{ orderMessage() }}<button (click)="orderMessage.set('')">×</button>
           </div>
         }
-        @if (adminTab() === 'customers' || adminTab() === 'kyc' || adminTab() === 'audit') {
+        @if (adminTab() === 'customers' || adminTab() === 'kyc') {
           <div class="admin-export">
             @if (adminTab() === 'customers') {
               <button (click)="exportAdminCustomers()">Export clienți CSV</button>
             }
             @if (adminTab() === 'kyc') {
               <button (click)="exportKyc()">Export KYC CSV</button>
-            }
-            @if (adminTab() === 'audit') {
-              <button (click)="exportAudit()">Export audit CSV</button>
             }
           </div>
         }
@@ -132,12 +130,14 @@
         } @else if (adminTab() === 'users') {
           @defer (when adminTab() === 'users') { <app-admin-users
             [users]="adminUsers()"
+            [sessions]="adminSessions()"
             (statusChange)="updateAdminUserStatus($event)"
+            (signOutAll)="signOutAdminUserSessions($event)"
             (passwordReset)="resetAdminUserPassword($event)"
             (create)="createAdminUser($event)"
           /> }
         } @else {
-          @defer (when adminTab() === 'audit') { <app-admin-audit [entries]="kycAudit()" /> } @placeholder { <section class="deferred-placeholder">Se încarcă jurnalul…</section> }
+          @defer (when adminTab() === 'audit') { <app-admin-audit-workspace [kycEntries]="kycAudit()" [orderEntries]="orderAudit()" (exportRequested)="$event === 'kyc' ? exportAudit() : exportOrderAudit()" /> } @placeholder { <section class="deferred-placeholder">Se încarcă jurnalul…</section> }
         }
       } @else if (isBroker()) {
         <div class="broker-refresh">
@@ -165,6 +165,7 @@
             Prezentare broker</button
           ><button [class.active]="brokerTab() === 'orders'" (click)="brokerTab.set('orders')">
             Ordine active</button
+          ><button [class.active]="brokerTab() === 'stop'" (click)="brokerTab.set('stop')">Ordine STOP</button
           ><button
             [class.active]="brokerTab() === 'executions'"
             (click)="brokerTab.set('executions')"
@@ -200,6 +201,7 @@
         @if (brokerTab() === 'orders') {
           @defer (when brokerTab() === 'orders') { <app-broker-panel [orders]="orders()" (details)="loadBrokerOrderDetails($event)" /> } @placeholder { <section class="deferred-placeholder">Se încarcă ordinele…</section> }
         }
+        @if (brokerTab() === 'stop') { @defer (when brokerTab() === 'stop') { <app-broker-panel [orders]="orders()" [stopOnly]="true" (details)="loadBrokerOrderDetails($event)" /> } @placeholder { <section class="deferred-placeholder">Se încarcă ordinele STOP…</section> } }
         @if (brokerTab() === 'executions') {
           @defer (when brokerTab() === 'executions') { <app-broker-executions
             [executions]="brokerExecutions()"

@@ -22,6 +22,8 @@ export class OrderFormComponent {
   quantity = 1;
   limitPrice: number | null = null;
   stopPrice: number | null = null;
+  timeInForce: CreateOrderRequest['timeInForce'] = 'GTC';
+  expiresAt = '';
   selectedInstrument() { return this.instruments().find(x => x.instrumentId === +this.instrumentId); }
   estimatedPrice() { return this.limitPrice ?? this.stopPrice ?? this.selectedInstrument()?.marketPrice ?? 0; }
   estimatedValue() { return (+this.quantity || 0) * this.estimatedPrice(); }
@@ -38,6 +40,8 @@ export class OrderFormComponent {
       orderType: this.orderType, quantity: +this.quantity,
       limitPrice: this.orderType === 'LIMIT' || this.orderType === 'STOP_LIMIT' ? +this.limitPrice! : null,
       stopPrice: this.orderType === 'STOP' || this.orderType === 'STOP_LIMIT' ? +this.stopPrice! : null,
+      timeInForce: this.timeInForce,
+      expiresAt: this.timeInForce === 'DATE' && this.expiresAt ? new Date(`${this.expiresAt}T23:59:59`).toISOString() : null,
     };
   }
   submit() {

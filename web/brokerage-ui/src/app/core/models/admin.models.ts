@@ -6,6 +6,8 @@ export type CreateOrderRequest = {
   quantity: number;
   limitPrice: number | null;
   stopPrice: number | null;
+  timeInForce: 'DAY' | 'DATE' | 'GTC';
+  expiresAt: string | null;
 };
 
 export type OrderEstimate = {
@@ -36,6 +38,15 @@ export type AccessAuditEntry = {
   changedBy: string;
   changedAt: string;
   details: string | null;
+};
+
+export type OrderAuditEntry = {
+  orderActivityLogId: number;
+  orderId: number | null;
+  activity: string;
+  details: string | null;
+  changedBy: string;
+  changedAt: string;
 };
 
 export type AdminCustomerOverview = {

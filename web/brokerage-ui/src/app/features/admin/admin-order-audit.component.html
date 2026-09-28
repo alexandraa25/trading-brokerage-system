@@ -1,0 +1,12 @@
+<section class="card">
+  <div class="heading"><div><p>AUDIT OPERAȚIONAL</p><h2>Jurnal ordine</h2><span>Estimări, anulări parțiale și activări automate STOP.</span></div><strong>{{ filtered().length }} evenimente</strong></div>
+  <div class="admin-toolbar">
+    <label>Caută utilizator<input [(ngModel)]="user" (ngModelChange)="resetPage()" placeholder="E-mail sau proces automat" /></label>
+    <label>Acțiune<select [(ngModel)]="action" (ngModelChange)="resetPage()"><option value="ALL">Toate acțiunile</option>@for(item of actions(); track item){<option [value]="item">{{ actionLabel(item) }}</option>}</select></label>
+    <label>Ordin<input [(ngModel)]="orderId" (ngModelChange)="resetPage()" type="number" min="1" placeholder="ID ordin" /></label>
+    <label>De la<input [(ngModel)]="from" (ngModelChange)="resetPage()" type="date" /></label>
+    <label>Până la<input [(ngModel)]="to" (ngModelChange)="resetPage()" type="date" /></label>
+    <button type="button" class="reset-filter" (click)="clear()">Resetează</button>
+  </div>
+  @if(paged().length){<div class="table-wrap"><table><thead><tr><th>Moment</th><th>Acțiune</th><th>Ordin</th><th>Utilizator</th><th>Detalii</th></tr></thead><tbody>@for(entry of paged(); track entry.orderActivityLogId){<tr><td>{{ entry.changedAt | date:'dd.MM.yyyy, HH:mm' }}</td><td><span class="action">{{ actionLabel(entry.activity) }}</span></td><td>{{ entry.orderId ? '#' + entry.orderId : '—' }}</td><td>{{ entry.changedBy }}</td><td>{{ entry.details || 'Fără detalii' }}</td></tr>}</tbody></table></div><div class="pagination"><button [disabled]="page() === 0" (click)="page.set(page() - 1)">‹ Anterior</button><span>Pagina {{ page() + 1 }} din {{ pages() }}</span><button [disabled]="page() + 1 >= pages()" (click)="page.set(page() + 1)">Următor ›</button></div>} @else {<div class="empty"><b>Nu există evenimente pentru filtrele alese.</b></div>}
+</section>

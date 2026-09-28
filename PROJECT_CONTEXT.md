@@ -347,3 +347,70 @@ Nu se salvează chei, parole sau alte secrete în acest document.
 - `warehouse/17_upgrade_fact_order_lifecycle_stop_history.sql` extinde `dw.FactOrderLifecycle`; cantitatea rămasă este calculată ca `comandată - executată - anulată`.
 - Încărcarea incrementală, încărcarea inițială, reîmprospătarea staging și `dw.vwPowerBiOrderLifecycle` includ acum pragul STOP, momentul declanșării și cantitățile pentru analiza în Power BI.
 
+## Finalizarea ordinelor avansate (28.09.2026)
+
+- Brokerul are tabul `Ordine STOP`, filtrat pentru `STOP` și `STOP-LIMIT`, inclusiv stările de așteptare și declanșare.
+- Formularul ordinului permite `DAY`, `DATE` și `GTC`. `database/21_order_expiration.sql` adaugă câmpurile pentru valabilitate și starea `Expired`; serviciul de fundal expiră automat ordinele active.
+- În fereastra brokerului, acțiunea devine „Execută ordin declanșat” pentru un STOP activat, iar feedbackul explică precis de ce un STOP-LIMIT nu respectă limita clientului.
+
+## Testare ordine avansate (28.09.2026)
+
+- `tests/24_advanced_order_validation.sql` validează schema și integritatea pentru STOP, STOP-LIMIT, anulare parțială și valori/comisioane de execuție.
+- Testele Angular pentru formular și istoric verifică estimarea comisionului, formarea ordinului STOP-LIMIT, starea de anulare parțială și pop-up-ul aferent.
+
+## Calitatea datelor de piață (28.09.2026)
+
+- Fluxul automat zilnic actualizează deja importul BCE, cotațiile simulate, staging-ul și depozitul de date prin `automation/Run-DailyDataPipeline.ps1`.
+- Monitorizarea administratorului semnalează separat cotațiile de piață care nu au fost actualizate în ultima zi.
+
+## Power BI — Ordine avansate (28.09.2026)
+
+- `powerbi/advanced-orders-page.md` descrie pagina de raportare pentru STOP și STOP-LIMIT: măsuri DAX, rată de declanșare, timp până la declanșare, ordine neexecutate, volume și comisioane.
+
+## Sesiune și audit de securitate (28.09.2026)
+
+- Interfața avertizează utilizatorul cu cinci minute înainte ca JWT-ul să expire și îl deconectează automat la expirare.
+- `database/22_security_activity_audit.sql` pregătește jurnalele pentru autentificări/dispozitive și activitatea ordinelor.
+
+
+## Vizibilitate autentificări pentru administrator (28.09.2026)
+
+- `GET /api/admin/sessions` oferă administratorului ultimele 100 de autentificări ale personalului (brokeri și administratori), cu e-mail, rol, dispozitiv, IP și momentul conectării.
+- Tabul **Utilizatori** afișează acum secțiunea „Conectări recente”, separată de lista de utilizatori și paginată.
+- Pentru înregistrarea autentificărilor trebuie rulat o singură dată `database/22_security_activity_audit.sql`; API-ul salvează o sesiune la fiecare conectare reușită.
+
+## Deconectare sesiuni și audit operațional al ordinelor (28.09.2026)
+
+- `database/23_session_revocation.sql` adaugă `SessionVersion` pentru `security.ApiUser`. JWT-ul conține versiunea sesiunii, iar API-ul o verifică la fiecare cerere autorizată. Acțiunea administratorului „Deconectează sesiunile” invalidează toate tokenurile existente ale utilizatorului.
+- `OrderAuditService` înregistrează estimările ordinelor, anulările parțiale și declanșările automate STOP în `audit.OrderActivityLog`. Auditul nu oprește fluxul operațional dacă scriptul de audit nu a fost încă rulat, dar scrie un avertisment în logul API.
+- Administratorul are tabul **Audit ordine**, cu căutare după utilizator, filtre după acțiune, ID de ordin și perioadă, paginare și export CSV.
+
+## Documentație README actualizată (28.09.2026)
+
+- Au fost revizuite toate cele 10 README-uri: rădăcină, API, Angular, bază de date, ETL, depozit, automatizare și Power BI.
+- Documentația acoperă ordinele avansate, activarea STOP, expirarea ordinelor, auditul operațional, deconectarea sesiunilor, taburile administratorului, testarea și scripturile SQL `22`/`23` necesare.
+
+## Verificare globală a proiectului (28.09.2026)
+
+- Build-ul Angular și testele automate au trecut: 10 teste Angular.
+- Testele API au trecut: 8 teste, inclusiv invalidarea sesiunilor brokerului de către administrator.
+- A fost corectată autentificarea în medii fără adresă IP disponibilă; eșecul jurnalizării sesiunii nu mai blochează conectarea, iar API-ul scrie un avertisment.
+- Verificările statice au confirmat existența șabloanelor/stilurilor externe pentru toate componentele și legăturile locale din README-uri.
+- Nu a putut fi verificată execuția SQL Server locală: instanța `localhost` nu este accesibilă din mediul curent, deși `sqlcmd` este instalat.
+
+## Diagramă ERD actualizată (28.09.2026)
+
+- `database/erd.png` a fost refăcută pentru structura actuală a bazei: `security.ApiUser`, sesiunile, valutele/cursurile, favoritele, alertele de preț, cotațiile, ordinele avansate, conversiile și auditul operațional.
+- `database/erd.svg` este sursa vectorială editabilă; `database/README.md` face referire la ambele variante.
+
+## Depozit de date — expirarea ordinelor (28.09.2026)
+
+- `etl/10_order_expiration_upgrade.sql` extinde `staging.[Order]` cu `TimeInForce` și `ExpiresAt`; încărcarea inițială, incrementală și reîmprospătarea completă transportă aceste valori din OLTP.
+- `warehouse/18_upgrade_fact_order_expiration.sql` adaugă aceleași câmpuri în `dw.FactOrderLifecycle` pentru un depozit existent. Pentru o instalare nouă, câmpurile sunt deja în `warehouse/12_create_fact_order_lifecycle.sql`.
+- Încărcătorul `warehouse/13_load_fact_order_lifecycle.sql` tratează starea `Expired` drept stare rezolvată și măsoară timpul până la expirare. Vizualizarea `dw.vwPowerBiOrderLifecycle` expune valabilitatea și momentul expirării pentru Power BI.
+
+## Depozit de date — audit operațional (28.09.2026)
+
+- `etl/11_refresh_audit_staging.sql` creează și reîmprospătează `staging.ApplicationUser` și `staging.OperationalAudit` din utilizatorii aplicației, conectări, jurnalul de acces și jurnalul ordinelor.
+- `warehouse/19_operational_audit_analytics.sql` încarcă `dw.DimApplicationUser` și `dw.FactOperationalAudit`. Faptul păstrează sursa, acțiunea, ordinul asociat și momentul, fără IP sau date despre dispozitiv.
+- `dw.vwPowerBiOperationalAudit`, documentat în `powerbi/operational-audit-page.md`, poate fi folosit pentru pagina Power BI de audit. Fluxul zilnic rulează automat această etapă; validarea este în `tests/26_operational_audit_dw_validation.sql`.

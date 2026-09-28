@@ -1,74 +1,37 @@
 # Power BI
 
-## Raportarea valutară
+Power BI consumă date din `BrokerageDW`, nu direct din `BrokerageDB`. EUR este valuta de raportare pentru indicatorii consolidați.
 
-EUR este valuta principală de afișare. Pentru indicatorii care combină mai
-multe piețe sau valute, folosiți măsurile `TradeValueReporting` și
-`CommissionReporting` din `dw.FactTrade`. `TradeValue` și `CommissionAmount`
-rămân valori în valuta originală și trebuie folosite numai împreună cu
-dimensiunea `dw.DimCurrency`.
+## Surse recomandate
 
-`dw.FactExchangeRate` conține cursurile istorice zilnice, iar relațiile cu
-`dw.DimDate` și `dw.DimCurrency` permit analizarea evoluției cursurilor.
+Importă din schema `dw`:
 
-Măsurile principale recomandate sunt:
+- `vwPowerBiCashFlow` pentru depuneri, retrageri, conversii și comisioane;
+- `vwPowerBiPortfolioEvolution` pentru evoluția zilnică a portofoliului;
+- `vwPowerBiOrderLifecycle` pentru ordine, execuții și ordine avansate;
+- `vwPowerBiOperationalAudit` pentru conectări, acțiuni administrative și activitatea asupra ordinelor;
+- `FactKyc` pentru analiza timpului de soluționare KYC.
 
-```DAX
-Volum tranzacționat EUR =
-SUM ( FactTrade[TradeValueReporting] )
+## Pagini recomandate
 
-Comisioane EUR =
-SUM ( FactTrade[CommissionReporting] )
+1. **Prezentare generală**: valoare portofoliu EUR, flux net, comisioane, clienți activi și KYC în așteptare.
+2. **Portofoliu și numerar**: evoluție zilnică, structură pe monedă, depuneri, retrageri și conversii.
+3. **Trading**: volume, execuții, comisioane, instrumente și stări de ordin.
+4. **Ordine avansate**: STOP/STOP-LIMIT, rată de declanșare, timp până la declanșare, ordine neexecutate și anulări parțiale.
+5. **KYC și operațiuni**: stări KYC, timp de soluționare, respingeri, clienți blocați și alerte de calitate a datelor.
+6. **Audit operațional**: conectări, acțiuni de acces, estimări de ordin, anulări parțiale și activări STOP.
 
-Valoare medie tranzacție EUR =
-DIVIDE ( [Volum tranzacționat EUR], COUNTROWS ( FactTrade ) )
-```
-
-Formatați primele trei măsuri ca monedă EUR. Pentru analiza sumelor originale,
-folosiți `TradeValue` numai într-un vizual filtrat sau grupat după
-`DimCurrency[CurrencyCode]`.
-
-Directorul conține documentația și capturile raportului. Fișierul editabil `.pbix` nu este versionat, deoarece `.gitignore` exclude fișierele binare Power BI.
-
-## Prezentarea portofoliului
-
-- valoarea totală a portofoliului;
-- soldul de numerar;
-- pozițiile și numărul de instrumente.
-
-## Activitatea de tranzacționare
-
-- ordine după stare, sens și instrument;
-- execuții în timp și volum tranzacționat;
-- preț mediu ponderat.
-
-## Activitatea clienților
-
-- clienți activi;
-- ordine și volum pe client;
-- detaliere client, cont și instrument.
-
-## Risc și operațiuni
-
-- ordine respinse sau anulate;
-- execuții eșuate;
-- venituri din comisioane și excepții operaționale.
-
-Modelul Power BI consumă datele din `BrokerageDW`, evitând interogarea directă a tabelelor operaționale.
-
-## Extensii pentru raportare
-
-Importă din schema `dw`: `vwPowerBiCashFlow`,
-`vwPowerBiPortfolioEvolution` și `vwPowerBiOrderLifecycle`.
+## Măsuri DAX de bază
 
 ```DAX
+Volum tranzacționat EUR = SUM ( FactTrade[TradeValueReporting] )
+Comisioane EUR = SUM ( FactTrade[CommissionReporting] )
 Flux net EUR = SUM ( vwPowerBiCashFlow[SumaEur] )
-
 Valoare portofoliu EUR = SUM ( vwPowerBiPortfolioEvolution[ValoareTotalaEur] )
-
-Timp mediu soluționare (minute) =
-AVERAGE ( vwPowerBiOrderLifecycle[MinutePanaLaSolutionare] )
+Timp mediu soluționare (minute) = AVERAGE ( vwPowerBiOrderLifecycle[MinutePanaLaSolutionare] )
 ```
 
-Folosește un grafic de evoluție pentru valoarea portofoliului, un grafic cu
-fluxul net după tipul operațiunii și distribuția ordinelor după stare.
+Folosește `TradeValue` și `CommissionAmount` numai împreună cu `DimCurrency`; acestea sunt în moneda originală. Pentru valori consolidate, folosește câmpurile de raportare EUR.
+
+Ghidul complet pentru pagina de ordine avansate, cu măsuri, vizualuri și filtre, este în [advanced-orders-page.md](advanced-orders-page.md). Fișierul `.pbix` este păstrat local și nu este versionat în Git.
+Ghidul pentru audit este în [operational-audit-page.md](operational-audit-page.md).
