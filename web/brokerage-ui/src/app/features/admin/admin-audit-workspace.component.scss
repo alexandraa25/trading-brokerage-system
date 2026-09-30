@@ -1,1 +1,74 @@
-.audit-controls{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.subtabs{display:flex;gap:8px;margin:0 0 18px;padding:6px;border:1px solid #dbe7ec;border-radius:14px;background:#fff;width:max-content}.subtabs button{display:flex;align-items:center;gap:8px;padding:10px 14px;border:0;border-radius:9px;background:transparent;color:#5d7284;font-weight:800}.subtabs button.active{background:#e3f6f2;color:#08736f;box-shadow:inset 0 -2px #0a8c88}.subtabs span{padding:2px 7px;border-radius:12px;background:#edf3f5;font-size:12px}.export{padding:11px 14px;border:1px solid #b9d5dd;border-radius:10px;background:#fff;color:#08736f;font-weight:800}@media(max-width:550px){.audit-controls{display:grid}.subtabs{width:100%;box-sizing:border-box;margin:0}.subtabs button{flex:1;justify-content:center;padding:10px 7px;font-size:12px}.export{width:100%}}
+.audit-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px
+}
+
+.subtabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 6px;
+  border: 1px solid #dbe7ec;
+  border-radius: 14px;
+  background: #fff;
+  width: max-content
+}
+
+.subtabs button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #5d7284;
+  font-weight: 800
+}
+
+.subtabs button.active {
+  background: #e3f6f2;
+  color: #08736f;
+  box-shadow: inset 0 -2px #0a8c88
+}
+
+.subtabs span {
+  padding: 2px 7px;
+  border-radius: 12px;
+  background: #edf3f5;
+  font-size: 12px
+}
+
+.export {
+  padding: 11px 14px;
+  border: 1px solid #b9d5dd;
+  border-radius: 10px;
+  background: #fff;
+  color: #08736f;
+  font-weight: 800
+}
+
+@media(max-width:550px) {
+  .audit-controls {
+    display: grid
+  }
+
+  .subtabs {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0
+  }
+
+  .subtabs button {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 7px;
+    font-size: 12px
+  }
+
+  .export {
+    width: 100%
+  }
+}

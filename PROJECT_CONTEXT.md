@@ -414,3 +414,21 @@ Nu se salvează chei, parole sau alte secrete în acest document.
 - `etl/11_refresh_audit_staging.sql` creează și reîmprospătează `staging.ApplicationUser` și `staging.OperationalAudit` din utilizatorii aplicației, conectări, jurnalul de acces și jurnalul ordinelor.
 - `warehouse/19_operational_audit_analytics.sql` încarcă `dw.DimApplicationUser` și `dw.FactOperationalAudit`. Faptul păstrează sursa, acțiunea, ordinul asociat și momentul, fără IP sau date despre dispozitiv.
 - `dw.vwPowerBiOperationalAudit`, documentat în `powerbi/operational-audit-page.md`, poate fi folosit pentru pagina Power BI de audit. Fluxul zilnic rulează automat această etapă; validarea este în `tests/26_operational_audit_dw_validation.sql`.
+
+## Integrare raport Power BI în aplicație (30.09.2026)
+
+- Tabul administratorului **Power BI** încorporează acum raportul publicat folosind URL-ul Power BI Service „Secure embed”. Linkul se configurează în `web/brokerage-ui/src/app/core/config/powerbi.config.ts`.
+- Integrarea acceptă numai URL-uri HTTPS de la `app.powerbi.com`, nu stochează tokenuri sau parole și păstrează butonul pentru deschiderea raportului într-o filă separată.
+
+## Documentație Power BI actualizată (30.09.2026)
+
+- `powerbi/README.md` descrie raportul construit: cele șase pagini, sursele din `BrokerageDW`, relațiile recomandate, măsurile pentru snapshoturile de portofoliu, modelarea KYC și regulile de formatare.
+- Documentația precizează fluxul actual de prezentare locală în Power BI Desktop și condiția necesară pentru embed securizat ulterior: un cont Microsoft de serviciu sau instituțional.
+- Ghidul `powerbi/advanced-orders-page.md` aplică filtrul permanent pentru `STOP` și `STOP_LIMIT` și măsuri de volum care nu includ ordine standard.
+
+## Docker (30.09.2026)
+
+- `docker-compose.yml` definește serviciile SQL Server, inițializare SQL, API ASP.NET Core și Angular/Nginx.
+- `docker/init-databases.sh` creează `BrokerageDB` și `BrokerageDW`, încarcă datele demonstrative, ETL-ul și vizualizările Power BI la prima pornire.
+- Frontendul folosește `apiConfig.baseUrl = '/api'`; Nginx din Docker și proxy-ul Angular din dezvoltare redirecționează cererile către API. Nu mai există URL-uri API hardcodate în componente.
+- Configurația și modul de pornire sunt documentate în `docker/README.md`; parolele locale sunt ținute în `.env`, ignorat de Git.

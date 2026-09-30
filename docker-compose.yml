@@ -1,0 +1,56 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: brokerage-db
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Completează MSSQL_SA_PASSWORD în .env}
+    ports:
+      - '1433:1433'
+    volumes:
+      - brokerage-sql-data:/var/opt/mssql
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: brokerage-db-init
+    depends_on:
+      - db
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Completează MSSQL_SA_PASSWORD în .env}
+    volumes:
+      - ./:/workspace:ro
+    entrypoint: ["/bin/bash", "/workspace/docker/init-databases.sh"]
+    restart: 'no'
+
+  api:
+    build:
+      context: ./api/Brokerage
+      dockerfile: Dockerfile
+    container_name: brokerage-api
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      UseHttpsRedirection: 'false'
+      ConnectionStrings__BrokerageDb: Server=db,1433;Database=BrokerageDB;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=False;TrustServerCertificate=True
+      ConnectionStrings__BrokerageDw: Server=db,1433;Database=BrokerageDW;User Id=sa;Password=${MSSQL_SA_PASSWORD};Encrypt=False;TrustServerCertificate=True
+      Jwt__Key: ${JWT_KEY:?Completează JWT_KEY în .env}
+      Jwt__Issuer: Brokerage.Api
+      Jwt__Audience: Brokerage.Api
+    ports:
+      - '8080:8080'
+
+  web:
+    build:
+      context: ./web/brokerage-ui
+      dockerfile: Dockerfile
+    container_name: brokerage-web
+    depends_on:
+      - api
+    ports:
+      - '4200:80'
+
+volumes:
+  brokerage-sql-data:

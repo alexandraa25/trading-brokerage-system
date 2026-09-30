@@ -115,7 +115,8 @@ if (app.Environment.IsDevelopment())
         .SeedAsync();
 }
 
-app.UseHttpsRedirection();
+if (builder.Configuration.GetValue("UseHttpsRedirection", true))
+    app.UseHttpsRedirection();
 
 app.UseCors("AngularDevelopment");
 app.UseAuthentication();

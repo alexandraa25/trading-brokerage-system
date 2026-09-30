@@ -1,33 +1,82 @@
-# Fișiere locale SQL Server
+# --------------------------------------------------
+# Configurație locală și secrete
+# --------------------------------------------------
+.env
+.env.*
+!.env.example
+*.secret.json
+appsettings.Local.json
+appsettings.*.Local.json
+secrets/
+
+# --------------------------------------------------
+# .NET / Visual Studio / Rider
+# --------------------------------------------------
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.DotSettings.user
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage/
+
+# --------------------------------------------------
+# Angular / Node.js
+# --------------------------------------------------
+node_modules/
+dist/
+.angular/
+.cache/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --------------------------------------------------
+# Docker și backup-uri SQL locale
+# --------------------------------------------------
+artifacts/
+docker-data/
+*.bak
 *.mdf
 *.ndf
 *.ldf
 
-# Visual Studio / SSMS
-.vs/
-bin/
-obj/
+# --------------------------------------------------
+# Power BI: fișiere locale de lucru și cache
+# Raportul final poate fi publicat separat ca release.
+# --------------------------------------------------
+*.pbix.autosave
+*.pbi-local
+*.pbit.autosave
 
-# Rezultate locale ale compilărilor și verificărilor
-artifacts/
-
-# Fișiere locale și cache Power BI
-#*.pbit
-#*.pbix
-
-# Python
+# --------------------------------------------------
+# Python / ETL local
+# --------------------------------------------------
 __pycache__/
-*.pyc
+*.py[cod]
 .venv/
 venv/
+env/
 
-# Sistem de operare
+# --------------------------------------------------
+# Jurnale, temporare și fișiere de sistem
+# --------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
-
-# Jurnale
-*.log
-
-# Fișiere temporare
-*.tmp
-*.bak
+Desktop.ini

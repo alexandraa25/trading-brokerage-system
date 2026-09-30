@@ -10,6 +10,50 @@
   color: #fff
 }
 
+.embedded-report {
+  margin-top: 1.25rem;
+  overflow: hidden;
+  border: 1px solid #dce6ef;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(9, 50, 94, .08);
+}
+
+.embedded-report__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e8eef4;
+}
+
+.embedded-report__heading p {
+  margin: 0;
+  color: #087b87;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.embedded-report__heading h3 {
+  margin: .2rem 0 0;
+  color: #102c55;
+}
+
+.embedded-report__heading span {
+  color: #617087;
+  font-size: .86rem;
+}
+
+.embedded-report iframe {
+  display: block;
+  width: 100%;
+  min-height: 760px;
+  border: 0;
+  background: #f4f7fb;
+}
+
 .powerbi-hero p,
 .configuration-card b,
 .data-note b {
@@ -134,5 +178,18 @@
 
   .report-grid {
     grid-template-columns: 1fr
+  }
+
+  .embedded-report__heading {
+    display: block;
+  }
+
+  .embedded-report__heading span {
+    display: block;
+    margin-top: .5rem;
+  }
+
+  .embedded-report iframe {
+    min-height: 580px;
   }
 }

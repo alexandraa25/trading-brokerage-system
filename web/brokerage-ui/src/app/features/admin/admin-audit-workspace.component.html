@@ -1,6 +1,10 @@
-<div class="audit-controls"><nav class="subtabs" aria-label="Tip jurnal audit">
-  <button [class.active]="tab() === 'kyc'" (click)="tab.set('kyc')">Modificări KYC <span>{{ kycEntries().length }}</span></button>
-  <button [class.active]="tab() === 'orders'" (click)="tab.set('orders')">Activitate ordine <span>{{ orderEntries().length }}</span></button>
-</nav><button class="export" (click)="exportRequested.emit(tab())">Export CSV</button></div>
+<div class="audit-controls">
+  <nav class="subtabs" aria-label="Tip jurnal audit">
+    <button [class.active]="tab() === 'kyc'" (click)="tab.set('kyc')">Modificări KYC <span>{{ kycEntries().length
+        }}</span></button>
+    <button [class.active]="tab() === 'orders'" (click)="tab.set('orders')">Activitate ordine <span>{{
+        orderEntries().length }}</span></button>
+  </nav><button class="export" (click)="exportRequested.emit(tab())">Export CSV</button>
+</div>
 @if(tab() === 'kyc') { <app-admin-audit [entries]="kycEntries()" /> }
 @else { <app-admin-order-audit [entries]="orderEntries()" /> }

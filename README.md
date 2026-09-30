@@ -51,6 +51,16 @@ Angular → ASP.NET Core API → BrokerageDB → staging → BrokerageDW → Pow
 
 Swagger: `https://localhost:7103/swagger` · Interfață: `http://localhost:4200`.
 
+## Pornire cu Docker
+
+Docker pornește SQL Server, API-ul și interfața, inițializând automat `BrokerageDB`, `BrokerageDW`, ETL-ul și datele demonstrative. Copiază `.env.example` ca `.env`, apoi rulează:
+
+```powershell
+docker-compose up --build
+```
+
+Interfața devine disponibilă la `http://localhost:4200`, iar Swagger la `http://localhost:8080/swagger`. Instrucțiunile complete, inclusiv resetarea datelor și conectarea Power BI, sunt în [docker/README.md](docker/README.md).
+
 ## Conturi demonstrative
 
 | Rol | Email | Parolă |
@@ -69,6 +79,7 @@ Swagger: `https://localhost:7103/swagger` · Interfață: `http://localhost:4200
 - [Depozit de date](warehouse/README.md)
 - [Automatizare](automation/README.md)
 - [Power BI](powerbi/README.md)
+- [Docker](docker/README.md)
 
 ## Testare
 

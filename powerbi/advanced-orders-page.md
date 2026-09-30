@@ -29,9 +29,12 @@ CALCULATE (
 
 Ordine neexecutate =
 CALCULATE (
-    COUNTROWS ( vwPowerBiOrderLifecycle ),
-    vwPowerBiOrderLifecycle[CantitateRamasa] > 0,
-    NOT vwPowerBiOrderLifecycle[Stare] IN { "Cancelled", "Rejected", "Expired" }
+    [Ordine avansate],
+    FILTER (
+        vwPowerBiOrderLifecycle,
+        vwPowerBiOrderLifecycle[CantitateRamasa] > 0
+            && NOT ( vwPowerBiOrderLifecycle[Stare] IN { "Cancelled", "Rejected", "Expired" } )
+    )
 )
 
 Ordine expirate =
@@ -46,14 +49,23 @@ DIVIDE ( [Ordine declanșate], [Ordine avansate], 0 )
 Timp mediu până la declanșare =
 AVERAGE ( vwPowerBiOrderLifecycle[MinutePanaLaDeclansare] )
 
-Volum comandat =
-SUM ( vwPowerBiOrderLifecycle[CantitateCeruta] )
+Volum comandat avansat =
+CALCULATE (
+    SUM ( vwPowerBiOrderLifecycle[CantitateCeruta] ),
+    vwPowerBiOrderLifecycle[TipOrdin] IN { "STOP", "STOP_LIMIT" }
+)
 
-Volum executat =
-SUM ( vwPowerBiOrderLifecycle[CantitateExecutata] )
+Volum executat avansat =
+CALCULATE (
+    SUM ( vwPowerBiOrderLifecycle[CantitateExecutata] ),
+    vwPowerBiOrderLifecycle[TipOrdin] IN { "STOP", "STOP_LIMIT" }
+)
 
-Volum anulat =
-SUM ( vwPowerBiOrderLifecycle[CantitateAnulata] )
+Volum anulat avansat =
+CALCULATE (
+    SUM ( vwPowerBiOrderLifecycle[CantitateAnulata] ),
+    vwPowerBiOrderLifecycle[TipOrdin] IN { "STOP", "STOP_LIMIT" }
+)
 
 Comisioane EUR =
 SUM ( FactTrade[CommissionReporting] )
@@ -69,7 +81,7 @@ Pe primul rând adaugă patru carduri: `Ordine avansate`, `Ordine declanșate`,
 patrulea card cu `Ordine expirate` când vrei să urmărești ordinele DAY/DATE.
 
 În stânga, folosește un grafic cu coloane grupate: axă `TipOrdin`, valori
-`Volum comandat`, `Volum executat`, `Volum anulat`. În dreapta, pune un grafic
+`Volum comandat avansat`, `Volum executat avansat`, `Volum anulat avansat`. În dreapta, pune un grafic
 inelar cu `Stare` și numărul de ordine.
 
 Sub ele, pune un grafic cu bare: axă `Symbol`, valoare `Ordine neexecutate`.
@@ -84,6 +96,9 @@ anulată, rămasă, data declanșării și minute până la declanșare.
 
 Adaugă slicere pentru `DataCrearii`, `TipOrdin`, `Stare`, `Valabilitate`,
 `ExpiraLa`, `Symbol`, `Client` și `Sens`.
+
+În **Filters on this page**, setează `TipOrdin` doar la `STOP` și `STOP_LIMIT`.
+Astfel tabelul și graficele nu includ ordinele `MARKET` și `LIMIT`.
 
 Aplică formatare condițională pentru stare: `WaitingTrigger` albastru,
 `Triggered` galben, `Executed` verde, `PartiallyExecuted` turcoaz,

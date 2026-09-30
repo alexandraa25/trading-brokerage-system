@@ -13,6 +13,12 @@ dotnet run
 
 API: `https://localhost:7103` · Swagger: `https://localhost:7103/swagger`.
 
+## Docker
+
+În Docker, API-ul rulează la `http://api:8080` în rețeaua internă și este expus local la `http://localhost:8080`. Conexiunile SQL și cheia JWT sunt configurate prin variabile de mediu în `docker-compose.yml`; nu sunt păstrate în `appsettings.json`. Docker dezactivează redirecționarea HTTPS locală prin `UseHttpsRedirection=false`.
+
+Consultă [ghidul Docker](../../docker/README.md) pentru pornirea tuturor serviciilor.
+
 Pentru AI configurează opțional:
 
 ```powershell

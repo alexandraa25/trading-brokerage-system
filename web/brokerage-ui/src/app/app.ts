@@ -36,6 +36,7 @@ import { AdminAnalyticsComponent } from './features/admin/admin-analytics.compon
 import { AdminPowerBiComponent } from './features/admin/admin-powerbi.component';
 import { AdminAiAssistantComponent } from './features/admin/admin-ai-assistant.component';
 import { powerBiConfig } from './core/config/powerbi.config';
+import { apiConfig } from './core/config/api.config';
 import { AdminAccount, AdminAnalytics, AdminCustomer, AdminOverview, AdminSession, AdminUser, BrokerNotification, CashTransaction, CurrencyExchangeQuote, CurrencyPortfolioValue, CustomerNotification, CustomerProfile, DisplayExchangeRate, Instrument, Order, PortfolioHistoryPoint } from './core/models';
 import { ApiService } from './core/api.service';
 import { CashBalance, PortfolioPosition, PortfolioValuation, TradingAccount } from './core/models/dashboard.models';
@@ -129,7 +130,7 @@ export class App {
 
   login() {
     this.loading.set(true); this.error.set('');
-    this.http.post<{ token: string }>('https://localhost:7103/api/auth/login', { email: this.email, password: this.password }).subscribe({
+    this.http.post<{ token: string }>(`${apiConfig.baseUrl}/auth/login`, { email: this.email, password: this.password }).subscribe({
       next: response => { localStorage.setItem('brokerage_token', response.token); this.loggedIn.set(true); this.loading.set(false); this.loadAccounts(); },
       error: () => { this.error.set('Date invalide sau API-ul nu rulează.'); this.loading.set(false); }
     });
@@ -150,7 +151,7 @@ export class App {
   }
   updateKycStatus(change: { kycId: number; status: 'Approved' | 'Rejected'; rejectionReason?: string }) {
     const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };
-    this.http.post(`https://localhost:7103/api/admin/kyc/${change.kycId}/status`, { status: change.status, rejectionReason: change.rejectionReason ?? null }, { headers }).subscribe({ next: () => { this.orderMessage.set(change.status === 'Approved' ? 'Dosarul KYC a fost aprobat.' : 'Dosarul KYC a fost respins.'); this.loadAdminData(); }, error: () => this.orderMessage.set('Starea dosarului KYC nu a putut fi actualizată.') });
+    this.http.post(`${apiConfig.baseUrl}/admin/kyc/${change.kycId}/status`, { status: change.status, rejectionReason: change.rejectionReason ?? null }, { headers }).subscribe({ next: () => { this.orderMessage.set(change.status === 'Approved' ? 'Dosarul KYC a fost aprobat.' : 'Dosarul KYC a fost respins.'); this.loadAdminData(); }, error: () => this.orderMessage.set('Starea dosarului KYC nu a putut fi actualizată.') });
   }
 
   createCustomerForAdmin(customer: { firstName: string; lastName: string; email: string; password: string; documentType: string }) {
@@ -183,7 +184,7 @@ export class App {
   signOutAdminUserSessions(userId:string) { this.api.signOutAllSessions(userId).subscribe({next:()=>{this.orderMessage.set('Toate sesiunile utilizatorului au fost deconectate.');this.loadAdminData();},error: error=>this.orderMessage.set(error.error?.detail??'Sesiunile nu au putut fi deconectate.')}); }
   updateAdminAccountStatus(change:{id:number;status:string;reason:string}) { this.api.updateAdminAccountStatus(change.id,change.status,change.reason).subscribe({next:()=>{this.orderMessage.set('Starea contului a fost actualizată.');this.loadAdminData();},error:error=>this.orderMessage.set(error.error?.detail??'Starea contului nu a putut fi actualizată.')}); }
   openAdminCashAccount(change:{accountId:number;currency:string}) { this.api.openAdminCashAccount(change.accountId,change.currency).subscribe({next:()=>this.orderMessage.set(`Contul de numerar în ${change.currency} a fost deschis.`),error:error=>this.orderMessage.set(error.error?.detail??'Contul de numerar nu a putut fi deschis.')}); }
-  loadAdminAccountDetails(accountId:number) { const headers={Authorization:`Bearer ${localStorage.getItem('brokerage_token')}`}; this.http.get<CashBalance[]>(`https://localhost:7103/api/accounts/${accountId}/cash`,{headers}).subscribe(cash=>this.http.get<PortfolioPosition[]>(`https://localhost:7103/api/accounts/${accountId}/portfolio`,{headers}).subscribe(positions=>this.adminAccountDetails.set({accountId,cash,positions}))); }
+  loadAdminAccountDetails(accountId:number) { const headers={Authorization:`Bearer ${localStorage.getItem('brokerage_token')}`}; this.http.get<CashBalance[]>(`${apiConfig.baseUrl}/accounts/${accountId}/cash`,{headers}).subscribe(cash=>this.http.get<PortfolioPosition[]>(`${apiConfig.baseUrl}/accounts/${accountId}/portfolio`,{headers}).subscribe(positions=>this.adminAccountDetails.set({accountId,cash,positions}))); }
   exportAdminCustomers() { this.downloadCsv('clienti.csv',['ID','Prenume','Nume','Email','Stare','KYC','Conturi'],this.adminCustomers().map(x=>[x.customerId,x.firstName,x.lastName,x.email,x.customerStatus,x.kycStatus,x.accountsCount])); }
   exportKyc() { this.downloadCsv('dosare-kyc.csv',['ID KYC','Client','Email','Stare','Document','Creat la'],this.kycRecords().map(x=>[x.kycId,`${x.firstName} ${x.lastName}`,x.email,x.status,x.documentType,x.createdAt])); }
   exportAudit() { this.downloadCsv('jurnal-audit-kyc.csv',['ID','Acțiune','Utilizator','Moment','Înainte','După'],this.kycAudit().map(x=>[x.auditLogId,x.action,x.changedBy,x.changedAt,x.oldValues??'',x.newValues??''])); }
@@ -238,7 +239,7 @@ export class App {
   }
   loadBrokerOrderDetails(orderId: number) {
     const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };
-    this.http.get<BrokerOrderDetails>(`https://localhost:7103/api/broker/orders/${orderId}/details`, { headers }).subscribe({ next: detail => this.brokerOrderDetails.set(detail), error: () => this.orderMessage.set('Detaliile ordinului nu au putut fi încărcate.') });
+    this.http.get<BrokerOrderDetails>(`${apiConfig.baseUrl}/broker/orders/${orderId}/details`, { headers }).subscribe({ next: detail => this.brokerOrderDetails.set(detail), error: () => this.orderMessage.set('Detaliile ordinului nu au putut fi încărcate.') });
   }
 
   openBrokerOrder(orderId: number): void {
@@ -294,22 +295,22 @@ export class App {
 
   loadAccountDetails(accountId: number) {
     const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };
-    this.http.get<CashBalance[]>(`https://localhost:7103/api/accounts/${accountId}/cash`, { headers }).subscribe(items => {
+    this.http.get<CashBalance[]>(`${apiConfig.baseUrl}/accounts/${accountId}/cash`, { headers }).subscribe(items => {
       this.cashBalances.update(current => [...current, ...items]);
       items.forEach(item => this.api.cashTransactions(item.cashAccountId).subscribe(transactions => this.cashTransactions.update(current => [...current, ...transactions])));
     });
-    this.http.get<PortfolioPosition[]>(`https://localhost:7103/api/accounts/${accountId}/portfolio`, { headers }).subscribe(items => this.positions.update(current => [...current, ...items]));
+    this.http.get<PortfolioPosition[]>(`${apiConfig.baseUrl}/accounts/${accountId}/portfolio`, { headers }).subscribe(items => this.positions.update(current => [...current, ...items]));
   }
 
   loadValuation(accountId: number) {
     const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };
-    this.http.get<PortfolioValuation>(`https://localhost:7103/api/accounts/${accountId}/valuation`, { headers })
+    this.http.get<PortfolioValuation>(`${apiConfig.baseUrl}/accounts/${accountId}/valuation`, { headers })
       .subscribe(item => { this.totalValueEur.update(total => total + item.totalValueEUR); this.investedValueEur.update(total => total + item.investedValueEUR); this.profitLossEur.update(total => total + item.profitLossEUR); this.profitLossPercent.set(this.investedValueEur() === 0 ? 0 : this.profitLossEur() / this.investedValueEur() * 100); });
   }
 
   createOrder(order: CreateOrderRequest = this.order) {
     this.orderMessage.set(''); const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };
-    this.http.post<{ orderId: number; status: string }>('https://localhost:7103/api/orders', order, { headers }).subscribe({ next: result => { this.orderMessage.set(`Ordinul #${result.orderId} a fost creat: ${result.status}.`); this.loadAccounts(); this.activeTab.set('orders'); }, error: () => this.orderMessage.set('Ordinul nu a putut fi creat. Verifică datele introduse.') });
+    this.http.post<{ orderId: number; status: string }>(`${apiConfig.baseUrl}/orders`, order, { headers }).subscribe({ next: result => { this.orderMessage.set(`Ordinul #${result.orderId} a fost creat: ${result.status}.`); this.loadAccounts(); this.activeTab.set('orders'); }, error: () => this.orderMessage.set('Ordinul nu a putut fi creat. Verifică datele introduse.') });
   }
 
   depositCash(deposit: { cashAccountId: number; amount: number; description: string }) {
@@ -348,12 +349,12 @@ export class App {
 
   executeOrder(execution: { id: number; quantity: number; price: number }) {
     const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };
-    this.http.post(`https://localhost:7103/api/orders/${execution.id}/executions`, { executedQuantity: execution.quantity, executionPrice: execution.price }, { headers }).subscribe({ next: () => { this.orderMessage.set('Ordinul a fost executat.'); this.brokerOrderDetails.set(null); this.loadAccounts(); }, error: error => this.orderMessage.set(error.error?.detail ?? 'Execuția nu a putut fi înregistrată.') });
+    this.http.post(`${apiConfig.baseUrl}/orders/${execution.id}/executions`, { executedQuantity: execution.quantity, executionPrice: execution.price }, { headers }).subscribe({ next: () => { this.orderMessage.set('Ordinul a fost executat.'); this.brokerOrderDetails.set(null); this.loadAccounts(); }, error: error => this.orderMessage.set(error.error?.detail ?? 'Execuția nu a putut fi înregistrată.') });
   }
 
   rejectBrokerOrder(rejection: { id: number; reason: string }) {
     const headers = { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };
-    this.http.post(`https://localhost:7103/api/broker/orders/${rejection.id}/reject`, { reason: rejection.reason }, { headers }).subscribe({ next: () => { this.orderMessage.set('Ordinul a fost respins, iar clientul a fost notificat.'); this.brokerOrderDetails.set(null); this.loadBrokerData(); }, error: error => this.orderMessage.set(error.error?.detail ?? 'Ordinul nu a putut fi respins.') });
+    this.http.post(`${apiConfig.baseUrl}/broker/orders/${rejection.id}/reject`, { reason: rejection.reason }, { headers }).subscribe({ next: () => { this.orderMessage.set('Ordinul a fost respins, iar clientul a fost notificat.'); this.brokerOrderDetails.set(null); this.loadBrokerData(); }, error: error => this.orderMessage.set(error.error?.detail ?? 'Ordinul nu a putut fi respins.') });
   }
 
   logout() { if (this.refreshTimer) clearInterval(this.refreshTimer); if (this.notificationTimer) clearInterval(this.notificationTimer); if(this.sessionWarningTimer)clearTimeout(this.sessionWarningTimer); if(this.sessionExpiryTimer)clearTimeout(this.sessionExpiryTimer); this.sessionWarning.set(false); localStorage.removeItem('brokerage_token'); localStorage.removeItem('brokerage_role'); this.isBroker.set(false); this.isAdmin.set(false); this.accounts.set([]); this.cashBalances.set([]); this.cashTransactions.set([]); this.portfolioHistory.set([]); this.profile.set(null); this.notifications.set([]); this.brokerNotifications.set([]); this.notificationsOpen.set(false); this.exchangeQuote.set(null); this.brokerOrderDetails.set(null); this.brokerOrderHistory.set([]); this.brokerUpdatedAt.set(null); this.alertedStaleOrderIds.clear(); this.positions.set([]); this.loggedIn.set(false); }

@@ -5,21 +5,36 @@
         <h2>Rapoarte Power BI</h2>
         <span>Analize interactive construite pe depozitul de date BrokerageDW.</span>
       </div>
-      @if (reportUrl()) {
+      @if (embedUrl()) {
         <button type="button" (click)="openReport()">Deschide raportul Power BI ↗</button>
       }
     </section>
 
-    @if (!reportUrl()) {
+    @if (!embedUrl()) {
       <section class="configuration-card">
         <b>RAPORT NECONFIGURAT</b>
         <h3>Conectează raportul Power BI</h3>
-        <p>După publicarea raportului în Power BI Service, copiază URL-ul de embed în <code>core/config/powerbi.config.ts</code>.</p>
+        <p>După publicarea raportului în Power BI Service, copiază URL-ul din „Secure embed” în <code>core/config/powerbi.config.ts</code>.</p>
         <ol>
           <li>Publică fișierul <code>BrokerageAnalytics.pbix</code> în Power BI Service.</li>
-          <li>Deschide raportul și copiază adresa din „Embed report” sau „Secure embed”.</li>
+          <li>Deschide raportul și copiază adresa din „Secure embed”.</li>
           <li>Lipește adresa în câmpul <code>reportUrl</code>.</li>
         </ol>
+      </section>
+    } @else {
+      <section class="embedded-report">
+        <div class="embedded-report__heading">
+          <div>
+            <p>RAPORT INTERACTIV</p>
+            <h3>Brokerage Analytics</h3>
+          </div>
+          <span>Folosește filtrele și navigarea din raport pentru detalii.</span>
+        </div>
+        <iframe
+          [src]="embedUrl()"
+          title="Raport Power BI Brokerage Analytics"
+          allowfullscreen="true"
+        ></iframe>
       </section>
     }
 
@@ -38,4 +53,3 @@
       <b>SURSA DATELOR</b>
       <p>BrokerageDB → Staging → BrokerageDW → Power BI. Valorile financiare agregate sunt raportate în EUR, folosind cursurile BCE istorice.</p>
     </section>
-  

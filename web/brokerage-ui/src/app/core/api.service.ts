@@ -35,9 +35,10 @@ import {
   InstrumentQuotePoint,
   Order,
 } from './models';
+import { apiConfig } from './config/api.config';
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private url = 'https://localhost:7103/api';
+  private readonly url = apiConfig.baseUrl;
   constructor(private http: HttpClient) {}
   private get headers() {
     return { Authorization: `Bearer ${localStorage.getItem('brokerage_token')}` };

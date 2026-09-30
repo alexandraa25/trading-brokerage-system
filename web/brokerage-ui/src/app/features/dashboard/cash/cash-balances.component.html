@@ -2,10 +2,11 @@
   <h2>Numerar disponibil</h2>
   <div class="balances">
     @for (balance of balances(); track balance.cashAccountId) {
-    <article>
-      <span>{{ balance.currency }}</span><strong>{{ balance.availableBalance | number: '1.2-2' }}</strong><small>Blocat:
-        {{ balance.blockedBalance | number: '1.2-2' }}</small>
-    </article>
+      <article>
+        <span>{{ balance.currency }}</span
+        ><strong>{{ balance.availableBalance | number: '1.2-2' }}</strong
+        ><small>Blocat: {{ balance.blockedBalance | number: '1.2-2' }}</small>
+      </article>
     }
   </div>
 </section>

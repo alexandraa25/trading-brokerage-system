@@ -1,1 +1,35 @@
-@if(data()){<section class="metrics"><article><span>Clienți activi</span><strong>{{data()!.activeCustomers}}</strong></article><article><span>KYC în așteptare</span><strong>{{data()!.pendingKyc}}</strong></article><article><span>Ordine active</span><strong>{{data()!.activeOrders}}</strong></article><article><span>Execuții azi</span><strong>{{data()!.dailyExecutions}}</strong></article></section><section class="alerts"><h2>Monitorizare operațională</h2>@if(data()!.delayedKyc){<p>⚠ {{data()!.delayedKyc}} dosare KYC sunt în așteptare de peste 7 zile.</p>}@if(data()!.blockedCustomers){<p>⚠ {{data()!.blockedCustomers}} clienți sunt blocați.</p>}@if(data()!.exchangeRateOutdated){<p>⚠ Cursul BCE necesită actualizare.</p>}@else{<p>✓ Curs BCE actualizat: {{data()!.latestRateDate|date:'dd.MM.yyyy'}}.</p>}@if(data()!.marketQuotesOutdated){<p>⚠ Cotațiile de piață necesită actualizare. Rulează fluxul zilnic de date.</p>}@else{<p>✓ Cotații actualizate: {{data()!.latestQuoteDate|date:'dd.MM.yyyy'}}.</p>}</section>}
+@if (data()) {
+  <section class="metrics">
+    <article>
+      <span>Clienți activi</span><strong>{{ data()!.activeCustomers }}</strong>
+    </article>
+    <article>
+      <span>KYC în așteptare</span><strong>{{ data()!.pendingKyc }}</strong>
+    </article>
+    <article>
+      <span>Ordine active</span><strong>{{ data()!.activeOrders }}</strong>
+    </article>
+    <article>
+      <span>Execuții azi</span><strong>{{ data()!.dailyExecutions }}</strong>
+    </article>
+  </section>
+  <section class="alerts">
+    <h2>Monitorizare operațională</h2>
+    @if (data()!.delayedKyc) {
+      <p>⚠ {{ data()!.delayedKyc }} dosare KYC sunt în așteptare de peste 7 zile.</p>
+    }
+    @if (data()!.blockedCustomers) {
+      <p>⚠ {{ data()!.blockedCustomers }} clienți sunt blocați.</p>
+    }
+    @if (data()!.exchangeRateOutdated) {
+      <p>⚠ Cursul BCE necesită actualizare.</p>
+    } @else {
+      <p>✓ Curs BCE actualizat: {{ data()!.latestRateDate | date: 'dd.MM.yyyy' }}.</p>
+    }
+    @if (data()!.marketQuotesOutdated) {
+      <p>⚠ Cotațiile de piață necesită actualizare. Rulează fluxul zilnic de date.</p>
+    } @else {
+      <p>✓ Cotații actualizate: {{ data()!.latestQuoteDate | date: 'dd.MM.yyyy' }}.</p>
+    }
+  </section>
+}
