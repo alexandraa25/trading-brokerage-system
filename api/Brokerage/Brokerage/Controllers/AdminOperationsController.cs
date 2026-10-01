@@ -29,8 +29,8 @@ public class AdminOperationsController(BrokerageDbContext db, IPasswordHasher<Ap
     public async Task<IActionResult> Overview()
     {
         var today = DateTime.UtcNow.Date;
-        var latestRateDate = await db.Database.SqlQuery<DateTime?>($"SELECT MAX(RateDate) AS Value FROM core.ExchangeRate").SingleAsync();
-        var latestQuoteDate = await db.Database.SqlQuery<DateTime?>($"SELECT MAX(QuoteDate) AS Value FROM trading.MarketQuote").SingleAsync();
+        var latestRateDate = await db.ExchangeRates.AsNoTracking().MaxAsync(item => (DateTime?)item.RateDate);
+        var latestQuoteDate = await db.MarketQuotes.AsNoTracking().MaxAsync(item => (DateTime?)item.QuoteDate);
         return Ok(new {
             ActiveCustomers = await db.Customers.CountAsync(item => item.Status == "Active"),
             PendingKyc = await db.KycRecords.CountAsync(item => item.Status == "Pending"),
@@ -78,7 +78,7 @@ public class AdminOperationsController(BrokerageDbContext db, IPasswordHasher<Ap
     {
         var currency = request.Currency.Trim().ToUpperInvariant();
         if (!await db.Accounts.AnyAsync(item => item.AccountId == accountId)) return NotFound();
-        var validCurrency = await db.Database.SqlQuery<int>($"SELECT COUNT(1) AS Value FROM core.Currency WHERE CurrencyCode = {currency}").SingleAsync() > 0;
+        var validCurrency = await db.Currencies.AsNoTracking().AnyAsync(item => item.CurrencyCode == currency && item.IsActive);
         if (!validCurrency) return BadRequest(new ProblemDetails { Detail = "Moneda selectată nu este disponibilă." });
         if (await db.CashAccounts.AnyAsync(item => item.AccountId == accountId && item.Currency == currency)) return Conflict(new ProblemDetails { Detail = "Contul de numerar există deja." });
         var cash = new CashAccount { AccountId = accountId, Currency = currency, AvailableBalance = 0, BlockedBalance = 0 };

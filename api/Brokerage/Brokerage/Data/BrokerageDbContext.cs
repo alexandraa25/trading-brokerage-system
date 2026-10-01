@@ -8,10 +8,16 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
 {
     public DbSet<ApiUser> ApiUsers => Set<ApiUser>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerType> CustomerTypes => Set<CustomerType>();
     public DbSet<KycRecord> KycRecords => Set<KycRecord>();
     public DbSet<TradingAccount> Accounts => Set<TradingAccount>();
     public DbSet<CashAccount> CashAccounts => Set<CashAccount>();
     public DbSet<Instrument> Instruments => Set<Instrument>();
+    public DbSet<Market> Markets => Set<Market>();
+    public DbSet<Issuer> Issuers => Set<Issuer>();
+    public DbSet<MarketQuote> MarketQuotes => Set<MarketQuote>();
+    public DbSet<Currency> Currencies => Set<Currency>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
     public DbSet<TradeOrder> Orders => Set<TradeOrder>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<TradeExecution> Executions => Set<TradeExecution>();
@@ -33,6 +39,12 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
         {
             entity.ToTable("Customer", "core", table => table.HasTrigger("trg_Customer_Audit"));
             entity.HasKey(customer => customer.CustomerId);
+        });
+
+        modelBuilder.Entity<CustomerType>(entity =>
+        {
+            entity.ToTable("CustomerType", "core");
+            entity.HasKey(customerType => customerType.CustomerTypeId);
         });
 
         modelBuilder.Entity<KycRecord>(entity =>
@@ -59,6 +71,38 @@ public class BrokerageDbContext(DbContextOptions<BrokerageDbContext> options)
         {
             entity.ToTable("Instrument", "trading");
             entity.HasKey(instrument => instrument.InstrumentId);
+        });
+
+        modelBuilder.Entity<Market>(entity =>
+        {
+            entity.ToTable("Market", "trading");
+            entity.HasKey(market => market.MarketId);
+        });
+
+        modelBuilder.Entity<Issuer>(entity =>
+        {
+            entity.ToTable("Issuer", "trading");
+            entity.HasKey(issuer => issuer.IssuerId);
+        });
+
+        modelBuilder.Entity<MarketQuote>(entity =>
+        {
+            entity.ToTable("MarketQuote", "trading");
+            entity.HasKey(quote => quote.MarketQuoteId);
+            entity.Property(quote => quote.MarketPrice).HasPrecision(19, 8);
+        });
+
+        modelBuilder.Entity<Currency>(entity =>
+        {
+            entity.ToTable("Currency", "core");
+            entity.HasKey(currency => currency.CurrencyCode);
+        });
+
+        modelBuilder.Entity<ExchangeRate>(entity =>
+        {
+            entity.ToTable("ExchangeRate", "core");
+            entity.HasKey(rate => rate.ExchangeRateId);
+            entity.Property(rate => rate.MidRate).HasPrecision(19, 10);
         });
 
         modelBuilder.Entity<TradeOrder>(entity =>

@@ -1,6 +1,7 @@
 using Brokerage.Api.Data;
 using Brokerage.Api.DTOs.Orders;
 using Brokerage.Api.DTOs.History;
+using Brokerage.Api.DTOs.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -17,11 +18,16 @@ namespace Brokerage.Api.Controllers;
 public class OrdersController(BrokerageDbContext db, BrokerNotificationService brokerNotifications, OrderAuditService orderAudit) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrderSummary>>> GetOrders()
+    public async Task<ActionResult<PagedResult<OrderSummary>>> GetOrders(
+        [FromQuery] PageRequest pageRequest,
+        [FromQuery] string? status = null,
+        [FromQuery] string? side = null,
+        [FromQuery] string? orderType = null,
+        [FromQuery] string? search = null)
     {
         var customerId = GetCustomerId();
 
-        var orders = await (
+        var orders = (
             from order in db.Orders.AsNoTracking()
             join account in db.Accounts.AsNoTracking()
                 on order.AccountId equals account.AccountId
@@ -31,6 +37,10 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
             where (IsStaff() || (customerId.HasValue && account.CustomerId == customerId.Value))
                 && (!IsStaff() || order.Status == "Pending" || order.Status == "WaitingTrigger"
                     || order.Status == "Triggered" || order.Status == "PartiallyExecuted")
+                && (string.IsNullOrWhiteSpace(status) || order.Status == status)
+                && (string.IsNullOrWhiteSpace(side) || order.Side == side)
+                && (string.IsNullOrWhiteSpace(orderType) || order.OrderType == orderType)
+                && (string.IsNullOrWhiteSpace(search) || instrument.Symbol.Contains(search))
             orderby order.CreatedAt descending
             select new OrderSummary(
                 order.OrderId,
@@ -47,9 +57,9 @@ public class OrdersController(BrokerageDbContext db, BrokerNotificationService b
                 order.Quantity - executedQuantity,
                 order.Status,
                 order.CreatedAt)
-        ).Take(IsStaff() ? 100 : int.MaxValue).ToListAsync();
+        );
 
-        return Ok(orders);
+        return Ok(await orders.ToPagedResultAsync(pageRequest));
     }
 
     [HttpGet("{orderId:long}")]

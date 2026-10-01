@@ -2,6 +2,7 @@ using Brokerage.Api.Data;
 using Brokerage.Api.DTOs.Accounts;
 using Brokerage.Api.DTOs.Cash;
 using Brokerage.Api.DTOs.History;
+using Brokerage.Api.DTOs.Common;
 using Brokerage.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,8 +57,10 @@ public class CashAccountsController(BrokerageDbContext db, CustomerNotificationS
     }
 
     [HttpGet("{cashAccountId:long}/transactions")]
-    public async Task<ActionResult<IEnumerable<CashTransactionSummary>>> GetTransactions(
-        long cashAccountId)
+    public async Task<ActionResult<PagedResult<CashTransactionSummary>>> GetTransactions(
+        long cashAccountId,
+        [FromQuery] PageRequest pageRequest,
+        [FromQuery] string? transactionType = null)
     {
         var cashAccount = await (
             from cash in db.CashAccounts.AsNoTracking()
@@ -70,9 +73,10 @@ public class CashAccountsController(BrokerageDbContext db, CustomerNotificationS
         if (cashAccount is null || (!IsStaff() && cashAccount.CustomerId != GetCustomerId()))
             return NotFound();
 
-        var transactions = await db.CashTransactions
+        var transactions = db.CashTransactions
             .AsNoTracking()
             .Where(transaction => transaction.CashAccountId == cashAccountId)
+            .Where(transaction => string.IsNullOrWhiteSpace(transactionType) || transaction.TransactionType == transactionType)
             .OrderByDescending(transaction => transaction.CreatedAt)
             .Select(transaction => new CashTransactionSummary(
                 transaction.CashTransactionId,
@@ -83,9 +87,9 @@ public class CashAccountsController(BrokerageDbContext db, CustomerNotificationS
                 transaction.ReferenceId,
                 transaction.Description,
                 transaction.CreatedAt))
-            .ToListAsync();
+            ;
 
-        return Ok(transactions);
+        return Ok(await transactions.ToPagedResultAsync(pageRequest));
     }
 
     [HttpPost("{cashAccountId:long}/deposits")]

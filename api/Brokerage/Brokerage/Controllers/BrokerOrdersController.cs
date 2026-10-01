@@ -1,5 +1,6 @@
 using Brokerage.Api.Data;
 using Brokerage.Api.DTOs.Orders;
+using Brokerage.Api.DTOs.Common;
 using Brokerage.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,12 +14,21 @@ namespace Brokerage.Api.Controllers;
 public class BrokerOrdersController(BrokerageDbContext db, CustomerNotificationService notifications) : ControllerBase
 {
     [HttpGet("history")]
-    public async Task<ActionResult<IEnumerable<OrderSummary>>> GetOrderHistory()
+    public async Task<ActionResult<PagedResult<OrderSummary>>> GetOrderHistory(
+        [FromQuery] PageRequest pageRequest,
+        [FromQuery] string? status = null,
+        [FromQuery] string? side = null,
+        [FromQuery] string? orderType = null,
+        [FromQuery] string? search = null)
     {
-        var orders = await (
+        var orders = (
             from order in db.Orders.AsNoTracking()
             join instrument in db.Instruments.AsNoTracking() on order.InstrumentId equals instrument.InstrumentId
             let executedQuantity = db.Executions.Where(item => item.OrderId == order.OrderId).Sum(item => (decimal?)item.ExecutedQuantity) ?? 0
+            where (string.IsNullOrWhiteSpace(status) || order.Status == status)
+                && (string.IsNullOrWhiteSpace(side) || order.Side == side)
+                && (string.IsNullOrWhiteSpace(orderType) || order.OrderType == orderType)
+                && (string.IsNullOrWhiteSpace(search) || instrument.Symbol.Contains(search))
             orderby order.CreatedAt descending
             select new OrderSummary(
                 order.OrderId, order.AccountId, instrument.Symbol, order.Side, order.OrderType,
@@ -26,9 +36,9 @@ public class BrokerOrdersController(BrokerageDbContext db, CustomerNotificationS
                 order.OriginalQuantity ?? order.Quantity + order.CancelledQuantity,
                 executedQuantity, order.CancelledQuantity, order.Quantity - executedQuantity,
                 order.Status, order.CreatedAt)
-        ).Take(500).ToListAsync();
+        );
 
-        return Ok(orders);
+        return Ok(await orders.ToPagedResultAsync(pageRequest));
     }
 
     [HttpGet("{orderId:long}/details")]

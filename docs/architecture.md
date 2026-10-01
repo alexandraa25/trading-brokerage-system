@@ -2,56 +2,63 @@
 
 ## Prezentare generală
 
-Sistemul este împărțit în patru straturi:
-
-1. baza operațională `BrokerageDB`;
-2. schema intermediară `staging` și procesele ETL;
-3. depozitul analitic `BrokerageDW`;
-4. raportarea Power BI.
+Aplicația este un sistem demonstrativ de trading și brokerage, cu interfață Angular, API ASP.NET Core, bază operațională SQL Server, depozit de date, automatizare ETL și rapoarte Power BI.
 
 ```text
-Utilizator / broker
+Utilizator (client / broker / administrator)
         │
         ▼
-BrokerageDB
-  core | trading | audit
+Angular + Nginx
+        │ /api
+        ▼
+ASP.NET Core API
+        │
+        ├── BrokerageDB (OLTP: core, trading, audit)
+        ├── cursuri BCE și cotații istorice
+        ├── asistent AI configurabil
         │
         ▼
 staging + ETL
         │
         ▼
-BrokerageDW
+BrokerageDW + view-uri Power BI
         │
         ▼
-Power BI
+Power BI Desktop / Service
 ```
+
+Aplicația poate rula local sau în containere Docker: SQL Server, API și interfața web. Nginx livrează Angular și redirecționează apelurile `/api` către API.
+
+## Roluri și interfață
+
+- **Client:** portofoliu în EUR sau într-o monedă selectată, conturi de numerar, depuneri, retrageri, conversii, instrumente, favorite, alerte de preț, ordine și profil.
+- **Broker:** ordine active și ordine care necesită atenție, ordine STOP declanșate, execuții, alerte, schimb valutar, export CSV, profil și audit operațional.
+- **Administrator:** KYC, clienți, conturi, utilizatori și acces, monitorizare și raportare, audit KYC și ordine, AI și linkuri către rapoarte Power BI.
+
+Fiecare rol primește doar datele și taburile permise de API și interfață.
 
 ## Stratul operațional
 
-Schema `core` gestionează clientul, verificarea KYC, contul de tranzacționare, conturile de numerar, catalogul valutelor și cursurile istorice. Schema `trading` gestionează piețele, emitenții, instrumentele, ordinele, execuțiile, pozițiile, comisioanele și tranzacțiile de numerar. Schema `audit` păstrează istoricul schimbărilor.
+`BrokerageDB` are schemele `core`, `trading` și `audit`.
 
-Un ordin reprezintă intenția clientului. O execuție reprezintă o cantitate tranzacționată efectiv. Separarea permite execuții parțiale și calculul corect al prețului mediu ponderat.
+- `core` gestionează utilizatori, clienți, KYC, conturi de tranzacționare, conturi de numerar, monede și cursuri BCE.
+- `trading` gestionează piețe, emitenți, instrumente, cotații, ordine, execuții, poziții, comisioane, conversii, favorite și alerte de preț.
+- `audit` păstrează istoricul stărilor ordinelor, importurile de cursuri, autentificările și evenimentele operaționale.
 
-Procedurile `usp_CreateOrder`, `usp_DepositCash` și `usp_ExecuteOrder` concentrează regulile de business. Operațiile financiare rulează în tranzacții și folosesc blocări explicite pentru a evita execuțiile duble și consumarea concurentă a aceluiași sold sau aceleiași poziții.
+Endpoint-urile de citire obișnuite folosesc Entity Framework Core. Listele mari sunt citite cu `AsNoTracking()`, filtre, sortare și paginare. Operațiile financiare cu efect asupra soldurilor sau pozițiilor folosesc proceduri SQL și tranzacții: depunere, retragere, conversie, creare, execuție și anulare de ordin.
 
-EUR este valuta principală de raportare. Execuțiile păstrează valuta și suma originală, data cursului, rata folosită și valorile convertite în EUR. Instantaneul de pe execuție permite reproducerea rapoartelor chiar dacă tabelul cursurilor este corectat ulterior.
+Ordinele pot fi MARKET, LIMIT, STOP și STOP-LIMIT, cu valabilitate pentru ziua curentă, până la o dată sau GTC. Sunt susținute execuții parțiale, anulări parțiale, estimarea comisionului și validarea fondurilor înainte de confirmare. Execuția salvează cursul BCE folosit, pentru ca rapoartele istorice să poată fi refăcute corect.
 
-Cursurile sunt importate din API-ul oficial BCE printr-o sarcină Windows programată zilnic la 17:15, ora Bucureștiului. Importul este idempotent și fiecare rulare este înregistrată în `audit.ExchangeRateImportLog`. În weekend și înaintea publicării cursului din ziua curentă se folosește ultimul curs oficial disponibil. Procedura de execuție respinge un curs oficial mai vechi de șapte zile, pentru a evita tranzacționarea cu date rămase neactualizate.
+## Date de piață și cursuri
 
-## Stratul ETL
+Cursurile BCE sunt importate zilnic. Cotațiile instrumentelor sunt păstrate istoric și sunt utilizate pentru evoluția portofoliului, graficele instrumentelor, alertele de preț și activarea ordinelor STOP. Dacă datele sunt vechi, administratorul vede o alertă operațională.
 
-Datele sunt copiate mai întâi în schema `staging`. Încărcarea inițială este completă, iar încărcările următoare folosesc marcaje temporale și o limită superioară fixată la începutul rulării.
+## Securitate și audit
 
-Entitățile modificabile folosesc actualizare și inserare. `Execution` și `CashTransaction` folosesc numai inserare și verifică identificatorul sursă pentru a preveni duplicatele.
+Autentificarea folosește JWT și politici de autorizare pe roluri. Aplicația include schimbarea parolei, expirarea vizibilă a sesiunii, avertizare înainte de deconectare, istoric de autentificări/dispozitive și deconectarea tuturor sesiunilor. Acțiunile administrative și evenimentele importante ale ordinelor sunt auditate.
 
-Jurnalul ETL înregistrează starea și numărul de rânduri procesate. Marcajele sunt actualizate în aceeași tranzacție cu datele, astfel încât un eșec nu poate marca drept procesate date care nu au fost încărcate.
+## ETL, depozit și raportare
 
-## Depozitul de date
+Datele sunt încărcate din OLTP în `staging`, apoi în `BrokerageDW`. Depozitul folosește dimensiuni pentru dată, client, cont, instrument și monedă, plus tabele de fapte pentru tranzacții, operațiuni de numerar, KYC, cursuri și evoluția portofoliului.
 
-Modelul este o schemă stea cu `FactTrade` în centru și dimensiunile `DimDate`, `DimCustomer`, `DimAccount`, `DimInstrument` și `DimCurrency` în jurul său. `FactExchangeRate` păstrează cursurile zilnice dintre valutele operaționale și EUR.
-
-Granularitatea tabelului de fapte este o execuție. Cheile surogat separă modelul analitic de identificatorii operaționali și permit extinderea ulterioară către dimensiuni cu istoric.
-
-## Raportare
-
-Power BI se conectează la depozitul de date, nu direct la tabelele tranzacționale. Separarea reduce încărcarea sistemului OLTP și simplifică interogările analitice.
+Power BI consumă view-urile `dw.vwPowerBi*`, nu tabelele tranzacționale. Raportul include prezentare generală, portofoliu și numerar, analiză de tranzacționare, ordine avansate și KYC/operațiuni.

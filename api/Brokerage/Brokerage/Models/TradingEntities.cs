@@ -10,6 +10,12 @@ public class Customer
     public string Status { get; set; } = string.Empty;
 }
 
+public class CustomerType
+{
+    public byte CustomerTypeId { get; set; }
+    public bool IsActive { get; set; }
+}
+
 public class KycRecord
 {
     public long KycId { get; set; }
@@ -46,11 +52,53 @@ public class CashAccount
 public class Instrument
 {
     public long InstrumentId { get; set; }
+    public int MarketId { get; set; }
+    public int IssuerId { get; set; }
     public string Symbol { get; set; } = string.Empty;
     public string InstrumentName { get; set; } = string.Empty;
     public string InstrumentType { get; set; } = string.Empty;
     public string Currency { get; set; } = string.Empty;
     public bool IsActive { get; set; }
+}
+
+public class Market
+{
+    public int MarketId { get; set; }
+    public string MarketName { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+}
+
+public class Issuer
+{
+    public int IssuerId { get; set; }
+    public string IssuerName { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+}
+
+public class MarketQuote
+{
+    public long MarketQuoteId { get; set; }
+    public long InstrumentId { get; set; }
+    public DateTime QuoteDate { get; set; }
+    public decimal MarketPrice { get; set; }
+    public string SourceSystem { get; set; } = string.Empty;
+}
+
+public class Currency
+{
+    public string CurrencyCode { get; set; } = string.Empty;
+    public bool IsActive { get; set; }
+    public bool IsReportingCurrency { get; set; }
+}
+
+public class ExchangeRate
+{
+    public long ExchangeRateId { get; set; }
+    public string SourceCurrency { get; set; } = string.Empty;
+    public string TargetCurrency { get; set; } = string.Empty;
+    public decimal MidRate { get; set; }
+    public DateTime RateDate { get; set; }
+    public string SourceSystem { get; set; } = string.Empty;
 }
 
 public class TradeOrder

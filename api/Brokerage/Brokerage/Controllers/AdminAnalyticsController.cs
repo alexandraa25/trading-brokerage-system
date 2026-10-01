@@ -18,12 +18,12 @@ public class AdminAnalyticsController(IConfiguration configuration) : Controller
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
 
-        var portfolioValue = await ScalarDecimal(connection, "SELECT ISNULL(SUM(TotalValueEur),0) FROM dw.FactPortfolioDailySnapshot WHERE DateKey=(SELECT MAX(DateKey) FROM dw.FactPortfolioDailySnapshot)");
-        var netCashFlow = await ScalarDecimal(connection, "SELECT ISNULL(SUM(AmountEur),0) FROM dw.FactCashTransaction");
-        var commissions = await ScalarDecimal(connection, "SELECT ISNULL(SUM(CASE WHEN TransactionType='Commission' THEN -AmountEur ELSE 0 END),0) FROM dw.FactCashTransaction");
-        var activeOrders = await ScalarInt(connection, "SELECT COUNT(*) FROM dw.FactOrderLifecycle WHERE OrderStatus IN ('Pending','PartiallyExecuted')");
-        var completedOrders = await ScalarInt(connection, "SELECT COUNT(*) FROM dw.FactOrderLifecycle WHERE OrderStatus='Executed'");
-        var rejectedOrders = await ScalarInt(connection, "SELECT COUNT(*) FROM dw.FactOrderLifecycle WHERE OrderStatus='Rejected'");
+        var portfolioValue = await ScalarDecimal(connection, "SELECT ISNULL(SUM(ValoareTotalaEur),0) FROM dw.vwPowerBiPortfolioEvolution WHERE Data=(SELECT MAX(Data) FROM dw.vwPowerBiPortfolioEvolution)");
+        var netCashFlow = await ScalarDecimal(connection, "SELECT ISNULL(SUM(SumaEur),0) FROM dw.vwPowerBiCashFlow");
+        var commissions = await ScalarDecimal(connection, "SELECT ISNULL(SUM(CASE WHEN TipOperatiune='Commission' THEN -SumaEur ELSE 0 END),0) FROM dw.vwPowerBiCashFlow");
+        var activeOrders = await ScalarInt(connection, "SELECT COUNT(*) FROM dw.vwPowerBiOrderLifecycle WHERE Stare IN ('Pending','PartiallyExecuted')");
+        var completedOrders = await ScalarInt(connection, "SELECT COUNT(*) FROM dw.vwPowerBiOrderLifecycle WHERE Stare='Executed'");
+        var rejectedOrders = await ScalarInt(connection, "SELECT COUNT(*) FROM dw.vwPowerBiOrderLifecycle WHERE Stare='Rejected'");
         var pendingKyc = await ScalarInt(connection, "SELECT COUNT(*) FROM dw.FactKyc WHERE KycStatus='Pending'");
         var averageKycDays = await ScalarDecimal(connection, "SELECT ISNULL(AVG(CAST(ResolutionDays AS DECIMAL(19,2))),0) FROM dw.FactKyc WHERE ResolutionDays IS NOT NULL");
 

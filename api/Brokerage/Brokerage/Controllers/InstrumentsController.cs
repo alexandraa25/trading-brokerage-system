@@ -14,23 +14,24 @@ public class InstrumentsController(BrokerageDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<InstrumentSummary>>> GetInstruments()
     {
-        var instruments = await db.Database.SqlQuery<InstrumentSummary>($"""
-            SELECT instrument.InstrumentId, instrument.Symbol, instrument.InstrumentName, instrument.InstrumentType,
-                   instrument.Currency, market.MarketName, issuer.IssuerName,
-                   quote.MarketPrice, quote.QuoteDate, quote.SourceSystem AS QuoteSource
-            FROM trading.Instrument instrument
-            INNER JOIN trading.Market market ON market.MarketId = instrument.MarketId
-            INNER JOIN trading.Issuer issuer ON issuer.IssuerId = instrument.IssuerId
-            OUTER APPLY
-            (
-                SELECT TOP 1 MarketPrice, QuoteDate, SourceSystem
-                FROM trading.MarketQuote
-                WHERE InstrumentId = instrument.InstrumentId
-                ORDER BY QuoteDate DESC
-            ) quote
-            WHERE instrument.IsActive = 1
-            ORDER BY instrument.Symbol
-            """).ToListAsync();
+        var instruments = await (
+            from instrument in db.Instruments.AsNoTracking()
+            join market in db.Markets.AsNoTracking() on instrument.MarketId equals market.MarketId
+            join issuer in db.Issuers.AsNoTracking() on instrument.IssuerId equals issuer.IssuerId
+            let quote = db.MarketQuotes.AsNoTracking()
+                .Where(item => item.InstrumentId == instrument.InstrumentId)
+                .OrderByDescending(item => item.QuoteDate)
+                .Select(item => new { item.MarketPrice, item.QuoteDate, item.SourceSystem })
+                .FirstOrDefault()
+            where instrument.IsActive
+            orderby instrument.Symbol
+            select new InstrumentSummary(
+                instrument.InstrumentId, instrument.Symbol, instrument.InstrumentName, instrument.InstrumentType,
+                instrument.Currency, market.MarketName, issuer.IssuerName,
+                quote == null ? null : quote.MarketPrice,
+                quote == null ? null : quote.QuoteDate,
+                quote == null ? null : quote.SourceSystem)
+        ).ToListAsync();
 
         return Ok(instruments);
     }
@@ -40,12 +41,12 @@ public class InstrumentsController(BrokerageDbContext db) : ControllerBase
     {
         days = Math.Clamp(days, 7, 365);
         if (!await db.Instruments.AnyAsync(x => x.InstrumentId == instrumentId && x.IsActive)) return NotFound();
-        var quotes = await db.Database.SqlQuery<InstrumentQuotePoint>($"""
-            SELECT TOP ({days}) QuoteDate, MarketPrice
-            FROM trading.MarketQuote
-            WHERE InstrumentId = {instrumentId}
-            ORDER BY QuoteDate DESC
-            """).ToListAsync();
+        var quotes = await db.MarketQuotes.AsNoTracking()
+            .Where(quote => quote.InstrumentId == instrumentId)
+            .OrderByDescending(quote => quote.QuoteDate)
+            .Take(days)
+            .Select(quote => new InstrumentQuotePoint(quote.QuoteDate, quote.MarketPrice))
+            .ToListAsync();
         quotes.Reverse();
         return Ok(quotes);
     }

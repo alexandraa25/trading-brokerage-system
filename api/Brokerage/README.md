@@ -60,6 +60,14 @@ Rulează obligatoriu `database/22_security_activity_audit.sql` și `database/23_
 
 Administratorul gestionează KYC, clienți, conturi, conturi de numerar, utilizatori și sesiuni. Rutele `GET /api/admin/overview` și `GET /api/admin/analytics` alimentează monitorizarea și graficele din Angular. `POST /api/admin/ai/ask` primește numai indicatori agregați, fără identificatori personali de client.
 
+## Reguli de acces la date
+
+- endpoint-urile operaționale obișnuite folosesc Entity Framework Core și proiecții LINQ;
+- citirile de listă folosesc `AsNoTracking()`, filtre, sortare deterministă și paginare server-side (`page`, `pageSize`, maximum 100 elemente);
+- depunerile, retragerile, conversiile valutare, crearea/executarea/anularea ordinelor folosesc proceduri SQL, pentru validări și actualizări atomice;
+- analiticele administratorului citesc view-urile `dw.vwPowerBi*` din `BrokerageDW`, nu tabelele operaționale;
+- SQL direct rămâne rezervat pentru audit, agregări financiare complexe și proceduri stocate.
+
 ## Organizare
 
 ```text

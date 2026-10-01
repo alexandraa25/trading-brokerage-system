@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { map } from 'rxjs';
 import {
   AdminAiResponse,
   AdminCustomerOverview,
@@ -36,6 +37,14 @@ import {
   Order,
 } from './models';
 import { apiConfig } from './config/api.config';
+
+interface PagedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly url = apiConfig.baseUrl;
@@ -180,10 +189,11 @@ export class ApiService {
   valuation(accountId: number) {
     return this.http.get(`${this.url}/accounts/${accountId}/valuation`, { headers: this.headers });
   }
-  brokerExecutions() {
-    return this.http.get<BrokerExecution[]>(`${this.url}/broker/executions`, {
-      headers: this.headers,
-    });
+  brokerExecutions(page = 1, pageSize = 100, symbol = '') {
+    return this.http.get<PagedResult<BrokerExecution>>(
+      `${this.url}/broker/executions?page=${page}&pageSize=${pageSize}&symbol=${encodeURIComponent(symbol)}`,
+      { headers: this.headers },
+    ).pipe(map(result => result.items));
   }
   brokerIntelligentAlerts() {
     return this.http.get<BrokerIntelligentAlert[]>(`${this.url}/broker/alerts/intelligent`, {
@@ -237,11 +247,17 @@ export class ApiService {
   createPriceAlert(instrumentId:number,direction:string,targetPrice:number){return this.http.post(`${this.url}/market/price-alerts`,{instrumentId,direction,targetPrice},{headers:this.headers});}
   priceAlerts(){return this.http.get<{customerPriceAlertId:number;symbol:string;direction:string;targetPrice:number;isActive:boolean;triggeredAt:string|null}[]>(`${this.url}/market/price-alerts`,{headers:this.headers});}
   deletePriceAlert(id:number){return this.http.delete(`${this.url}/market/price-alerts/${id}`,{headers:this.headers});}
-  orders() {
-    return this.http.get<Order[]>(`${this.url}/orders`, { headers: this.headers });
+  orders(page = 1, pageSize = 100) {
+    return this.http.get<PagedResult<Order>>(
+      `${this.url}/orders?page=${page}&pageSize=${pageSize}`,
+      { headers: this.headers },
+    ).pipe(map(result => result.items));
   }
-  brokerOrderHistory() {
-    return this.http.get<Order[]>(`${this.url}/broker/orders/history`, { headers: this.headers });
+  brokerOrderHistory(page = 1, pageSize = 100) {
+    return this.http.get<PagedResult<Order>>(
+      `${this.url}/broker/orders/history?page=${page}&pageSize=${pageSize}`,
+      { headers: this.headers },
+    ).pipe(map(result => result.items));
   }
   cancelOrder(orderId: number) {
     return this.http.post(`${this.url}/orders/${orderId}/cancel`, {}, { headers: this.headers });
@@ -272,11 +288,11 @@ export class ApiService {
       { headers: this.headers },
     );
   }
-  cashTransactions(cashAccountId: number) {
-    return this.http.get<CashTransaction[]>(
-      `${this.url}/cash-accounts/${cashAccountId}/transactions`,
+  cashTransactions(cashAccountId: number, page = 1, pageSize = 100) {
+    return this.http.get<PagedResult<CashTransaction>>(
+      `${this.url}/cash-accounts/${cashAccountId}/transactions?page=${page}&pageSize=${pageSize}`,
       { headers: this.headers },
-    );
+    ).pipe(map(result => result.items));
   }
   portfolioHistory(from: string, to: string) {
     return this.http.get<PortfolioHistoryPoint[]>(

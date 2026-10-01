@@ -27,8 +27,11 @@ public class RegistrationController(BrokerageDbContext db, IPasswordHasher<ApiUs
         if (await db.Customers.AnyAsync(item => item.Email == email) || await db.ApiUsers.AnyAsync(item => item.Email == email))
             return Conflict(new ProblemDetails { Detail = "Există deja un client cu această adresă de email." });
 
-        var customerTypeId = await db.Database.SqlQuery<byte>($"SELECT TOP 1 CustomerTypeId AS Value FROM core.CustomerType WHERE IsActive = 1 ORDER BY CustomerTypeId")
-            .SingleOrDefaultAsync();
+        var customerTypeId = await db.CustomerTypes.AsNoTracking()
+            .Where(item => item.IsActive)
+            .OrderBy(item => item.CustomerTypeId)
+            .Select(item => item.CustomerTypeId)
+            .FirstOrDefaultAsync();
         if (customerTypeId == 0) return Problem("Nu este configurat un tip de client activ.");
 
         await using var transaction = await db.Database.BeginTransactionAsync();
