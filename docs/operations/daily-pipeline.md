@@ -35,3 +35,59 @@ Pentru un flux complet, rulează scriptul fără parametrul `-SkipEcbImport`.
 ## Docker
 
 Când aplicația rulează în Docker, baza de date păstrează datele în volumul `sql-data`. Pentru oprire folosește `docker-compose down`; nu folosi `docker-compose down -v` dacă vrei să păstrezi datele din container.
+
+## Programare, oprire și verificare
+
+Automatizarea nu pornește aplicația Docker și nu ține browserul deschis. Ea rulează numai scriptul de import BCE și ETL, la ora programată.
+
+### Crearea sau actualizarea unei singure sarcini zilnice
+
+Din rădăcina proiectului, rulează în PowerShell:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Install-DailyEcbRateTask.ps1
+```
+
+Această comandă creează sau actualizează sarcina Windows:
+
+```text
+TradingBrokerage-Daily-Data-Pipeline
+```
+
+Ora implicită este 17:15. Pentru altă oră, de exemplu 18:00:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Install-DailyEcbRateTask.ps1 -DailyTime "18:00"
+```
+
+### Oprirea actualizării automate
+
+În **Task Scheduler**, caută `TradingBrokerage-Daily-Data-Pipeline`, selecteaz-o și apasă **Disable** în panoul din dreapta. Sarcina rămâne salvată, dar nu va mai rula.
+
+Alternativ, în PowerShell:
+
+```powershell
+Disable-ScheduledTask -TaskName "TradingBrokerage-Daily-Data-Pipeline"
+```
+
+Pentru reactivare:
+
+```powershell
+Enable-ScheduledTask -TaskName "TradingBrokerage-Daily-Data-Pipeline"
+```
+
+### Evitarea rulărilor duplicate
+
+Păstrează o singură sarcină pentru acest proiect. Dacă în Task Scheduler apar două sarcini `TradingBrok...` la aceeași oră, deschide **Properties → Actions** pentru fiecare. Oprește-o pe cea care pornește același fișier `automation\Run-DailyDataPipeline.ps1` ca sarcina păstrată.
+
+Nu șterge o sarcină dacă nu ești sigură ce face; **Disable** este reversibil.
+
+### Rulare și jurnal manual
+
+Poți rula fluxul oricând, fără să aștepți ora programată:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File automation\Run-DailyDataPipeline.ps1
+```
+
+Jurnalele fiecărei rulări sunt în `automation/logs/`. După o rulare reușită, reîmprospătează raportul în Power BI Desktop.

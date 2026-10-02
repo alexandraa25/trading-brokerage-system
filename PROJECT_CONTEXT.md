@@ -221,39 +221,37 @@ sunt păstrate zilnic în baza de date.
   sau 365 de zile, iar API-ul reîncarcă punctele din `BrokerageDW`. Graficul
   este o linie SVG cu puncte și tooltip care arată data și valoarea în EUR.
 
-## Organizare Angular (24.09.2026)
+## Organizare Angular 
 
 - Componentele clientului și brokerului nu mai sunt împreună în `dashboard/components`.
   Ele sunt separate în `features/dashboard/portfolio`, `cash`, `trading`, `broker` și `profile`.
 - Componenta reutilizabilă de notificări este în `shared/components`.
 - Tipurile locale ale componentei rădăcină sunt în `core/models/dashboard.models.ts`.
 - Convențiile noii structuri sunt documentate în `web/brokerage-ui/src/app/README.md`.
-## Fațade dashboard Angular (24.09.2026)
+## Fațade dashboard Angular 
 
 - `core/services/customer-dashboard.service.ts` încarcă datele de bază ale clientului într-o singură operație: conturi, instrumente, ordine, profil, cursuri, istoric, valori pe monedă și notificări.
 - `core/services/broker-dashboard.service.ts` centralizează lista de ordine, execuții, istoric, cursuri și notificări broker.
 - `core/services/admin-dashboard.service.ts` centralizează încărcarea datelor KYC, audit, clienți, conturi, utilizatori, indicatori și rapoarte administrator.
 - `app.ts` coordonează ecranul și semnalele de stare, delegând încărcările de date către aceste servicii.
-## Modele TypeScript explicite (24.09.2026)
+## Modele TypeScript explicite 
 
 - `web/brokerage-ui/src/app/core/models/admin.models.ts` conține modelele pentru cererea de ordin, detaliile clientului administratorului și înregistrările de audit.
 - `AdminCustomerOverview` înlocuiește `any` pentru fereastra cu conturi, solduri și poziții ale clientului.
 - `KycAuditEntry` este folosit de componenta Jurnal audit, iar `CreateOrderRequest` este folosit de formularul de ordin și de componenta rădăcină.
 - `ApiService` returnează acum `AdminCustomerOverview` și `AccessAuditEntry` pentru endpointurile respective.
-## Tipuri KYC și Broker (24.09.2026)
+## Tipuri KYC și Broker 
 
 - Modelele `KycRecord`, `BrokerExecution` și `BrokerOrderDetails` sunt în `web/brokerage-ui/src/app/core/models/admin.models.ts`.
 - Endpointurile API și componentele KYC/Broker folosesc aceste modele, fără `any` pentru datele de răspuns.
 - `$any(...)` rămas în șabloane este numai conversie pentru `EventTarget` din DOM, nu un model de date nestructurat.
-## Integrare Power BI în administrator (24.09.2026)
+## Integrare Power BI în administrator 
 
 - Tabul `Power BI` este disponibil exclusiv în panoul administratorului și este implementat în `web/brokerage-ui/src/app/features/admin/admin-powerbi.component.ts`.
 - Pagina listează cele șase rapoarte propuse și deschide raportul publicat într-o filă nouă.
 - URL-ul de embed se configurează local în `web/brokerage-ui/src/app/core/config/powerbi.config.ts`; tokenurile și parolele nu se salvează în cod.
-## Documentație API (24.09.2026)
 
-- `api/Brokerage/README.md` descrie pornirea API-ului, User Secrets pentru JWT, Swagger, endpointurile pe roluri, configurația locală și testele automate.
-## Asistent AI pentru administrator (25.09.2026)
+## Asistent AI pentru administrator 
 
 - Tabul `Asistent AI` este disponibil exclusiv administratorului, în `web/brokerage-ui/src/app/features/admin/admin-ai-assistant.component.ts`.
 - `POST /api/admin/ai/ask` este protejat prin rolul `Administrator`. El construiește un context cu valori agregate, read-only, din `BrokerageDW` și îl trimite prin `Responses API`.
@@ -267,166 +265,142 @@ sunt păstrate zilnic în baza de date.
   `database/README.md`, `etl/README.md`, `warehouse/README.md`,
   `automation/README.md` și `powerbi/README.md`.
 
-## Testare automată (24.09.2026)
+## Testare automată 
 
 - Testele Angular sunt în `web/brokerage-ui/src/app/features/admin/*.spec.ts` și se rulează din `web/brokerage-ui` cu `npm run test:ci`.
 - Sunt acoperite filtrele pentru Clienți și Utilizatori, fereastra modală pentru client nou, precum și punctele și selectorul de perioadă ale graficului administrativ.
 - Validarea `tests/23_admin_analytics_validation.sql` verifică rapoartele administrative și datele aferente din `BrokerageDW`; a trecut cu succes.
 - În timpul testării au fost corectate filtrele administrative: lista se recalculează acum când se schimbă criteriile. Scala graficului folosește minimul și maximul reale ale perioadei, pentru a face vizibile diferențele mici.
-## Teste API automate (24.09.2026)
+## Teste API automate 
 
 - Proiectul `api/Brokerage/Brokerage.Api.Tests` conține teste xUnit de integrare.
 - `BrokerageApiFactory` pornește API-ul cu SQLite temporar și date de test pentru Client, Broker și Administrator; `BrokerageDB` nu este folosită sau modificată.
 - Sunt verificate autentificarea, identificarea rolului, accesul interzis între roluri, protecția conturilor altui client, validarea ordinelor, accesul brokerului la execuții și accesul administratorului la KYC/utilizatori.
 - Comanda de rulare este `dotnet test Brokerage.Api.Tests/Brokerage.Api.Tests.csproj`; la 24.09.2026 au trecut 6 din 6 teste.
 - Depunerea, retragerea, conversia, execuția și crearea utilizatorului cu audit necesită o suită SQL Server de test, deoarece apelează proceduri stocate sau jurnale SQL Server. Ele nu se rulează intenționat pe baza principală.
-## Următorii pași recomandați
 
-1. Actualizarea raportului Power BI existent cu noile vizualizări analitice.
-2. Teste SQL Server de integrare pentru procedurile stocate.
-3. Pregătirea configurării pentru publicare.
-
-## Regulă de continuitate
-
-După fiecare etapă importantă implementată, actualizez acest document cu
-funcțiile noi, fișierele relevante, deciziile tehnice și următorii pași.
-Nu se salvează chei, parole sau alte secrete în acest document.
-
-## Monitorizare și rapoarte reunite (25.09.2026)
+## Monitorizare și rapoarte reunite 
 
 - În panoul administratorului, taburile Monitorizare și Rapoarte au fost reunite în Monitorizare și rapoarte. Indicatorii și alertele operaționale apar înaintea analizelor din BrokerageDW și a graficului cu perioada selectabilă.
 
-## Asistent AI pentru client (25.09.2026)
+## Asistent AI pentru client
 
 - Pagina Prezentare generală a clientului include `customer-ai-assistant.component`, pentru explicații despre profit/pierdere, structură de portofoliu și impactul cursurilor BCE.
 - `POST /api/customer-ai/ask` este disponibil numai rolului `Customer`. Contextul este calculat în backend pentru `customerId` din JWT, fără ca interfața să poată cere datele altui client.
 - Datele trimise către Groq sunt agregări ale conturilor proprii, soldurilor, valorilor investite la preț mediu și cursurilor BCE curente. Răspunsul are caracter informativ, nu de consultanță financiară.
 
-## Alerte inteligente broker (25.09.2026)
+## Alerte inteligente broker 
 
 - `GET /api/broker/alerts/intelligent` analizează ordinele active în backend și atribuie prioritate, motiv și acțiune sugerată.
 - Sunt semnalate ordinele executate parțial, ordinele în așteptare peste 60 de minute, lipsa cotației de piață, prețul în afara limitei clientului și ordinele care depășesc 15 minute.
 - Componenta `broker-alerts.component` afișează alertele cu paginare și deschide direct detaliile ordinului.
 
-## Date de piață și grafice pe instrument (25.09.2026)
+## Date de piață și grafice pe instrument 
 
 - `GET /api/instruments/{instrumentId}/quotes?days=7|30|90` oferă istoricul de cotații pentru un instrument activ.
 - Tabul Instrumente afișează un buton „Vezi evoluția”, un grafic de preț și variația procentuală pentru 7, 30 sau 90 de zile.
 - `database/07_simulated_market_quotes.sql` include `trading.usp_SeedSimulatedMarketQuoteHistory`, care creează 90 de zile de cotații demonstrative variate. Scriptul trebuie rulat în `BrokerageDB` după actualizare.
 
-## Ordine avansate și confirmare (25.09.2026)
+## Ordine avansate și confirmare 
 
 - Formularul clientului acceptă ordine `MARKET`, `LIMIT`, `STOP` și `STOP-LIMIT`, afișează valoarea, comisionul estimat de 0,25% și un pop-up de confirmare înainte de trimitere.
 - `database/17_advanced_orders.sql` adaugă prețul de declanșare și procedura `trading.usp_CancelOrderPartially`; `database/18_advanced_order_creation.sql` actualizează procedura de creare a ordinului.
 - `POST /api/orders/{orderId}/cancel-partial` și fereastra „Anulare parțială” permit clientului să anuleze doar o cantitate dintr-un ordin activ. Validarea finală a cantității rămâne în procedura SQL, pentru a preveni depășirea cantității rămase.
 - Asistentul AI al clientului este randat din nou în Prezentare generală, după solduri și poziții.
 
-## Încărcare la cerere a interfeței (25.09.2026)
+## Încărcare la cerere a interfeței 
 
 - Panourile secundare ale clientului, brokerului și administratorului folosesc `@defer`, astfel încât codul pentru tabul respectiv se descarcă numai când utilizatorul îl deschide.
 - Ecranul principal se încarcă mai repede, iar taburile afișează un mesaj scurt cât timp componenta este pregătită.
 
-## Estimare ordin în API (25.09.2026)
+## Estimare ordin în API 
 
 - `POST /api/orders/estimate` calculează în backend prețul folosit, valoarea, comisionul de 0,25%, suma/cantitatea necesară și disponibilul real al contului.
 - Înaintea pop-up-ului de confirmare, formularul afișează estimarea venită din API. Dacă fondurile sau poziția sunt insuficiente, arată lipsa și blochează confirmarea.
 
-## Activarea automată a ordinelor STOP (25.09.2026)
+## Activarea automată a ordinelor STOP 
 
 - `StopOrderActivationService` verifică la fiecare 30 de secunde ultima cotație a ordinelor `STOP` și `STOP-LIMIT` în așteptare. La atingerea pragului, starea devine `Triggered` și brokerii primesc o notificare.
 - `database/19_stop_order_activation.sql` adaugă stările `WaitingTrigger` și `Triggered`, actualizează crearea ordinelor STOP și permite execuția ordinelor declanșate. Pentru `STOP-LIMIT`, API-ul refuză orice preț de execuție care nu respectă limita clientului.
 
-## Istoric detaliat al ordinelor (25.09.2026)
+## Istoric detaliat al ordinelor 
 
 - `database/20_order_history_quantities.sql` adaugă cantitatea inițială și cantitatea anulată, iar anularea parțială le actualizează tranzacțional.
 - Istoricul clientului afișează cantitatea comandată, executată, anulată și rămasă, prețul STOP și limita, precum și etichete clare pentru stările de declanșare și anulare parțială.
 
-## Depozit de date pentru ordine avansate (25.09.2026)
+## Depozit de date pentru ordine avansate 
 
 - `etl/09_stop_order_history_upgrade.sql` extinde `staging.[Order]` cu `StopPrice`, `OriginalQuantity` și `CancelledQuantity` și sincronizează datele operaționale.
 - `warehouse/17_upgrade_fact_order_lifecycle_stop_history.sql` extinde `dw.FactOrderLifecycle`; cantitatea rămasă este calculată ca `comandată - executată - anulată`.
 - Încărcarea incrementală, încărcarea inițială, reîmprospătarea staging și `dw.vwPowerBiOrderLifecycle` includ acum pragul STOP, momentul declanșării și cantitățile pentru analiza în Power BI.
 
-## Finalizarea ordinelor avansate (28.09.2026)
+## Finalizarea ordinelor avansate 
 
 - Brokerul are tabul `Ordine STOP`, filtrat pentru `STOP` și `STOP-LIMIT`, inclusiv stările de așteptare și declanșare.
 - Formularul ordinului permite `DAY`, `DATE` și `GTC`. `database/21_order_expiration.sql` adaugă câmpurile pentru valabilitate și starea `Expired`; serviciul de fundal expiră automat ordinele active.
 - În fereastra brokerului, acțiunea devine „Execută ordin declanșat” pentru un STOP activat, iar feedbackul explică precis de ce un STOP-LIMIT nu respectă limita clientului.
 
-## Testare ordine avansate (28.09.2026)
+## Testare ordine avansate 
 
 - `tests/24_advanced_order_validation.sql` validează schema și integritatea pentru STOP, STOP-LIMIT, anulare parțială și valori/comisioane de execuție.
 - Testele Angular pentru formular și istoric verifică estimarea comisionului, formarea ordinului STOP-LIMIT, starea de anulare parțială și pop-up-ul aferent.
 
-## Calitatea datelor de piață (28.09.2026)
+## Calitatea datelor de piață 
 
 - Fluxul automat zilnic actualizează deja importul BCE, cotațiile simulate, staging-ul și depozitul de date prin `automation/Run-DailyDataPipeline.ps1`.
 - Monitorizarea administratorului semnalează separat cotațiile de piață care nu au fost actualizate în ultima zi.
 
-## Power BI — Ordine avansate (28.09.2026)
+## Power BI — Ordine avansate 
 
 - `powerbi/advanced-orders-page.md` descrie pagina de raportare pentru STOP și STOP-LIMIT: măsuri DAX, rată de declanșare, timp până la declanșare, ordine neexecutate, volume și comisioane.
 
-## Sesiune și audit de securitate (28.09.2026)
+## Sesiune și audit de securitate 
 
 - Interfața avertizează utilizatorul cu cinci minute înainte ca JWT-ul să expire și îl deconectează automat la expirare.
 - `database/22_security_activity_audit.sql` pregătește jurnalele pentru autentificări/dispozitive și activitatea ordinelor.
 
 
-## Vizibilitate autentificări pentru administrator (28.09.2026)
+## Vizibilitate autentificări pentru administrator 
 
 - `GET /api/admin/sessions` oferă administratorului ultimele 100 de autentificări ale personalului (brokeri și administratori), cu e-mail, rol, dispozitiv, IP și momentul conectării.
 - Tabul **Utilizatori** afișează acum secțiunea „Conectări recente”, separată de lista de utilizatori și paginată.
 - Pentru înregistrarea autentificărilor trebuie rulat o singură dată `database/22_security_activity_audit.sql`; API-ul salvează o sesiune la fiecare conectare reușită.
 
-## Deconectare sesiuni și audit operațional al ordinelor (28.09.2026)
+## Deconectare sesiuni și audit operațional al ordinelor 
 
 - `database/23_session_revocation.sql` adaugă `SessionVersion` pentru `security.ApiUser`. JWT-ul conține versiunea sesiunii, iar API-ul o verifică la fiecare cerere autorizată. Acțiunea administratorului „Deconectează sesiunile” invalidează toate tokenurile existente ale utilizatorului.
 - `OrderAuditService` înregistrează estimările ordinelor, anulările parțiale și declanșările automate STOP în `audit.OrderActivityLog`. Auditul nu oprește fluxul operațional dacă scriptul de audit nu a fost încă rulat, dar scrie un avertisment în logul API.
 - Administratorul are tabul **Audit ordine**, cu căutare după utilizator, filtre după acțiune, ID de ordin și perioadă, paginare și export CSV.
 
-## Documentație README actualizată (28.09.2026)
-
-- Au fost revizuite toate cele 10 README-uri: rădăcină, API, Angular, bază de date, ETL, depozit, automatizare și Power BI.
-- Documentația acoperă ordinele avansate, activarea STOP, expirarea ordinelor, auditul operațional, deconectarea sesiunilor, taburile administratorului, testarea și scripturile SQL `22`/`23` necesare.
-
-## Verificare globală a proiectului (28.09.2026)
-
-- Build-ul Angular și testele automate au trecut: 10 teste Angular.
-- Testele API au trecut: 8 teste, inclusiv invalidarea sesiunilor brokerului de către administrator.
-- A fost corectată autentificarea în medii fără adresă IP disponibilă; eșecul jurnalizării sesiunii nu mai blochează conectarea, iar API-ul scrie un avertisment.
-- Verificările statice au confirmat existența șabloanelor/stilurilor externe pentru toate componentele și legăturile locale din README-uri.
-- Nu a putut fi verificată execuția SQL Server locală: instanța `localhost` nu este accesibilă din mediul curent, deși `sqlcmd` este instalat.
-
-## Diagramă ERD actualizată (28.09.2026)
+## Diagramă ERD actualizată 
 
 - `database/erd.png` a fost refăcută pentru structura actuală a bazei: `security.ApiUser`, sesiunile, valutele/cursurile, favoritele, alertele de preț, cotațiile, ordinele avansate, conversiile și auditul operațional.
 - `database/erd.svg` este sursa vectorială editabilă; `database/README.md` face referire la ambele variante.
 
-## Depozit de date — expirarea ordinelor (28.09.2026)
+## Depozit de date — expirarea ordinelor 
 
 - `etl/10_order_expiration_upgrade.sql` extinde `staging.[Order]` cu `TimeInForce` și `ExpiresAt`; încărcarea inițială, incrementală și reîmprospătarea completă transportă aceste valori din OLTP.
 - `warehouse/18_upgrade_fact_order_expiration.sql` adaugă aceleași câmpuri în `dw.FactOrderLifecycle` pentru un depozit existent. Pentru o instalare nouă, câmpurile sunt deja în `warehouse/12_create_fact_order_lifecycle.sql`.
 - Încărcătorul `warehouse/13_load_fact_order_lifecycle.sql` tratează starea `Expired` drept stare rezolvată și măsoară timpul până la expirare. Vizualizarea `dw.vwPowerBiOrderLifecycle` expune valabilitatea și momentul expirării pentru Power BI.
 
-## Depozit de date — audit operațional (28.09.2026)
+## Depozit de date — audit operațional 
 
 - `etl/11_refresh_audit_staging.sql` creează și reîmprospătează `staging.ApplicationUser` și `staging.OperationalAudit` din utilizatorii aplicației, conectări, jurnalul de acces și jurnalul ordinelor.
 - `warehouse/19_operational_audit_analytics.sql` încarcă `dw.DimApplicationUser` și `dw.FactOperationalAudit`. Faptul păstrează sursa, acțiunea, ordinul asociat și momentul, fără IP sau date despre dispozitiv.
 - `dw.vwPowerBiOperationalAudit`, documentat în `powerbi/operational-audit-page.md`, poate fi folosit pentru pagina Power BI de audit. Fluxul zilnic rulează automat această etapă; validarea este în `tests/26_operational_audit_dw_validation.sql`.
 
-## Integrare raport Power BI în aplicație (30.09.2026)
+## Integrare raport Power BI în aplicație 
 
 - Tabul administratorului **Power BI** încorporează acum raportul publicat folosind URL-ul Power BI Service „Secure embed”. Linkul se configurează în `web/brokerage-ui/src/app/core/config/powerbi.config.ts`.
 - Integrarea acceptă numai URL-uri HTTPS de la `app.powerbi.com`, nu stochează tokenuri sau parole și păstrează butonul pentru deschiderea raportului într-o filă separată.
 
-## Documentație Power BI actualizată (30.09.2026)
+## Documentație Power BI actualizată 
 
 - `powerbi/README.md` descrie raportul construit: cele șase pagini, sursele din `BrokerageDW`, relațiile recomandate, măsurile pentru snapshoturile de portofoliu, modelarea KYC și regulile de formatare.
 - Documentația precizează fluxul actual de prezentare locală în Power BI Desktop și condiția necesară pentru embed securizat ulterior: un cont Microsoft de serviciu sau instituțional.
 - Ghidul `powerbi/advanced-orders-page.md` aplică filtrul permanent pentru `STOP` și `STOP_LIMIT` și măsuri de volum care nu includ ordine standard.
 
-## Docker (30.09.2026)
+## Docker 
 
 - `docker-compose.yml` definește serviciile SQL Server, inițializare SQL, API ASP.NET Core și Angular/Nginx.
 - `docker/init-databases.sh` creează `BrokerageDB` și `BrokerageDW`, încarcă datele demonstrative, ETL-ul și vizualizările Power BI la prima pornire.

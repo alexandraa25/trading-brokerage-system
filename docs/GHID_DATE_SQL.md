@@ -167,6 +167,4 @@ Rulează testele pe o bază de test sau citește cu atenție comentariile. Unele
 5. reîmprospătezi Power BI din view-urile `dw.vwPowerBi...`;
 6. rulezi testele de validare relevante.
 
-## Ce explici la interviu
 
-„Am separat baza operațională de depozitul analitic. Procedurile stocate protejează operațiile financiare atomice, trigger-ele creează audit, iar ETL-ul mută datele prin staging într-un model dimensional. Power BI citește view-uri pregătite pentru analiză, nu tabelele operaționale.”
